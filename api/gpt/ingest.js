@@ -37,11 +37,18 @@ export default async function handler(req, res) {
 
     if (kerr) return res.status(500).json({ error: kerr.message });
 
+    console.log('Found keys:', keys?.length || 0);
     let ok = false;
     for (const k of (keys || [])) {
-      if (await bcrypt.compare(token, k.hashed_key)) { ok = true; break; }
+      console.log('Checking key:', k.id);
+      const match = await bcrypt.compare(token, k.hashed_key);
+      console.log('Key match:', match);
+      if (match) { ok = true; break; }
     }
-    if (!ok) return res.status(401).json({ error: 'Invalid API key' });
+    if (!ok) {
+      console.log('No matching key found');
+      return res.status(401).json({ error: 'Invalid API key' });
+    }
 
     // Create bundle
     const { data: bundle, error: berr } = await supabaseAdmin
@@ -75,6 +82,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ inbox_id: bundle.id, count: cleaned.length });
   } catch (e) {
     console.error('ingest error', e);
-    return res.status(500).json({ error: 'Server error' });
+    console.error('Error details:', e.message, e.stack);
+    return res.status(500).json({ error: 'Server error', details: e.message });
   }
 }
