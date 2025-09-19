@@ -10,7 +10,6 @@ export default async function handler(req, res) {
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     console.log('Received auth header:', auth);
     console.log('Extracted token:', token);
-    console.log('Planner email:', planner_email);
     if (!token) return res.status(401).json({ error: 'Missing API key (Authorization: Bearer ...)' });
 
     const body = req.body || {};
@@ -23,6 +22,8 @@ export default async function handler(req, res) {
       tasks = [],
       suggest_user = null
     } = body;
+
+    console.log('Planner email:', planner_email);
 
     if (!planner_email || !task_list_title || !start_date || !Array.isArray(tasks) || tasks.length === 0) {
       return res.status(400).json({ error: 'Missing planner_email, task_list_title, start_date, or tasks[]' });
