@@ -13,6 +13,8 @@ export default async function handler(req, res) {
     if (!token) return res.status(401).json({ error: 'Missing API key (Authorization: Bearer ...)' });
 
     const body = req.body || {};
+    console.log('Received body:', JSON.stringify(body, null, 2));
+    
     const {
       planner_email,
       source = 'gpt',
@@ -24,6 +26,9 @@ export default async function handler(req, res) {
     } = body;
 
     console.log('Planner email:', planner_email);
+    console.log('Task list title:', task_list_title);
+    console.log('Start date:', start_date);
+    console.log('Tasks:', tasks);
 
     if (!planner_email || !task_list_title || !start_date || !Array.isArray(tasks) || tasks.length === 0) {
       return res.status(400).json({ error: 'Missing planner_email, task_list_title, start_date, or tasks[]' });
