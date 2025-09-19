@@ -1,61 +1,65 @@
-// api/inbox/assign.js
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
+// /api/inbox/assign.js
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (req.method !== 'POST') {
+    res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return;
+  }
 
   try {
     const { plannerEmail, inboxId, userEmail } = req.body || {};
     if (!plannerEmail || !inboxId || !userEmail) {
-      return res.status(400).json({ error: "Missing plannerEmail, inboxId, or userEmail" });
+      res.status(200).json({ ok: false, error: 'Missing plannerEmail, inboxId, or userEmail' });
+      return;
     }
 
-    // Fetch bundle
-    const { data: bundle, error: bErr } = await supabaseAdmin
-      .from("inbox_bundles")
-      .select("id, planner_email, title, start_date, timezone")
-      .eq("id", inboxId)
+    // Ensure bundle exists and is not archived
+    const { data: bundle, error: findErr } = await supabase
+      .from('inbox_bundles')
+      .select('id, title, start_date, timezone, suggested_user, assigned_user_email, assigned_at, archived_at')
+      .eq('id', inboxId)
       .single();
-    if (bErr) throw bErr;
-    if (!bundle || String(bundle.planner_email).toLowerCase() !== String(plannerEmail).toLowerCase()) {
-      return res.status(404).json({ error: "Bundle not found for this planner" });
+
+    if (findErr || !bundle) {
+      res.status(200).json({ ok: false, error: 'Bundle not found' });
+      return;
+    }
+    if (bundle.archived_at) {
+      res.status(200).json({ ok: false, error: 'Bundle is archived and cannot be assigned' });
+      return;
     }
 
-    // Fetch tasks
-    const { data: rows, error: tErr } = await supabaseAdmin
-      .from("inbox_tasks")
-      .select("title, day_offset, time, duration_mins, notes")
-      .eq("bundle_id", inboxId)
-      .order("id", { ascending: true });
-    if (tErr) throw tErr;
-
-    // Stamp assigned metadata
-    const { error: uErr } = await supabaseAdmin
-      .from("inbox_bundles")
+    // Assign (or reassign)
+    const nowIso = new Date().toISOString();
+    const { data: updated, error: updErr } = await supabase
+      .from('inbox_bundles')
       .update({
-        assigned_user_email: userEmail.toLowerCase(),
-        assigned_at: new Date().toISOString()
+        assigned_user_email: userEmail,
+        assigned_at: nowIso
       })
-      .eq("id", inboxId)
-      .eq("planner_email", plannerEmail.toLowerCase());
-    if (uErr) throw uErr;
+      .eq('id', inboxId)
+      .select('id, title, start_date, timezone, suggested_user, assigned_user_email, assigned_at, archived_at')
+      .single();
 
-    const plan = {
-      title: bundle.title,
-      startDate: bundle.start_date,
-      timezone: bundle.timezone || "America/Chicago",
-    };
-    const tasks = (rows || []).map(r => ({
-      title: r.title,
-      dayOffset: r.day_offset || 0,
-      time: r.time || null,
-      durationMins: r.duration_mins || 60,
-      notes: r.notes || ""
-    }));
+    if (updErr) {
+      res.status(200).json({ ok: false, error: `assign_failed: ${updErr.message}` });
+      return;
+    }
 
-    res.json({ ok: true, userEmail, bundleId: inboxId, plan, tasks });
+    res.status(200).json({
+      ok: true,
+      plannerEmail,
+      inboxId,
+      assigned_user: userEmail,
+      assigned_at: updated.assigned_at,
+      bundle: updated
+    });
   } catch (e) {
-    console.error("POST /api/inbox/assign error", e);
-    res.status(500).json({ error: "Server error" });
+    res.status(200).json({ ok: false, error: `internal_error: ${e.message}` });
   }
 }

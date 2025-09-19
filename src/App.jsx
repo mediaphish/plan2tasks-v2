@@ -1,1124 +1,1880 @@
-// src/App.jsx
-import * as React from "react";
-import { format, parseISO, addDays, isValid as isValidDate } from "date-fns";
-import { supabase } from "../lib/supabase.js";
-import { Calendar, Users as UsersIcon, Settings as SettingsIcon, LogOut, Send } from "lucide-react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
+  Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
+  Plus, RotateCcw, Info, Mail, Tag
+} from "lucide-react";
+import { format } from "date-fns";
 
-/* ---------- helpers ---------- */
-const clsx = (...xs) => xs.filter(Boolean).join(" ");
-const toast = (m, t = "ok") => alert((t === "error" ? "Error: " : "") + m);
 
-/* ---------- brand ---------- */
-function BrandLogo() {
-  return <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-6 w-auto" />;
+const APP_VERSION = "2025-09-02 · C4";
+/* ───────────── utils (LOCAL DATE ONLY) ───────────── */
+function cn(...a){ return a.filter(Boolean).join(" "); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function parseYMDLocal(s){
+  if (!s) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));
+  if (!m) return null;
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  return new Date(y, mo-1, d);
+}
+function fmtYMDLocal(d){
+  const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,"0"); const dd=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${dd}`;
+}
+function addDaysLocal(base, days){
+  return new Date(base.getFullYear(), base.getMonth(), base.getDate()+days);
+}
+function daysBetweenLocal(a,b){
+  const a0=new Date(a.getFullYear(),a.getMonth(),a.getDate());
+  const b0=new Date(b.getFullYear(),b.getMonth(),b.getDate());
+  return Math.round((b0 - a0)/86400000);
+}
+function addMonthsLocal(date, months){
+  const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
+  const nmo=m+months; const ny=y+Math.floor(nmo/12); const nm=((nmo%12)+12)%12;
+  const last=new Date(ny, nm+1, 0).getDate();
+  return new Date(ny, nm, Math.min(d,last));
+}
+function lastDayOfMonthLocal(y,m0){ return new Date(y, m0+1, 0).getDate(); }
+function firstWeekdayOfMonthLocal(y,m0,weekday){
+  const first=new Date(y,m0,1);
+  const shift=(7+weekday-first.getDay())%7;
+  return new Date(y,m0,1+shift);
+}
+function nthWeekdayOfMonthLocal(y,m0,weekday,nth){
+  const first=firstWeekdayOfMonthLocal(y,m0,weekday);
+  const c=new Date(y,m0, first.getDate()+7*(nth-1));
+  return c.getMonth()===m0?c:null;
+}
+function lastWeekdayOfMonthLocal(y,m0,weekday){
+  const lastD=lastDayOfMonthLocal(y,m0);
+  const last=new Date(y,m0,lastD);
+  const shift=(7+last.getDay()-weekday)%7;
+  return new Date(y,m0,lastD-shift);
 }
 
-/* ---------- layout ---------- */
-function Section({ title, right, children }) {
+/* display helper */
+function to12hDisplay(hhmm){
+  if (!hhmm) return "";
+  const [h,m] = hhmm.split(":").map(Number);
+  const ampm = h>=12 ? "pm" : "am";
+  const h12 = h%12 || 12;
+  return `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
+/* Time dropdown (15-min steps) */
+const TIME_OPTIONS = (() => {
+  const out = [{ value: "", label: "— none —" }];
+  for (let h=0; h<24; h++){
+    for (let m=0; m<60; m+=15){
+      const v = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+      const h12 = (h%12) || 12;
+      const ampm = h>=12 ? "pm" : "am";
+      const label = `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+      out.push({ value: v, label });
+    }
+  }
+  return out;
+})();
+
+function TimeSelect({ value, onChange }){
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {right}
+    <select
+      value={value || ""}
+      onChange={(e)=>onChange(e.target.value)}
+      className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-10"
+    >
+      {TIME_OPTIONS.map(opt=>(
+        <option key={opt.value || "none"} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  );
+}
+
+/* ───────── Error boundary ───────── */
+class ErrorBoundary extends React.Component{
+  constructor(p){ super(p); this.state={error:null}; }
+  static getDerivedStateFromError(e){ return {error:e}; }
+  componentDidCatch(e, info){ console.error("UI crash:", e, info); }
+  render(){
+    if (this.state.error) {
+      return (
+        <div className="min-h-screen bg-red-50 p-4 sm:p-6">
+          <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-4">
+            <div className="text-red-700 font-bold mb-2">Something went wrong in the UI</div>
+            <pre className="bg-red-100 p-3 text-xs text-red-900 overflow-auto rounded">
+              {String(this.state.error?.message || this.state.error)}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/* ───────── App shell ───────── */
+export default function App(){
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
+}
+
+function MainApp(){
+  const usp = typeof window!=="undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const urlPE = usp.get("plannerEmail");
+  const urlView = (usp.get("view")||"").toLowerCase();
+  const validViews = new Set(["users","plan","settings","inbox"]);
+
+  const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
+  const plannerEmail = (urlPE || storedPE || "bartpaden@gmail.com");
+  if (urlPE) { try { localStorage.setItem("plannerEmail", urlPE); } catch {} }
+  const [view,setView]=useState(validViews.has(urlView) ? urlView : "users");
+  const [selectedUserEmail,setSelectedUserEmail]=useState("");
+  const [prefs,setPrefs]=useState({});
+  const [inboxOpen,setInboxOpen]=useState(false); // legacy; not used anymore
+  const [inboxBadge,setInboxBadge]=useState(0);
+  const [toasts,setToasts]=useState([]);
+
+  // Load prefs, but do NOT override URL-driven view
+  useEffect(()=>{ (async ()=>{
+    try{
+      const qs=new URLSearchParams({ plannerEmail });
+      const r=await fetch(`/api/prefs/get?${qs.toString()}`);
+      if (r.ok){ const j=await r.json(); const p=j.prefs||j;
+        setPrefs(p||{});
+        if (!validViews.has(urlView)) setView((p&&p.default_view) || "users");
+      }
+    }catch(e){/* noop */}
+  })(); },[plannerEmail]);
+
+  async function loadBadge(){
+    try{
+      const qs=new URLSearchParams({ plannerEmail, status:"new" });
+      const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
+      setInboxBadge((j.bumpCount||0));
+    }catch(e){/* noop */}
+  }
+  useEffect(()=>{ if (prefs.show_inbox_badge) loadBadge(); },[plannerEmail,prefs.show_inbox_badge]);
+
+  function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
+  function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Toasts items={toasts} dismiss={dismissToast} />
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-3 sm:mb-6 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="text-lg sm:text-2xl font-bold whitespace-nowrap">Plan2Tasks</div>
+            <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">{APP_VERSION}</span>
+            <nav className="ml-1 sm:ml-4 flex gap-1 sm:gap-2">
+              <NavBtn active={view==="users"} onClick={()=>{ setView("users"); updateQueryView("users"); }} icon={<Users className="h-4 w-4" />}><span className="hidden sm:inline">Users</span></NavBtn>
+              <NavBtn active={view==="plan"} onClick={()=>{ setView("plan"); updateQueryView("plan"); }} icon={<Calendar className="h-4 w-4" />}><span className="hidden sm:inline">Plan</span></NavBtn>
+              <NavBtn active={view==="settings"} onClick={()=>{ setView("settings"); updateQueryView("settings"); }} icon={<SettingsIcon className="h-4 w-4" />}><span className="hidden sm:inline">Settings</span></NavBtn>
+            </nav>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* NOW: routes to internal Inbox view (no modal, no external page) */}
+            <a
+              href="/index.html?view=inbox"
+              id="navInbox"
+              onClick={(e)=>{ e.preventDefault(); setView("inbox"); updateQueryView("inbox"); }}
+              className="relative rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm hover:bg-gray-50 whitespace-nowrap"
+            >
+              <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
+              {prefs.show_inbox_badge && inboxBadge>0 && (
+                <span className="absolute -top-2 -right-2 rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-bold text-white">{inboxBadge}</span>
+              )}
+            </a>
+            <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
+              <span className="hidden sm:inline">Signed in:&nbsp;</span><b className="truncate inline-block max-w-[160px] align-bottom">{plannerEmail}</b>
+            </span>
+          </div>
+        </div>
+
+        {view==="users" && (
+          <UsersView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onManage={(email)=>{ 
+              setSelectedUserEmail(email);
+              setView("plan"); updateQueryView("plan");
+            }}
+          />
+        )}
+
+        {view==="plan" && (
+          <PlanView
+            plannerEmail={plannerEmail}
+            selectedUserEmailProp={selectedUserEmail}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+
+        {view==="settings" && (
+          <SettingsView
+            plannerEmail={plannerEmail}
+            prefs={prefs}
+            onChange={(p)=>setPrefs(p)}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+
+        {view==="inbox" && (
+          <InboxViewIntegrated
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+
+        {/* Legacy modal kept inert; no UI path sets inboxOpen=true */}
+        {inboxOpen && (
+          <InboxDrawer
+            plannerEmail={plannerEmail}
+            onClose={()=>setInboxOpen(false)}
+          />
+        )}
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-3">{children}</div>
     </div>
   );
 }
-function Modal({ title, onClose, children }) {
+
+function updateQueryView(next){
+  try{
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", next);
+    window.history.replaceState({}, "", url.toString());
+  }catch{/* noop */}
+}
+
+/* ───────── nav & toasts ───────── */
+function NavBtn({ active, onClick, icon, children }){
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-4 shadow-xl">
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs sm:text-sm",
+        active ? "border-gray-800 bg-gray-900 text-white" : "border-gray-300 bg-white hover:bg-gray-50"
+      )}
+    >
+      {icon} {children}
+    </button>
+  );
+}
+function Toasts({ items, dismiss }){
+  return (
+    <div className="fixed bottom-2 left-0 right-0 z-50 flex justify-center">
+      <div className="flex max-w-[90vw] flex-col gap-2">
+        {items.map(t=>(
+          <div key={t.id} className={cn(
+            "relative rounded-xl border px-3 py-2 text-sm shadow-sm",
+            t.type==="ok" ? "border-green-300 bg-green-50 text-green-800" :
+            t.type==="warn" ? "border-yellow-300 bg-yellow-50 text-yellow-800" :
+            "border-red-300 bg-red-50 text-red-800"
+          )}>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">{t.type==="ok"?"Success":t.type==="warn"?"Heads up":"Error"}</span>
+              <span className="opacity-70">{t.text}</span>
+            </div>
+            <button onClick={()=>dismiss(t.id)} className="absolute right-1 top-1 text-xs text-gray-500 hover:text-gray-800">×</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Inbox: integrated view (no iframe, no new header) ───────── */
+function InboxViewIntegrated({ plannerEmail, onToast }){
+  const [users,setUsers]=useState([]);
+  const [selectedUser,setSelectedUser]=useState("");
+  const [rows,setRows]=useState([]);
+  const [status,setStatus]=useState("new"); // "new" | "assigned" | "archived"
+  const [loading,setLoading]=useState(false);
+
+  // Deep-link support: when landing on inbox view, prefer NEW; if empty, auto-load ASSIGNED
+  useEffect(()=>{ (async ()=>{
+    await loadUsers();
+    await loadInbox("new", { fallbackToAssigned: true });
+  })(); /* eslint-disable-next-line */},[]);
+
+  async function fetchJSON(url){
+    const sep = url.includes("?") ? "&" : "?";
+    const noCacheUrl = `${url}${sep}t=${Date.now()}`;
+    const r = await fetch(noCacheUrl, { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json().catch(()=> ({}));
+  }
+
+  async function loadUsers(){
+    try{
+      const url = `/api/users?op=list&plannerEmail=${encodeURIComponent(plannerEmail)}&status=all`;
+      const body = await fetchJSON(url);
+      const list = body?.users || body?.data || [];
+      setUsers(list);
+      // Do not auto-select; dropdown serves both NEW (assign target) and ASSIGNED (context)
+    }catch{/* noop */}
+  }
+
+  function mapBundle(b){
+    return {
+      id: b.id || b.inboxId,
+      title: b.title,
+      startDate: b.start_date || b.startDate,
+      timezone: b.timezone,
+      assignedEmail: b.assigned_user_email || b.assigned_user || null
+    };
+  }
+
+  function preselectIfUniformAssigned(bundles, viewStatus){
+    if (viewStatus !== "assigned") return;
+    const emails = (bundles||[])
+      .map(b => (b.assigned_user_email || b.assigned_user || "").toString().trim())
+      .filter(Boolean).map(e=>e.toLowerCase());
+    if (emails.length===0) return;
+    const uniq = Array.from(new Set(emails));
+    if (uniq.length===1) {
+      const email = uniq[0];
+      const found = (users||[]).find(u => String(u.email||"").toLowerCase()===email);
+      if (found) setSelectedUser(found.email);
+    }
+  }
+
+  async function loadInbox(nextStatus="new", { fallbackToAssigned=false } = {}){
+    setLoading(true);
+    setRows([]);
+    setStatus(nextStatus);
+    try{
+      const url = `/api/inbox?plannerEmail=${encodeURIComponent(plannerEmail)}&status=${encodeURIComponent(nextStatus)}`;
+      const body = await fetchJSON(url);
+      const bundles = body?.bundles || body?.data || body || [];
+      if (nextStatus==="new" && fallbackToAssigned && (!Array.isArray(bundles) || bundles.length===0)){
+        setLoading(false);
+        return loadInbox("assigned", { fallbackToAssigned:false });
+      }
+      setRows(Array.isArray(bundles) ? bundles.map(mapBundle) : []);
+      preselectIfUniformAssigned(bundles, nextStatus);
+    }catch(e){
+      onToast?.("error", "Failed to load inbox");
+    }
+    setLoading(false);
+  }
+
+  async function assignBundle(inboxId){
+    const userEmail = selectedUser;
+    if (!userEmail) return; // require selection; no extra UI
+    try{
+      await fetch("/api/inbox/assign",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, inboxId, userEmail })
+      });
+      // After assignment, reload NEW; if empty, fall back to ASSIGNED
+      loadInbox("new", { fallbackToAssigned:true });
+      onToast?.("ok","Assigned");
+    }catch{
+      onToast?.("error","Assign failed");
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="text-base sm:text-lg font-semibold">Inbox — New Bundles</div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="inboxUserSelect" className="text-sm">Assign to:</label>
+          <select
+            id="inboxUserSelect"
+            value={selectedUser || ""}
+            onChange={(e)=>setSelectedUser(e.target.value)}
+            className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          >
+            <option value="">Select…</option>
+            {users.map(u=>(
+              <option key={u.email} value={u.email}>{u.email}</option>
+            ))}
+          </select>
+
+          <button onClick={()=>loadInbox("new")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load NEW</button>
+          <button onClick={()=>loadInbox("assigned")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load ASSIGNED</button>
+          <button onClick={()=>loadInbox("archived")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load ARCHIVED</button>
+          <button onClick={()=>loadInbox("new", { fallbackToAssigned:true })} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Refresh</button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr className="text-left text-gray-500">
+              <th className="py-1.5 px-2">Title</th>
+              <th className="py-1.5 px-2">Start Date</th>
+              <th className="py-1.5 px-2">Timezone</th>
+              <th className="py-1.5 px-2">Inbox ID</th>
+              <th className="py-1.5 px-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={5} className="py-4 text-center text-gray-500">Loading {status.toUpperCase()}…</td></tr>
+            )}
+            {!loading && rows.length===0 && (
+              <tr><td colSpan={5} className="py-4 text-center text-gray-500">No bundles.</td></tr>
+            )}
+            {!loading && rows.map(b=>(
+              <tr key={b.id} className="border-t align-top">
+                <td className="py-1.5 px-2">{b.title}</td>
+                <td className="py-1.5 px-2">{b.startDate || ""}</td>
+                <td className="py-1.5 px-2">{b.timezone || ""}</td>
+                <td className="py-1.5 px-2"><code className="text-xs">{b.id}</code></td>
+                <td className="py-1.5 px-2">
+                  <div className="flex gap-1.5">
+                    <a
+                      href={`/review.html?inboxId=${encodeURIComponent(b.id)}`}
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                    >Review</a>
+                    <button
+                      disabled={status!=="new"}
+                      onClick={()=>assignBundle(b.id)}
+                      className={cn("rounded-lg border px-2 py-1 text-xs", status==="assigned" ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50")}
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Inbox Drawer (legacy; not used) ───────── */
+function InboxDrawer({ plannerEmail, onClose }){
+  const [query,setQuery]=useState("");
+  const [items,setItems]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [sel,setSel]=useState({});
+
+  async function search(){
+    setLoading(true);
+    try{
+      const r=await fetch(`/api/inbox/search?q=${encodeURIComponent(query)}&plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const j=await r.json();
+      setItems(j.results||[]);
+      const m={}; for (const r of (j.results||[])) m[r.id]=false; setSel(m);
+    }catch(e){/* noop */}
+    setLoading(false);
+  }
+  useEffect(()=>{ if (query.trim().length===0) setItems([]); },[query]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/10 p-2 sm:p-4">
+      <div className="mx-auto max-w-2xl rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
         <div className="mb-2 flex items-center justify-between">
-          <div className="text-base font-semibold">{title}</div>
-          <button onClick={onClose} className="rounded-lg px-2 py-1 text-sm hover:bg-gray-50">Close</button>
+          <div className="text-sm font-semibold">Inbox</div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="mb-2 flex gap-2">
+          <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search..." className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <button onClick={search} className="rounded-xl border px-2 py-1 text-sm hover:bg-gray-50"><Search className="h-4 w-4" /></button>
+        </div>
+
+        <div className="max-h-[50vh] overflow-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr className="text-left text-gray-500">
+                <th className="py-1.5 px-2">Pick</th>
+                <th className="py-1.5 px-2">Title</th>
+                <th className="py-1.5 px-2">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(r=>(
+                <tr key={r.id} className="border-t">
+                  <td className="py-1.5 px-2"><input type="checkbox" checked={!!sel[r.id]} onChange={()=>setSel(s=>({ ...s, [r.id]: !s[r.id] }))} /></td>
+                  <td className="py-1.5 px-2">{r.title}</td>
+                  <td className="py-1.5 px-2 text-gray-500">{r.notes||"—"}</td>
+                </tr>
+              ))}
+              {(!items||items.length===0) && (
+                <tr><td colSpan={3} className="py-4 text-center text-gray-500">{loading?"Searching…":"No results"}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-xs text-gray-500">Search your inbox items to add to a plan.</div>
+          <button onClick={onClose} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Modal + Calendar (LOCAL) ───────── */
+function Modal({ title, onClose, children }){
+  useEffect(()=>{
+    function onKey(e){ if (e.key==="Escape") onClose?.(); }
+    document.addEventListener("keydown", onKey);
+    return ()=>document.removeEventListener("keydown", onKey);
+  },[onClose]);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/10 p-2 sm:p-4">
+      <div className="mx-auto max-w-lg rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-semibold">{title}</div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
         </div>
         {children}
       </div>
     </div>
   );
 }
+function CalendarGridFree({ initialDate, selectedDate, onPick }){
+  const init = parseYMDLocal(initialDate) || new Date();
+  const sel = parseYMDLocal(selectedDate) || init;
+  const [vm,setVm]=useState(()=>new Date(sel.getFullYear(), sel.getMonth(), 1));
 
-/* ---------- date UI ---------- */
-function DateButton({ value, onChange, labelWhenEmpty = "Pick date" }) {
-  const [open, setOpen] = React.useState(false);
-  const d = value ? (typeof value === "string" ? parseISO(value) : value) : null;
-  const btnLabel = d && isValidDate(d) ? format(d, "EEE, MMM d, yyyy") : labelWhenEmpty;
+  function same(d1,d2){ return d2 && d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth() && d1.getDate()===d2.getDate(); }
+
+  const weeks = useMemo(()=>{
+    const out=[];
+    const firstDow=new Date(vm.getFullYear(), vm.getMonth(), 1).getDay();
+    const start=new Date(vm.getFullYear(), vm.getMonth(), 1-firstDow);
+    let cur = new Date(start);
+    for (let r=0;r<6;r++){
+      const row=[];
+      for (let c=0;c<7;c++){ row.push(new Date(cur)); cur = addDaysLocal(cur,1); }
+      out.push(row);
+    }
+    return out;
+  },[vm]);
+
+  const monthLabel = (d)=> format(d, "LLLL yyyy");
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="rounded-xl border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"
-      >
-        {btnLabel}
-      </button>
-      {open ? (
-        <div className="absolute z-10 mt-2 w-72 rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
-          <CalendarGrid
-            initialDate={d || new Date()}
-            onPick={(picked) => { setOpen(false); onChange(picked); }}
-          />
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear()-1, v.getMonth(), 1))} title="Prev year"><ChevronsLeft className="h-3 w-3" /></button>
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear(), v.getMonth()-1, 1))} title="Prev month"><ChevronLeft className="h-3 w-3" /></button>
+          <div className="px-2 text-sm font-semibold">{monthLabel(vm)}</div>
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear(), v.getMonth()+1, 1))} title="Next month"><ChevronRight className="h-3 w-4" /></button>
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear()+1, v.getMonth(), 1))} title="Next year"><ChevronsRight className="h-3 w-3" /></button>
         </div>
-      ) : null}
-    </div>
-  );
-}
-function CalendarGrid({ initialDate, onPick }) {
-  const [base, setBase] = React.useState(initialDate);
-  const monthLabel = format(base, "MMMM yyyy");
-  const start = new Date(base.getFullYear(), base.getMonth(), 1);
-  const firstDay = start.getDay();
-  const daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
-  const cells = [];
-  for (let i = 0; i < firstDay; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(base.getFullYear(), base.getMonth(), d));
-  return (
-    <div className="text-sm">
-      <div className="mb-2 flex items-center justify-between px-1">
-        <button className="rounded-lg px-2 py-1 hover:bg-gray-50"
-          onClick={() => setBase((b) => new Date(b.getFullYear(), b.getMonth() - 1, 1))}>‹</button>
-        <div className="font-semibold">{monthLabel}</div>
-        <button className="rounded-lg px-2 py-1 hover:bg-gray-50"
-          onClick={() => setBase((b) => new Date(b.getFullYear(), b.getMonth() + 1, 1))}>›</button>
+        <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(new Date(init.getFullYear(), init.getMonth(), 1))}>Jump to current</button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1">
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><div key={d}>{d}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
-        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((w) => (
-          <div key={w} className="pb-1 text-center text-[11px] text-gray-500">{w}</div>
-        ))}
-        {cells.map((c, idx) => c ? (
-          <button key={idx} onClick={() => onPick(c)} className="rounded-lg px-0.5 py-1.5 text-center hover:bg-gray-50">
+        {weeks.map((row,ri)=>row.map((c,ci)=>(
+          <button key={`${ri}-${ci}`} type="button"
+            onClick={()=>onPick?.(fmtYMDLocal(c))}
+            className={cn(
+              "rounded-lg border px-2 py-2 text-sm",
+              c.getMonth()===vm.getMonth() ? "bg-white hover:bg-gray-50" : "bg-gray-50 text-gray-400",
+              same(c, parseYMDLocal(selectedDate)||new Date(0)) ? "border-gray-800 ring-1 ring-gray-700" : "border-gray-300"
+            )}
+          >
             {c.getDate()}
           </button>
-        ) : <div key={idx} />)}
+        )))}
       </div>
     </div>
   );
 }
 
-/* ---------- small utils ---------- */
-function parseUserTimeTo24h(input) {
-  if (!input) return "";
-  let s = String(input).trim().toLowerCase().replace(/\s+/g, "");
-  const ampm = s.endsWith("am") ? "am" : s.endsWith("pm") ? "pm" : "";
-  if (ampm) s = s.slice(0, -2);
-  if (/^\d{3,4}$/.test(s)) {
-    const hh = s.length === 3 ? "0" + s[0] : s.slice(0, 2);
-    const mm = s.slice(-2);
-    const H = parseInt(hh, 10), M = parseInt(mm, 10);
-    if (Number.isNaN(H) || Number.isNaN(M) || H > 23 || M > 59) return "";
-    return `${String(H).padStart(2, "0")}:${String(M).padStart(2, "0")}`;
-  }
-  const m = s.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
-  if (!m) return "";
-  let H = parseInt(m[1], 10);
-  let M = m[2] ? parseInt(m[2], 10) : 0;
-  if (ampm === "am") { if (H === 12) H = 0; }
-  else if (ampm === "pm") { if (H !== 12) H += 12; }
-  if (H > 23 || M > 59) return "";
-  return `${String(H).padStart(2, "0")}:${String(M).padStart(2, "0")}`;
-}
+/* ───────── Plan view ───────── */
+function PlanView({ plannerEmail, selectedUserEmailProp, onToast }){
+  const [users,setUsers]=useState([]);
+  const [selectedUserEmail,setSelectedUserEmail]=useState("");
+  const [plan,setPlan]=useState({ title:"Weekly Plan", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
+  const [tasks,setTasks]=useState([]);
+  const [replaceMode,setReplaceMode]=useState(false);
+  const [msg,setMsg]=useState("");
+  const [planDateOpen,setPlanDateOpen]=useState(false);
+  const [histReloadKey,setHistReloadKey]=useState(0);
 
-/* ---------- Invite modal (unchanged UX, fixes "Send Email" w/o link first) ---------- */
-function InviteModal({ plannerEmail, onClose, presetEmail = "" }) {
-  const [email, setEmail] = React.useState(presetEmail);
-  const [sending, setSending] = React.useState(false);
-  const [canSend, setCanSend] = React.useState(false);
-  const [fromLabel, setFromLabel] = React.useState("");
+  useEffect(()=>{ 
+    if (selectedUserEmailProp) setSelectedUserEmail(selectedUserEmailProp);
+  },[selectedUserEmailProp]);
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/invite/cansend");
-        const j = await r.json();
-        setCanSend(!!j.emailEnabled);
-        setFromLabel(j.from || "");
-      } catch {}
-    })();
-  }, []);
-
-  async function ensureLink() {
-    const qs = new URLSearchParams({ plannerEmail, userEmail: email });
-    const r = await fetch(`/api/invite/preview?` + qs.toString());
-    const j = await r.json();
-    if (!r.ok || j.error || !j.inviteUrl) throw new Error(j.error || "Failed to prepare invite");
-    return j.inviteUrl;
-  }
-
-  async function onSend() {
-    try {
-      if (!email || !/^\S+@\S+\.\S+$/.test(email)) throw new Error("Enter a valid email address.");
-      setSending(true);
-      await ensureLink(); // auto-create if needed
-      const r = await fetch(`/api/invite/send`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plannerEmail, userEmail: email }),
-      });
-      const j = await r.json();
-      if (!r.ok || j.error) throw new Error(j.error || "Send failed");
-      toast("Invite email sent");
-    } catch (e) { toast(String(e.message || e), "error"); }
-    finally { setSending(false); }
-  }
-
-  return (
-    <Modal title="Invite user to connect Google Tasks" onClose={onClose}>
-      <div className="space-y-3">
-        <label className="block">
-          <div className="mb-1 text-xs font-medium">User email</div>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-            placeholder="name@example.com"
-          />
-        </label>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={async () => {
-              try {
-                const u = await ensureLink();
-                await navigator.clipboard.writeText(u);
-                toast("Invite link copied");
-              } catch (e) { toast(String(e.message || e), "error"); }
-            }}
-            className="rounded-xl border px-3 py-2 text-xs hover:bg-gray-50"
-          >
-            Create & Copy Invite Link
-          </button>
-          <button
-            onClick={onSend}
-            disabled={!canSend || sending}
-            className="rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
-          >
-            {sending ? "Sending…" : `Send Email${fromLabel ? ` (from ${fromLabel})` : ""}`}
-          </button>
-        </div>
-        {!canSend ? (
-          <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
-            Email isn’t configured; share the link manually instead.
-          </div>
-        ) : null}
-      </div>
-    </Modal>
-  );
-}
-
-/* ---------- Users ---------- */
-function UsersView({ plannerEmail, onManage }) {
-  const [inviteOpen, setInviteOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
-  const [users, setUsers] = React.useState([]);
-  const [q, setQ] = React.useState("");
-  const [editUser, setEditUser] = React.useState(null);
-  const [newCat, setNewCat] = React.useState("");
-
-  React.useEffect(() => { load(); /* eslint-disable-next-line */ }, [plannerEmail]);
-
-  async function load() {
-    setLoading(true);
-    try {
-      let r = await fetch(`/api/users?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-      if (r.status === 404) r = await fetch(`/api/users/list?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-      const j = await r.json().catch(() => ({}));
-      const arr = Array.isArray(j) ? j : j.users || [];
-      arr.sort((a, b) => (a.status === "connected" ? 0 : 1) - (b.status === "connected" ? 0 : 1));
-      setUsers(arr);
-    } catch { toast("Failed to load users", "error"); }
-    finally { setLoading(false); }
-  }
-
-  async function saveCats(u, cats) {
-    const r = await fetch("/api/users", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plannerEmail, userEmail: u.email, groups: cats }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || j.error) throw new Error(j.error || "Save failed");
-  }
-
-  const filtered = users.filter((u) => {
-    if (!q) return true;
-    const hay = `${u.email || ""} ${(Array.isArray(u.groups) ? u.groups.join(" ") : "")} ${u.status || ""}`.toLowerCase();
-    return hay.includes(q.toLowerCase());
-  });
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold">Users</h2>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search (email, categories, status)"
-            className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm sm:w-64"
-          />
-          <button
-            onClick={() => setInviteOpen(true)}
-            className="rounded-xl bg-cyan-600 px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-cyan-700"
-          >
-            Invite User
-          </button>
-        </div>
-      </div>
-
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-left">
-            <tr className="text-gray-600">
-              <th className="px-3 py-2 font-medium">Email</th>
-              <th className="px-3 py-2 font-medium">Categories</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={4} className="px-3 py-6 text-center text-gray-500">Loading…</td></tr>
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={4} className="px-3 py-6 text-center text-gray-500">No users yet.</td></tr>
-            ) : (
-              filtered.map((u) => (
-                <tr key={u.email} className="border-t">
-                  <td className="px-3 py-2">{u.email}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap items-center gap-1">
-                      {(u.groups || []).map((g) => (
-                        <span key={g} className="rounded-full border px-2 py-0.5 text-[11px]">{g}</span>
-                      ))}
-                      <button
-                        onClick={() => setEditUser(u)}
-                        className="rounded-full border px-2 py-0.5 text-[11px] hover:bg-gray-50"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    {u.status === "connected" ? (
-                      <span className="rounded-full bg-green-50 px-2 py-1 text-[11px] font-medium text-green-700 border border-green-200">Connected</span>
-                    ) : (
-                      <span className="rounded-full bg-yellow-50 px-2 py-1 text-[11px] font-medium text-yellow-800 border border-yellow-200">Not connected</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => onManage(u.email)}
-                        className="rounded-xl bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-cyan-700"
-                      >
-                        Manage User
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {inviteOpen ? <InviteModal plannerEmail={plannerEmail} onClose={() => setInviteOpen(false)} /> : null}
-      {editUser ? (
-        <EditCats
-          plannerEmail={plannerEmail}
-          user={editUser}
-          onClose={() => setEditUser(null)}
-          onSave={async (cats) => {
-            try {
-              await saveCats(editUser, cats);
-              // update local
-              udate(setUsers, editUser.email, cats);
-              toast("Categories saved");
-              setEditUser(null);
-            } catch (e) { toast(String(e.message || e), "error"); }
-          }}
-        />
-      ) : null}
-    </div>
-  );
-
-  function udate(setter, email, cats) {
-    setter((prev) => prev.map((x) => (x.email === email ? { ...x, groups: cats } : x)));
-  }
-}
-
-function EditCats({ plannerEmail, user, onClose, onSave }) {
-  const [chips, setChips] = React.useState(Array.isArray(user.groups) ? user.groups : []);
-  const [input, setInput] = React.useState("");
-  function add() {
-    const v = input.trim();
-    if (!v) return;
-    if (!chips.includes(v)) setChips([...chips, v]);
-    setInput("");
-  }
-  function remove(v) { setChips(chips.filter((c) => c !== v)); }
-  return (
-    <Modal title={`Edit categories – ${user.email}`} onClose={onClose}>
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <input value={input} onChange={(e) => setInput(e.target.value)} className="flex-1 rounded-xl border px-3 py-2 text-sm" placeholder="Add category…" />
-          <button onClick={add} className="rounded-xl border px-3 py-2 text-xs hover:bg-gray-50">Add</button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {chips.length ? chips.map((c) => (
-            <span key={c} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs">
-              {c}
-              <button onClick={() => remove(c)} className="rounded px-1 text-[10px] hover:bg-gray-100">×</button>
-            </span>
-          )) : <div className="text-sm text-gray-500">No categories yet.</div>}
-        </div>
-        <div className="flex items-center justify-end gap-2 pt-2">
-          <button onClick={onClose} className="rounded-xl border px-3 py-2 text-xs hover:bg-gray-50">Cancel</button>
-          <button onClick={() => onSave(chips)} className="rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-700">Save</button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-/* ---------- Recurrence chips ---------- */
-function DayPills({ value, onChange }) {
-  const days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {days.map((d, idx) => {
-        const on = value.includes(idx);
-        return (
-          <button
-            key={d}
-            type="button"
-            onClick={() => {
-              const s = new Set(value);
-              if (on) s.delete(idx); else s.add(idx);
-              onChange(Array.from(s).sort((a, b) => a - b));
-            }}
-            className={clsx(
-              "rounded-full px-2.5 py-1 text-xs border",
-              on ? "bg-cyan-600 text-white border-cyan-600" : "bg-white text-gray-700 hover:bg-gray-50"
-            )}
-          >
-            {d}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ---------- Plan + History ---------- */
-function PlanView({ plannerEmail, selectedUserEmail, onChangeUserEmail, onPushed }) {
-  const [users, setUsers] = React.useState([]);
-  const [planTitle, setPlanTitle] = React.useState("");
-  const [planDate, setPlanDate] = React.useState(null);
-  const [timezone, setTimezone] = React.useState(
-    localStorage.getItem("p2t.defaultTz") || Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Chicago"
-  );
-
-  const [items, setItems] = React.useState([]);
-  const [taskTitle, setTaskTitle] = React.useState("");
-  const [taskNotes, setTaskNotes] = React.useState("");
-  const [taskDate, setTaskDate] = React.useState(null);
-  const [taskTime, setTaskTime] = React.useState("");
-
-  const [recurring, setRecurring] = React.useState({
-    type: "none", weeklyDays: [], monthlyDay: null, end: "none", count: 5, until: null,
-  });
-
-  const [histTab, setHistTab] = React.useState("active");
-  const [historyRows, setHistoryRows] = React.useState([]);
-  const [histLoading, setHistLoading] = React.useState(false);
-  const [page, setPage] = React.useState(1);
-  const pageSize = 10;
-
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const qs = new URLSearchParams({ plannerEmail });
-        let r = await fetch(`/api/users?` + qs.toString());
-        if (r.status === 404) r = await fetch(`/api/users/list?` + qs.toString());
-        const j = await r.json().catch(() => ({}));
-        const arr = Array.isArray(j) ? j : j.users || [];
-        arr.sort((a, b) => (a.status === "connected" ? 0 : 1) - (b.status === "connected" ? 0 : 1));
-        setUsers(arr);
-      } catch {}
-    })();
-  }, [plannerEmail]);
-
-  React.useEffect(() => {
+  useEffect(()=>{ (async ()=>{
+    const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
+    const r=await fetch(`/api/users?${qs.toString()}`); const j=await r.json();
+    const arr = (j.users||[]).map(u => ({ ...u, email: u.email || u.userEmail || u.user_email || "" }));
+    setUsers(arr);
     if (!selectedUserEmail) {
-      setHistoryRows([]);
-      return;
+      const fromProp = selectedUserEmailProp && arr.find(a=>a.email===selectedUserEmailProp)?.email;
+      const connected = arr.find(u=>u.status==="connected")?.email;
+      const fallback = arr[0]?.email || "";
+      setSelectedUserEmail(fromProp || connected || fallback || "");
     }
-    loadHistory();
-    // eslint-disable-next-line
-  }, [plannerEmail, selectedUserEmail, histTab]);
+  })(); },[plannerEmail]);
 
-  async function loadHistory() {
-    setHistLoading(true);
+  useEffect(()=>{ setTasks([]); setMsg(""); },[selectedUserEmail]);
+
+  const planDateText = format(parseYMDLocal(plan.startDate)||new Date(),"EEE MMM d, yyyy");
+
+  const applyPrefill = useCallback(({ plan: rp, tasks: rt, mode })=>{
+    try{
+      setPlan(p=>({
+        ...p,
+        title: rp?.title ?? p.title,
+        startDate: rp?.startDate ?? p.startDate,
+        timezone: rp?.timezone ?? p.timezone
+      }));
+      setReplaceMode(mode === "replace");
+      if (Array.isArray(rt)) {
+        setTasks(rt.map(t=>({ id: uid(), ...t })));
+        setMsg(`Restored ${rt.length} task(s) from history`);
+        onToast?.("ok", `Restored ${rt.length} task(s)`);
+      }
+    }catch(e){ console.error("applyPrefill error", e); }
+  },[onToast]);
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-5 shadow-sm">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <div className="text-base sm:text-lg font-semibold">Plan (create & deliver tasks)</div>
+          <div className="text-[11px] sm:text-xs text-gray-500">Set the <b>Plan Name</b>, timezone, and start date. Add tasks, preview, then push.</div>
+          {!!msg && <div className="mt-1 text-xs text-gray-600">{msg}</div>}
+        </div>
+        <div className="w-full sm:w-72">
+          <select
+            value={selectedUserEmail || ""}
+            onChange={(e)=>setSelectedUserEmail(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            title={selectedUserEmail || "— Choose user —"}
+          >
+            <option value="">— Choose user —</option>
+            {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+              {u.email}
+            </option>))}
+          </select>
+        </div>
+      </div>
+
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))]">
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Plan Name</div>
+          <input value={plan.title} onChange={(e)=>setPlan({...plan, title:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
+        </label>
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Timezone</div>
+          <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+          </select>
+        </label>
+        <div className="block">
+          <div className="mb-1 text-sm font-medium">Plan start date</div>
+          <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap">
+            <Calendar className="h-4 w-4" /> Choose Plan Start Date: {planDateText}
+          </button>
+        </div>
+      </div>
+
+      {planDateOpen && (
+        <Modal title="Choose Plan Start Date" onClose={()=>setPlanDateOpen(false)}>
+          <CalendarGridFree
+            initialDate={plan.startDate}
+            selectedDate={plan.startDate}
+            onPick={(ymd)=>{ setPlan({...plan, startDate: ymd}); setPlanDateOpen(false); }}
+          />
+        </Modal>
+      )}
+
+      <TaskEditor
+        planStartDate={plan.startDate}
+        onAdd={(items)=>{
+          setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+          onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+        }}
+      />
+
+      {tasks.length>0 && (
+        <ComposerPreview
+          plannerEmail={plannerEmail}
+          selectedUserEmail={selectedUserEmail}
+          plan={plan}
+          tasks={tasks}
+          setTasks={setTasks}
+          replaceMode={replaceMode}
+          setReplaceMode={setReplaceMode}
+          msg={msg}
+          setMsg={setMsg}
+          onToast={onToast}
+          onPushed={()=>{ /* can reload history */ }}
+        />
+      )}
+
+      <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+    </div>
+  );
+}
+
+/* ───────── Task editor ───────── */
+function TaskEditor({ planStartDate, onAdd }){
+  const [title,setTitle]=useState("");
+  const [notes,setNotes]=useState("");
+  const [taskDate,setTaskDate]=useState(planStartDate);
+  const [taskDateOpen,setTaskDateOpen]=useState(false);
+  const [time,setTime]=useState("");
+  const [dur,setDur]=useState(60);
+
+  const [repeat,setRepeat]=useState("none");    // none | daily | weekly | monthly
+  const [interval,setInterval]=useState(1);     // every N units (1 = every day/week/month)
+  const [endMode,setEndMode]=useState("count"); // "horizon" | "until" | "count"
+  const [count,setCount]=useState(4);
+  const [untilDate,setUntilDate]=useState("");
+  const [untilOpen,setUntilOpen]=useState(false);
+  const [horizonMonths,setHorizonMonths]=useState(6);
+  const [weeklyDays,setWeeklyDays]=useState([false,true,false,true,false,false,false]);
+  const [monthlyMode,setMonthlyMode]=useState("dom"); // dom | dow
+
+  useEffect(()=>{ if (!taskDate) setTaskDate(planStartDate); },[planStartDate]);
+
+  function generate(){
+    const name=title.trim(); if (!name) return;
+    const planStart=parseYMDLocal(planStartDate)||new Date();
+    const base=parseYMDLocal(taskDate)||planStart;
+    const baseObj={ title:name, time: time || undefined, durationMins: Number(dur)||undefined, notes: notes || undefined };
+
+    const added=[];
+    function push(d){ const off=daysBetweenLocal(planStart, d); added.push({ ...baseObj, dayOffset: off }); }
+
+    const step=Math.max(1, Number(interval)||1);
+
+    if (repeat==="none"){ push(base); }
+
+    if (repeat==="daily"){
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        for (let i=0;i<n;i++){ push(addDaysLocal(base, i*step)); }
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
+        let i=0; while (i<2000){ const d=addDaysLocal(base, i*step); if (d>until) break; push(d); i++; }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let i=0; for(;;){ const d=addDaysLocal(base, i*step); if (d>end) break; push(d); if(++i>2000) break; }
+      }
+    }
+
+    if (repeat==="weekly"){
+      const checked=weeklyDays.map((v,i)=>v?i:null).filter(v=>v!==null);
+      if (checked.length===0) { alert("Pick at least one weekday."); return; }
+      const baseDow=base.getDay();
+      const baseStartOfWeek=addDaysLocal(base, -baseDow);
+      const emitWeek=(weekIndex)=>{
+        for(const dow of checked){
+          const d=addDaysLocal(baseStartOfWeek, dow + weekIndex*7*step);
+          if (d>=base) push(d);
+        }
+      };
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        let week=0; while (added.length<n){ emitWeek(week); week++; }
+        if (added.length>n) added.length=n;
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 3);
+        let week=0;
+        while (week<520){
+          emitWeek(week);
+          const lastOff=added.length? (added[added.length-1].dayOffset||0) : 0;
+          const lastDate = addDaysLocal(planStart, lastOff);
+          if (lastDate>until) break;
+          week++;
+        }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let week=0;
+        while (week<520){
+          emitWeek(week);
+          const lastOff=added.length? (added[added.length-1].dayOffset||0) : 0;
+          const lastDate = addDaysLocal(planStart, lastOff);
+          if (lastDate>end) break;
+          week++;
+        }
+      }
+    }
+
+    if (repeat==="monthly"){
+      const by=base.getFullYear(), bm=base.getMonth(), bd=base.getDate(), bw=base.getDay();
+      const firstSame=firstWeekdayOfMonthLocal(by,bm,bw);
+      const nth=Math.floor((base.getDate()-firstSame.getDate())/7)+1;
+      const lastSame=lastWeekdayOfMonthLocal(by,bm,bw);
+      const isLast=(base.getDate()===lastSame.getDate());
+      const compute=(y,m0)=> monthlyMode==="dom"
+        ? new Date(y,m0, Math.min(bd, lastDayOfMonthLocal(y,m0)))
+        : (isLast ? lastWeekdayOfMonthLocal(y,m0,bw) : (nthWeekdayOfMonthLocal(y,m0,bw, Math.max(1,nth)) || lastWeekdayOfMonthLocal(y,m0,bw)));
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        for (let i=0;i<n;i++){ const t=addMonthsLocal(base, i*step); push(compute(t.getFullYear(), t.getMonth())); }
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 6);
+        let i=0; while (i<240){ const t=addMonthsLocal(base, i*step); const d=compute(t.getFullYear(), t.getMonth()); if (d>until) break; push(d); i++; }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let i=0; while (i<240){ const t=addMonthsLocal(base, i*step); const d=compute(t.getFullYear(), t.getMonth()); if (d>end) break; push(d); i++; }
+      }
+    }
+
+    if (added.length===0) return;
+    onAdd(added);
+    setTitle(""); setNotes("");
+  }
+
+  const taskDateText = format(parseYMDLocal(taskDate||planStartDate)||new Date(),"EEE MMM d, yyyy");
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 p-2 sm:p-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2 sm:gap-3">
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Task title</div>
+          <input value={title} onChange={(e)=>setTitle(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder='e.g., "Workout" or "Read 20 pages"' />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Notes (optional)</div>
+          <input value={notes} onChange={(e)=>setNotes(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+        </label>
+      </div>
+
+      <div className="mt-2 grid grid-cols-1 sm:grid-cols-[repeat(3,minmax(0,1fr))] gap-2 sm:gap-3">
+        <div className="block min-w-0">
+          <div className="mb-1 text-sm font-medium">Task date</div>
+          <button type="button" onClick={()=>setTaskDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap overflow-hidden h-10">
+            <Calendar className="h-4 w-4 shrink-0" /> <span className="truncate">{taskDateText}</span>
+          </button>
+        </div>
+
+        <label className="block min-w-0">
+          <div className="mb-1 text-sm font-medium">Time (optional)</div>
+          <TimeSelect value={time} onChange={setTime} />
+        </label>
+
+        <label className="block min-w-0">
+          <div className="mb-1 text-sm font-medium">Duration (mins)</div>
+          <input type="number" min={15} step={15} value={dur} onChange={(e)=>setDur(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-10" />
+        </label>
+      </div>
+
+      {taskDateOpen && (
+        <Modal title="Choose Task Date" onClose={()=>setTaskDateOpen(false)}>
+          <CalendarGridFree
+            initialDate={taskDate || planStartDate}
+            selectedDate={taskDate || planStartDate}
+            onPick={(ymd)=>{ setTaskDate(ymd); setTaskDateOpen(false); }}
+          />
+        </Modal>
+      )}
+
+      {/* Recurrence */}
+      <div className="mt-2 rounded-xl border border-gray-200 bg-white p-2 sm:p-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="text-sm font-medium">Repeat</div>
+          <select value={repeat} onChange={(e)=>setRepeat(e.target.value)} className="rounded-xl border border-gray-300 px-2 py-1 text-sm">
+            <option value="none">Doesn’t repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+
+          {repeat==="daily" && (
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <span className="text-sm">Every</span>
+              <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+              <span className="text-sm">day(s)</span>
+            </div>
+          )}
+
+          {repeat==="weekly" && (
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>(
+                <button key={d} type="button" className={pill(weeklyDays[i])} onClick={()=>setWeeklyDays(v=>{const n=[...v]; n[i]=!n[i]; return n;})}>{d}</button>
+              ))}
+            </div>
+          )}
+
+          {repeat==="monthly" && (
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <span className="text-sm">Every</span>
+              <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+              <span className="text-sm">month(s)</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="text-sm font-medium">Ends</div>
+          <select
+            value={endMode}
+            onChange={(e)=>setEndMode(e.target.value)}
+            className="rounded-xl border border-gray-300 px-2 py-1 text-sm"
+          >
+            <option value="horizon">No end date</option>
+            <option value="until">On date</option>
+            <option value="count">After</option>
+          </select>
+
+          {endMode==="count" && (
+            <>
+              <input
+                type="number"
+                min={1}
+                value={count}
+                onChange={(e)=>setCount(e.target.value)}
+                className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+              />
+              <span className="text-sm">occurrence(s)</span>
+            </>
+          )}
+
+          {endMode==="until" && (
+            <>
+              <span className="text-sm">Date</span>
+              <UntilDatePicker value={untilDate} setValue={setUntilDate} planStartDate={planStartDate} />
+            </>
+          )}
+
+          {endMode==="horizon" && (
+            <>
+              <span className="text-sm">Planning window (months)</span>
+              <input
+                type="number"
+                min={1}
+                value={horizonMonths}
+                onChange={(e)=>setHorizonMonths(e.target.value)}
+                className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+              />
+            </>
+          )}
+
+          {repeat==="monthly" && (
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <span className="text-sm">Pattern</span>
+              <select value={monthlyMode} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded-xl border border-gray-300 px-2 py-1 text-sm">
+                <option value="dom">Same day of month</option>
+                <option value="dow">Same weekday pattern</option>
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <button onClick={generate} className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-3 sm:px-4 py-2 text-sm font-semibold text-white hover:bg-black">
+          <Plus className="h-4 w-4" /> Add to Plan
+        </button>
+        <div className="text-[11px] sm:text-xs text-gray-500 flex items-center gap-2">
+          <Info className="h-3.5 w-3.5" /> Times are optional; recurrence supported above.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UntilDatePicker({ value, setValue, planStartDate }){
+  const [open,setOpen]=useState(false);
+  const label = value ? format(parseYMDLocal(value)||new Date(),"MMM d, yyyy") : "Pick date";
+  return (
+    <>
+      <button type="button" onClick={()=>setOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50">
+        <Calendar className="h-4 w-4" />
+        {label}
+      </button>
+      {open && (
+        <Modal title="Choose Until Date" onClose={()=>setOpen(false)}>
+          <CalendarGridFree
+            initialDate={value || planStartDate}
+            selectedDate={value || planStartDate}
+            onPick={(ymd)=>{ setValue(ymd); setOpen(false); }}
+          />
+        </Modal>
+      )}
+    </>
+  );
+}
+
+function pill(on){ return cn("rounded-full border px-2 py-1 text-xs sm:text-sm", on?"border-gray-800 bg-gray-900 text-white":"border-gray-300 bg-white hover:bg-gray-50"); }
+
+/* ───────── Preview / Deliver ───────── */
+function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTasks, replaceMode, setReplaceMode, msg, setMsg, onToast, onPushed }){
+  const total=tasks.length;
+
+  async function pushNow(){
+    if (!selectedUserEmail) { setMsg("Choose a user first."); onToast?.("warn","Choose a user first"); return; }
+    if (!plan.title?.trim()) { setMsg("Title is required."); onToast?.("warn","Title is required"); return; }
+    if (!plan.startDate) { setMsg("Plan start date is required."); onToast?.("warn","Plan start date is required"); return; }
+    if (!total) { setMsg("Add at least one task."); onToast?.("warn","Add at least one task"); return; }
+    setMsg("Pushing…");
     try {
-      const body = { plannerEmail, userEmail: selectedUserEmail, status: histTab };
-      const r = await fetch("/api/history/list", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-      });
-      const j = await r.json();
-      const arr = Array.isArray(j.items) ? j.items : [];
-      setHistoryRows(arr);
-      setPage(1);
-    } catch {
-      setHistoryRows([]);
-    } finally {
-      setHistLoading(false);
-    }
-  }
-
-  function pageRows() {
-    const start = (page - 1) * pageSize;
-    return historyRows.slice(start, start + pageSize);
-  }
-
-  function addTask() {
-    if (!taskTitle.trim()) return toast("Add a task title", "error");
-    const baseDate = taskDate || planDate || new Date();
-    const time24 = parseUserTimeTo24h(taskTime);
-
-    const pushItem = (d) => ({
-      title: taskTitle.trim(),
-      notes: taskNotes.trim(),
-      date: d ? new Date(d) : null,
-      time: time24 || "",
-    });
-
-    const out = [];
-    if (recurring.type === "none") {
-      out.push(pushItem(baseDate));
-    } else if (recurring.type === "daily") {
-      const n = recurring.end === "count" ? Math.max(1, Number(recurring.count || 1)) : 10;
-      let cur = new Date(baseDate);
-      for (let i = 0; i < n; i++) { out.push(pushItem(cur)); cur = addDays(cur, 1); }
-    } else if (recurring.type === "weekly") {
-      if (!recurring.weeklyDays.length) return toast("Pick days of week", "error");
-      const n = recurring.end === "count" ? Math.max(1, Number(recurring.count || 1)) : 10;
-      const until = recurring.until ? new Date(recurring.until) : null;
-      let added = 0; let cur = new Date(baseDate);
-      while (added < n) {
-        if (until && cur > until) break;
-        if (recurring.weeklyDays.includes(cur.getDay())) { out.push(pushItem(cur)); added++; }
-        cur = addDays(cur, 1);
-      }
-    } else if (recurring.type === "monthly") {
-      const n = recurring.end === "count" ? Math.max(1, Number(recurring.count || 1)) : 6;
-      const start = new Date(baseDate);
-      const day = recurring.monthlyDay || start.getDate();
-      for (let i = 0; i < n; i++) {
-        const d = new Date(start.getFullYear(), start.getMonth() + i, Math.min(day, 28));
-        if (recurring.until && d > new Date(recurring.until)) break;
-        out.push(pushItem(d));
-      }
-    }
-
-    setItems((prev) => [...prev, ...out]);
-    setTaskTitle(""); setTaskNotes(""); setTaskTime("");
-    setRecurring({ type: "none", weeklyDays: [], monthlyDay: null, end: "none", count: 5, until: null });
-  }
-
-  function removeTask(idx) { setItems((prev) => prev.filter((_, i) => i !== idx)); }
-
-  function exportICS() {
-    const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Plan2Tasks//EN","CALSCALE:GREGORIAN"];
-    items.forEach((it, i) => {
-      lines.push("BEGIN:VTODO");
-      lines.push(`UID:p2t-${i}-${Date.now()}@plan2tasks`);
-      lines.push(`SUMMARY:${it.title}`);
-      if (it.notes) lines.push(`DESCRIPTION:${it.notes.replace(/\n/g, "\\n")}`);
-      if (it.date) {
-        const due = it.time ? format(it.date, "yyyyMMdd'T'HHmmss'Z'") : format(it.date, "yyyyMMdd");
-        lines.push(`DUE:${due}`);
-      }
-      lines.push("END:VTODO");
-    });
-    lines.push("END:VCALENDAR");
-    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = `${(planTitle || "plan2tasks").replace(/\s+/g, "-").toLowerCase()}.ics`; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 800);
-  }
-
-  async function pushToGoogle() {
-    if (!selectedUserEmail) return toast("Select a user first", "error");
-    if (!planTitle.trim()) return toast("Plan Name is required", "error");
-    if (items.length === 0) return toast("No tasks to push", "error");
-
-    const startISO = planDate ? format(planDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
-    const itemsPayload = items.map((it) => {
-      const due = it.date ? format(it.date, "yyyy-MM-dd") + (it.time ? `T${it.time}:00.000Z` : "") : null;
-      return { title: it.title, notes: it.notes, due };
-    });
-    const planBlock = { title: planTitle.trim(), start_date: startISO, timezone, items: itemsPayload };
-
-    try {
-      const r = await fetch("/api/push", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        // send BOTH forms to satisfy older/newer server handlers
+      const resp = await fetch("/api/push", {
+        method:"POST", headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          plannerEmail, userEmail: selectedUserEmail,
-          items: itemsPayload, planBlock, mode: "append"
-        }),
+          plannerEmail,
+          userEmail: selectedUserEmail,
+          listTitle: plan.title,
+          timezone: plan.timezone,
+          startDate: plan.startDate,
+          mode: replaceMode ? "replace" : "append",
+          items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes }))
+        })
       });
-      const j = await r.json();
-      if (!r.ok || j.error) throw new Error(j.error || "Push failed");
-      toast("Pushed to Google Tasks");
-      setItems([]);
-      onPushed?.();
-      // reload history
-      await loadHistory();
+      const j = await resp.json();
+      if (!resp.ok || j.error) throw new Error(j.error || "Push failed");
+
+      try{
+        const snap = await fetch("/api/history/snapshot",{
+          method:"POST", headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({
+            plannerEmail,
+            userEmail: selectedUserEmail,
+            listTitle: plan.title,
+            startDate: plan.startDate,
+            timezone: plan.timezone,
+            mode: replaceMode ? "replace" : "append",
+            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes }))
+          })
+        });
+        const sj = await snap.json();
+        if (!snap.ok || sj.error) {
+          onToast?.("warn", "Pushed, but could not save to History");
+        }
+      } catch (_e) {
+        onToast?.("warn", "Pushed, but could not save to History");
+      }
+
+      const created = j.created || total;
+      setMsg(`Success — ${created} task(s) created`);
+      onToast?.("ok", `Pushed ${created} task${created>1?"s":""}`);
+      setTasks([]);
+      onPushed?.(created);
     } catch (e) {
-      toast(String(e.message || e), "error");
+      const m = String(e.message||e);
+      setMsg("Error: "+m);
+      onToast?.("error", m);
     }
   }
 
   return (
-    <div className="space-y-4">
-      <Section
-        title="Plan"
-        right={
-          <div className="text-right">
-            <div className="mb-1 text-xs font-medium">Deliver to user</div>
-            <select
-              value={selectedUserEmail || ""}
-              onChange={(e) => onChangeUserEmail(e.target.value)}
-              className="w-64 rounded-xl border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="">— Select user —</option>
-              {users.map((u) => (
-                <option key={u.email} value={u.email}>
-                  {u.email}{u.status === "connected" ? "" : " (not connected)"}
-                </option>
-              ))}
-            </select>
-          </div>
-        }
-      >
-        <div className="grid gap-3 sm:grid-cols-3">
-          <label className="block sm:col-span-2">
-            <div className="mb-1 text-xs font-medium">Plan Name</div>
-            <input
-              value={planTitle}
-              onChange={(e) => setPlanTitle(e.target.value)}
-              placeholder="e.g., Onboarding – Week 1"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-            />
-          </label>
-          <div className="block">
-            <div className="mb-1 text-xs font-medium">Choose Plan Start Date</div>
-            <DateButton value={planDate} onChange={(d) => setPlanDate(d)} labelWhenEmpty="Pick date" />
-          </div>
-        </div>
+    <div className="mt-4 rounded-xl border border-gray-200 p-3 sm:p-4">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="text-sm font-semibold">Preview & Deliver</div>
+        <label className="inline-flex items-center gap-2 text-xs whitespace-nowrap">
+          <input type="checkbox" checked={replaceMode} onChange={(e)=>setReplaceMode(e.target.checked)} />
+          Replace existing list
+        </label>
+      </div>
 
-        <div className="mt-2 grid gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 sm:grid-cols-2">
-          <label className="block">
-            <div className="mb-1 text-xs font-medium">Task title</div>
-            <input
-              value={taskTitle}
-              onChange={(e) => setTaskTitle(e.target.value)}
-              placeholder="What needs to be done?"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block">
-            <div className="mb-1 text-xs font-medium">Notes (optional)</div>
-            <input
-              value={taskNotes}
-              onChange={(e) => setTaskNotes(e.target.value)}
-              placeholder="Any extra details"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-            />
-          </label>
+      {!!msg && <div className="mb-2 text-xs sm:text-sm text-gray-500">{msg}</div>}
 
-          <div className="block">
-            <div className="mb-1 text-xs font-medium">Task date</div>
-            <DateButton value={taskDate} onChange={(d) => setTaskDate(d)} labelWhenEmpty="Pick date" />
-          </div>
-          <label className="block">
-            <div className="mb-1 text-xs font-medium">Time (optional)</div>
-            <input
-              value={taskTime}
-              onChange={(e) => setTaskTime(e.target.value)}
-              placeholder="e.g., 1pm, 1:30pm, 1330"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-            />
-          </label>
-
-          {/* Recurrence */}
-          <div className="col-span-full rounded-xl border border-gray-200 bg-white p-3">
-            <div className="mb-2 text-xs font-medium">Recurrence</div>
-            <div className="flex flex-wrap gap-2">
-              {["none", "daily", "weekly", "monthly"].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setRecurring((r) => ({ ...r, type: t }))}
-                  className={clsx(
-                    "rounded-full border px-3 py-1 text-xs",
-                    recurring.type === t ? "bg-cyan-600 text-white border-cyan-600" : "hover:bg-gray-50"
-                  )}
-                >
-                  {t[0].toUpperCase() + t.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            {recurring.type === "weekly" ? (
-              <div className="mt-2">
-                <div className="mb-1 text-xs text-gray-600">Days of week</div>
-                <DayPills
-                  value={recurring.weeklyDays}
-                  onChange={(v) => setRecurring((r) => ({ ...r, weeklyDays: v }))}
-                />
-              </div>
-            ) : null}
-
-            {recurring.type === "monthly" ? (
-              <div className="mt-2">
-                <div className="mb-1 text-xs text-gray-600">Day of month</div>
-                <input
-                  type="number" min={1} max={31}
-                  value={recurring.monthlyDay || ""}
-                  onChange={(e) => setRecurring((r) => ({ ...r, monthlyDay: Number(e.target.value || 1) }))}
-                  className="w-24 rounded-xl border border-gray-300 px-2 py-1 text-sm"
-                />
-              </div>
-            ) : null}
-
-            {recurring.type !== "none" ? (
-              <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio" name="rec-end"
-                    checked={recurring.end === "none"}
-                    onChange={() => setRecurring((r) => ({ ...r, end: "none", until: null }))}
-                  />
-                  <span>Indefinite (limited preview)</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio" name="rec-end"
-                    checked={recurring.end === "count"}
-                    onChange={() => setRecurring((r) => ({ ...r, end: "count", until: null }))}
-                  />
-                  <span>
-                    Generate{" "}
-                    <input
-                      type="number" min={1} value={recurring.count}
-                      onChange={(e) => setRecurring((r) => ({ ...r, count: Number(e.target.value || 1) }))}
-                      className="mx-1 w-16 rounded-lg border px-2 py-1 text-sm"
-                    /> items
-                  </span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio" name="rec-end"
-                      checked={recurring.end === "until"}
-                      onChange={() => setRecurring((r) => ({ ...r, end: "until" }))}
-                    />
-                    <span>End on date</span>
-                  </label>
-                  {recurring.end === "until" ? (
-                    <DateButton value={recurring.until} onChange={(d) => setRecurring((r) => ({ ...r, until: d }))} />
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="col-span-full flex items-center gap-2">
-            <button
-              onClick={addTask}
-              className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black"
-            >
-              Add task
-            </button>
-          </div>
-        </div>
-      </Section>
-
-      {/* PREVIEW ABOVE HISTORY */}
-      {items.length > 0 ? (
-        <Section
-          title="Preview & Deliver"
-          right={
-            <div className="flex items-center gap-2">
-              <button onClick={exportICS} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50">
-                Export .ics
-              </button>
-              <button
-                onClick={pushToGoogle}
-                className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
-              >
-                <Send size={16} /> Push to Google Tasks
-              </button>
-            </div>
-          }
-        >
-          <div className="rounded-xl border border-gray-100 overflow-x-auto">
-            <table className="min-w-full text-sm">
+      {total===0 ? (
+        <div className="text-sm text-gray-500">No tasks yet.</div>
+      ) : (
+        <>
+          <div className="mb-3 rounded-lg border overflow-x-auto">
+            <table className="w-full min-w-[640px] text-xs sm:text-sm">
               <thead className="bg-gray-50">
-                <tr className="text-left text-gray-600">
-                  <th className="px-3 py-2 font-medium">Task</th>
-                  <th className="px-3 py-2 font-medium">Date</th>
-                  <th className="px-3 py-2 font-medium">Time</th>
-                  <th className="px-3 py-2 font-medium">Notes</th>
-                  <th className="px-3 py-2 font-medium text-right">Remove</th>
+                <tr className="text-left text-gray-500">
+                  <th className="py-1.5 px-2">Title</th>
+                  <th className="py-1.5 px-2">Offset</th>
+                  <th className="py-1.5 px-2">Time</th>
+                  <th className="py-1.5 px-2">Dur</th>
+                  <th className="py-1.5 px-2">Notes</th>
+                  <th className="py-1.5 px-2 text-right w-40 sm:w-48">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((it, idx) => (
-                  <tr key={idx} className="border-t">
-                    <td className="px-3 py-2">{it.title}</td>
-                    <td className="px-3 py-2">{it.date ? format(it.date, "yyyy-MM-dd") : "—"}</td>
-                    <td className="px-3 py-2">{it.time || "—"}</td>
-                    <td className="px-3 py-2">{it.notes || "—"}</td>
-                    <td className="px-3 py-2 text-right">
-                      <button onClick={() => removeTask(idx)} className="rounded-xl border px-2.5 py-1.5 text-xs hover:bg-gray-50">Delete</button>
+                {tasks.map(t=>(
+                  <tr key={t.id} className="border-t">
+                    <td className="py-1.5 px-2">{t.title}</td>
+                    <td className="py-1.5 px-2">{String(t.dayOffset||0)}</td>
+                    <td className="py-1.5 px-2">{t.time?to12hDisplay(t.time):"—"}</td>
+                    <td className="py-1.5 px-2">{t.durationMins||"—"}</td>
+                    <td className="py-1.5 px-2 text-gray-500 truncate max-w-[200px]">{t.notes||"—"}</td>
+                    <td className="py-1.5 px-2">
+                      <div className="flex flex-nowrap items-center justify-end gap-1.5 whitespace-nowrap">
+                        <button onClick={()=>setTasks(prev=>prev.filter(x=>x.id!==t.id))} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-gray-50" title="Remove">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="sr-only">Remove</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </Section>
-      ) : null}
 
-      <Section
-        title={`History ${selectedUserEmail ? `for ${selectedUserEmail}` : ""}`}
-        right={
-          <div className="rounded-xl border">
-            <div className="flex overflow-hidden rounded-xl">
-              {["active", "archived"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setHistTab(t)}
-                  className={clsx("px-3 py-1.5 text-xs", histTab === t ? "bg-gray-900 text-white" : "hover:bg-gray-50")}
-                >
-                  {t[0].toUpperCase() + t.slice(1)}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center justify-end">
+            <button onClick={pushNow} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
+              Push to Google Tasks
+            </button>
           </div>
-        }
-      >
-        {!selectedUserEmail ? (
-          <div className="text-sm text-gray-600">Select a user (top-right) to view their history.</div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr className="text-left text-gray-600">
-                    <th className="px-3 py-2 font-medium">Title</th>
-                    <th className="px-3 py-2 font-medium">Start date</th>
-                    <th className="px-3 py-2 font-medium">Items</th>
-                    <th className="px-3 py-2 font-medium">Mode</th>
-                    <th className="px-3 py-2 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {histLoading ? (
-                    <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-500">Loading…</td></tr>
-                  ) : pageRows().length === 0 ? (
-                    <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-500">Nothing here yet.</td></tr>
-                  ) : (
-                    pageRows().map((r) => (
-                      <tr key={r.id} className="border-t">
-                        <td className="px-3 py-2">{r.title}</td>
-                        <td className="px-3 py-2">{r.start_date}</td>
-                        <td className="px-3 py-2">{r.items_count}</td>
-                        <td className="px-3 py-2">{r.mode}</td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const rr = await fetch("/api/history/restore", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ plannerEmail, historyId: r.id }),
-                                  });
-                                  const jj = await rr.json();
-                                  if (!rr.ok || jj.error) throw new Error(jj.error || "Restore failed");
-                                  // prefill
-                                  const block = jj.planBlock;
-                                  setPlanTitle(block?.title || "");
-                                  setPlanDate(block?.start_date ? parseISO(block.start_date) : null);
-                                  setItems(
-                                    (block?.items || []).map((it) => ({
-                                      title: it.title || "",
-                                      notes: it.notes || "",
-                                      date: it.due ? parseISO(it.due) : null,
-                                      time: it.due && it.due.includes("T") ? format(parseISO(it.due), "HH:mm") : "",
-                                    }))
-                                  );
-                                  toast("Restored into Plan");
-                                } catch (e) { toast(String(e.message || e), "error"); }
-                              }}
-                              className="rounded-xl border px-2.5 py-1.5 text-xs hover:bg-gray-50"
-                            >
-                              Restore
-                            </button>
-                            {histTab === "active" ? (
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    const rr = await fetch("/api/history/archive", {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ plannerEmail, historyId: r.id, archived: true }),
-                                    });
-                                    const jj = await rr.json();
-                                    if (!rr.ok || jj.error) throw new Error(jj.error || "Archive failed");
-                                    await loadHistory();
-                                  } catch (e) { toast(String(e.message || e), "error"); }
-                                }}
-                                className="rounded-xl border px-2.5 py-1.5 text-xs hover:bg-gray-50"
-                              >
-                                Archive
-                              </button>
-                            ) : (
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    const rr = await fetch("/api/history/archive", {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ plannerEmail, historyId: r.id, archived: false }),
-                                    });
-                                    const jj = await rr.json();
-                                    if (!rr.ok || jj.error) throw new Error(jj.error || "Unarchive failed");
-                                    await loadHistory();
-                                  } catch (e) { toast(String(e.message || e), "error"); }
-                                }}
-                                className="rounded-xl border px-2.5 py-1.5 text-xs hover:bg-gray-50"
-                              >
-                                Unarchive
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* simple pagination */}
-            <div className="mt-2 flex items-center justify-end gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-xl border px-3 py-1.5 text-xs hover:bg-gray-50"
-                disabled={page === 1}
-              >
-                Prev
-              </button>
-              <div className="text-xs text-gray-600">
-                Page {page} of {Math.max(1, Math.ceil(historyRows.length / pageSize))}
-              </div>
-              <button
-                onClick={() => setPage((p) => (p < Math.ceil(historyRows.length / pageSize) ? p + 1 : p))}
-                className="rounded-xl border px-3 py-1.5 text-xs hover:bg-gray-50"
-                disabled={page >= Math.ceil(historyRows.length / pageSize)}
-              >
-                Next
-              </button>
-            </div>
-          </>
-        )}
-      </Section>
+        </>
+      )}
     </div>
   );
 }
 
-/* ---------- Settings ---------- */
-function SettingsView() {
-  const keyTz = "p2t.defaultTz";
-  const keyAA = "p2t.autoArchive";
-  const [tz, setTz] = React.useState(
-    localStorage.getItem(keyTz) || Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Chicago"
-  );
-  const [aa, setAa] = React.useState(localStorage.getItem(keyAA) === "1");
-  function save() {
-    localStorage.setItem(keyTz, tz);
-    localStorage.setItem(keyAA, aa ? "1" : "0");
-    toast("Settings saved");
+/* ───────── History ───────── */
+function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
+  const [rows,setRows]=useState([]);
+  const [page,setPage]=useState(1);
+  const [total,setTotal]=useState(0);
+  const [loading,setLoading]=useState(false);
+
+  async function load(){
+    if (!userEmail) { setRows([]); setTotal(0); return; }
+    setLoading(true);
+    try{
+      const r=await fetch(`/api/history/list`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail, status: "active", page })
+      });
+      const j=await r.json();
+      setRows(j.rows||[]);
+      setTotal(j.total||0);
+    }catch(e){/* noop */}
+    setLoading(false);
   }
+  useEffect(()=>{ load(); },[plannerEmail,userEmail,page,reloadKey]);
+
   return (
-    <div className="space-y-4">
-      <Section title="Settings">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <div className="mb-1 text-xs font-medium">Default Timezone</div>
-            <input
-              value={tz}
-              onChange={(e) => setTz(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-              placeholder="America/Chicago"
-            />
-            <div className="mt-1 text-[11px] text-gray-500">Used as the default when creating plans.</div>
-          </label>
-          <div className="block">
-            <div className="mb-1 text-xs font-medium">Auto-archive after assign</div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setAa(!aa)}
-                className={clsx(
-                  "rounded-full px-3 py-1.5 text-xs border",
-                  aa ? "bg-cyan-600 text-white border-cyan-600" : "hover:bg-gray-50"
-                )}
-              >
-                {aa ? "On" : "Off"}
-              </button>
-              <div className="text-xs text-gray-600">Inbox bundles are archived after assignment.</div>
-            </div>
+    <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-sm font-semibold">History</div>
+        <div className="text-xs text-gray-500">{total} plan(s)</div>
+      </div>
+
+      <div className="rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr className="text-left text-gray-500">
+              <th className="py-1.5 px-2">Title</th>
+              <th className="py-1.5 px-2">Start</th>
+              <th className="py-1.5 px-2">Items</th>
+              <th className="py-1.5 px-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r=>(
+              <tr key={r.id} className="border-t">
+                <td className="py-1.5 px-2">{r.title}</td>
+                <td className="py-1.5 px-2">{r.startDate}</td>
+                <td className="py-1.5 px-2">{r.itemsCount||"—"}</td>
+                <td className="py-1.5 px-2">
+                  <div className="flex justify-end">
+                    <button onClick={()=>onPrefill?.({ plan:{ title:r.title, startDate:r.startDate, timezone:r.timezone }, tasks:r.tasks, mode:r.mode })} className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50">Restore</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {(!rows || rows.length===0) && (
+              <tr><td colSpan={4} className="py-6 text-center text-gray-500">No history yet</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-lg border px-2 py-1 text-xs"><ChevronLeft className="h-3 w-3" /></button>
+        <div className="text-xs">Page {page}</div>
+        <button onClick={()=>setPage(p=>p+1)} className="rounded-lg border px-2 py-1 text-xs"><ChevronRight className="h-3 w-3" /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Users view — Active/Archived/Deleted ───────── */
+function UsersView({ plannerEmail, onToast, onManage }){
+  const [rows,setRows]=useState([]);
+  const [filter,setFilter]=useState("");
+  const [groups,setGroups]=useState({});
+  const [inviteOpen,setInviteOpen]=useState(false);
+
+  // Tabs: active | archived | deleted
+  const [tab,setTab]=useState("active");
+
+  // Category modal state
+  const [catOpen,setCatOpen]=useState(false);
+  const [catUserEmail,setCatUserEmail]=useState("");
+  const [catAssigned,setCatAssigned]=useState([]);
+
+  // Derived global categories (union) for the planner
+  const allCats = useMemo(()=>{
+    const set = new Map();
+    const eat = (arr)=> (arr||[]).forEach(g=>{
+      const s=String(g||"").trim();
+      if (!s) return;
+      const k=s.toLowerCase();
+      if (!set.has(k)) set.set(k, s);
+    });
+    for (const r of rows) eat(groups[r.email] ?? r.groups);
+    return Array.from(set.values()).sort((a,b)=>a.localeCompare(b));
+  },[rows, groups]);
+
+  useEffect(()=>{ load(); },[plannerEmail, tab]);
+
+  async function load(){
+    const qs=new URLSearchParams({ plannerEmail, status: tab });
+    const r=await fetch(`/api/users?${qs.toString()}`); const j=await r.json();
+    const arr = (j.users||[]).map(u => ({ ...u, email: u.email || u.userEmail || u.user_email || "" }));
+    setRows(arr);
+  }
+
+  async function saveGroups(email, nextList){
+    try{
+      const body={ plannerEmail, userEmail: email, groups: nextList };
+      const r=await fetch("/api/users",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
+      const j=await r.json();
+      if (!r.ok || j.error) throw new Error(j.error||"Save failed");
+      onToast?.("ok", `Categories saved for ${email}`);
+    }catch(e){ onToast?.("error", String(e.message||e)); }
+  }
+
+  function openCats(email){
+    const list = groups[email] ?? rows.find(x=>x.email===email)?.groups ?? [];
+    setCatUserEmail(email);
+    setCatAssigned(list);
+    setCatOpen(true);
+  }
+
+  async function doArchive(email, archived){
+    try{
+      const r = await fetch("/api/users/archive",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email, archived })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Archive failed");
+
+      // Immediate UI update
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `${archived ? "User archived" : "User restored"}: ${email}`);
+
+      // Gentle background refresh
+      setTimeout(()=>{ load(); }, 400);
+    } catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  // Soft delete (to status=deleted); allowed only in "archived" tab
+  async function doSoftDelete(email){
+    try{
+      const r = await fetch("/api/users/remove",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Delete failed");
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `User moved to Deleted: ${email}`);
+      setTimeout(()=>{ load(); }, 400);
+    } catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  // NEW: Cancel invite (invite-only pending rows)
+  async function doCancelInvite(email){
+    try{
+      const r = await fetch("/api/invite/remove",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Cancel invite failed");
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `Invite canceled: ${email}`);
+      setTimeout(()=>{ load(); }, 400);
+    } catch (e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  // Permanent purge; allowed only in "deleted" tab
+  async function doPurge(email){
+    if (!confirm(`Permanently delete ${email}? This cannot be undone.`)) return;
+    try{
+      const r = await fetch("/api/users/purge",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Purge failed");
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `Permanently deleted: ${email}`);
+      setTimeout(()=>{ load(); }, 400);
+    } catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  function onCatsSaved(email, nextList){
+    setGroups(prev=>({ ...prev, [email]: nextList }));
+    saveGroups(email, nextList);
+  }
+
+  const visible = rows.filter(r=>!filter || (r.email||"").toLowerCase().includes(filter.toLowerCase()));
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-semibold">Users</div>
+          {/* Active / Archived / Deleted toggle */}
+          <div className="ml-2 inline-flex rounded-xl border overflow-hidden">
+            <button
+              onClick={()=>setTab("active")}
+              className={cn("px-2.5 py-1 text-xs", tab==="active" ? "bg-gray-900 text-white" : "bg-white hover:bg-gray-50")}
+            >
+              Active
+            </button>
+            <button
+              onClick={()=>setTab("archived")}
+              className={cn("px-2.5 py-1 text-xs border-l", tab==="archived" ? "bg-gray-900 text-white" : "bg-white hover:bg-gray-50")}
+            >
+              Archived
+            </button>
+            <button
+              onClick={()=>setTab("deleted")}
+              className={cn("px-2.5 py-1 text-xs border-l", tab==="deleted" ? "bg-gray-900 text-white" : "bg-white hover:bg-gray-50")}
+            >
+              Deleted
+            </button>
           </div>
         </div>
-        <div className="pt-3">
-          <button onClick={save} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
-            Save settings
+
+        <div className="flex items-center gap-2">
+          <input value={filter} onChange={(e)=>setFilter(e.target.value)} placeholder="Search…" className="rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+          <button onClick={load} className="rounded-xl border px-2 py-1 text-sm hover:bg-gray-50"><RotateCcw className="h-4 w-4" /></button>
+          <button onClick={()=>setInviteOpen(true)} className="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">
+            <Mail className="h-4 w-4" /> Send Invite
           </button>
         </div>
-      </Section>
+      </div>
+
+      <div className="rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr className="text-left text-gray-500">
+              <th className="py-1.5 px-2">Email</th>
+              <th className="py-1.5 px-2">Status</th>
+              <th className="py-1.5 px-2">Categories</th>
+              <th className="py-1.5 px-2 text-right w-[24rem]">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map(r=>{
+              const list = (groups[r.email] ?? r.groups ?? []).slice().sort((a,b)=>a.localeCompare(b));
+              const pills = list.slice(0,2);
+              const count = list.length;
+              const isArchived = (r.status||"").toLowerCase()==="archived";
+              const isDeleted = (r.status||"").toLowerCase()==="deleted";
+              const isPendingInvite = !isArchived && !isDeleted && ((r.status||"").toLowerCase()==="pending") && (r.__source==="invite");
+
+              return (
+                <tr key={r.email} className="border-t align-top">
+                  <td className="py-1.5 px-2">{r.email || "Unknown"}</td>
+                  <td className="py-1.5 px-2">
+                    <span className={cn(
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-xs border",
+                      isDeleted ? "border-red-300 text-red-700 bg-red-50" :
+                      isArchived ? "border-gray-300 text-gray-600 bg-gray-50" :
+                      (r.status==="connected" ? "border-emerald-300 text-emerald-800 bg-emerald-50" : "border-gray-300 text-gray-700 bg-white")
+                    )}>
+                      {r.status||"—"}
+                    </span>
+                  </td>
+                  <td className="py-1.5 px-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {pills.map(g=>(
+                        <span key={g} className="inline-flex max-w-[140px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs" title={g}>
+                          <span className="truncate">{g}</span>
+                        </span>
+                      ))}
+                      <button
+                        onClick={()=>openCats(r.email)}
+                        className="relative inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs hover:bg-gray-50 disabled:opacity-40"
+                        aria-label={count===0 ? "Add categories" : "Edit categories"}
+                        title={count===0 ? "Add categories" : "Edit categories"}
+                        disabled={isDeleted}
+                      >
+                        <Tag className="h-3.5 w-3.5" />
+                        {count===0 ? (
+                          <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-white text-[10px] font-bold">+</span>
+                        ) : (
+                          <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[10px] font-bold text-white">{count}</span>
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="py-1.5 px-2">
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
+                      {!isArchived && !isDeleted && (
+                        <>
+                          <button
+                            onClick={()=>onManage?.(r.email)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            title="Open Plan view for this user"
+                          >
+                            Plan
+                          </button>
+
+                          {/* NEW: Cancel invite for pending invite-only rows */}
+                          {isPendingInvite && (
+                            <button
+                              onClick={()=>doCancelInvite(r.email)}
+                              className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                              title="Cancel pending invite"
+                            >
+                              Cancel invite
+                            </button>
+                          )}
+
+                          <button
+                            onClick={()=>doArchive(r.email, true)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            title="Archive this user connection"
+                          >
+                            Archive user
+                          </button>
+                        </>
+                      )}
+
+                      {isArchived && (
+                        <>
+                          <button
+                            onClick={()=>doArchive(r.email, false)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            title="Restore user from archive"
+                          >
+                            Restore user
+                          </button>
+                          <button
+                            onClick={()=>doSoftDelete(r.email)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-red-50 text-red-700 border-red-300"
+                            title="Move to Deleted (soft delete)"
+                          >
+                            Delete user
+                          </button>
+                        </>
+                      )}
+
+                      {isDeleted && (
+                        <>
+                          <button
+                            onClick={()=>doArchive(r.email, false)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            title="Restore user (undelete)"
+                          >
+                            Restore user
+                          </button>
+                          <button
+                            onClick={()=>doPurge(r.email)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-red-50 text-red-700 border-red-300"
+                            title="Permanently delete this user connection"
+                          >
+                            Permanently delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {visible.length===0 && (
+              <tr><td colSpan={4} className="py-6 text-center text-gray-500">No users</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {inviteOpen && (
+        <SendInviteModal
+          plannerEmail={plannerEmail}
+          onClose={()=>setInviteOpen(false)}
+          onToast={onToast}
+        />
+      )}
+
+      {catOpen && (
+        <CategoriesModal
+          userEmail={catUserEmail}
+          assigned={catAssigned}
+          allCats={allCats}
+          onClose={()=>setCatOpen(false)}
+          onSave={(next)=>{ onCatsSaved(catUserEmail, next); setCatOpen(false); }}
+          onToast={onToast}
+        />
+      )}
     </div>
   );
 }
 
-/* ---------- App shell ---------- */
-function AppShell() {
-  const [session, setSession] = React.useState(null);
-  const [ready, setReady] = React.useState(false);
-  const [tab, setTab] = React.useState("users");
-  const [inviteOpen, setInviteOpen] = React.useState(false);
-  const [selectedUserEmail, setSelectedUserEmail] = React.useState("");
+/* Categories Modal */
+function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToast }){
+  const [local,setLocal]=useState(()=>dedupeCaseInsensitive(assigned||[]));
+  const [search,setSearch]=useState("");
+  const [dirty,setDirty]=useState(false);
 
-  React.useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (mounted) setSession(data?.session || null);
-      } finally {
-        if (mounted) setReady(true);
+  useEffect(()=>{
+    setLocal(dedupeCaseInsensitive(assigned||[]));
+    setDirty(false);
+    setSearch("");
+  },[assigned]);
+
+  const norm = (s)=> String(s||"")
+    .normalize("NFD").replace(/\p{Diacritic}/gu,"")
+    .toLowerCase().trim();
+
+  const filtered = useMemo(()=>{
+    const q = norm(search);
+    const map = new Map();
+    for (const c of allCats) map.set(norm(c), c);
+    for (const c of local) if (!map.has(norm(c))) map.set(norm(c), c);
+    let arr = Array.from(map.values());
+
+    const selSet = new Set(local.map(x=>norm(x)));
+    const score = (c)=>{
+      const n = norm(c);
+      let s = 0;
+      if (selSet.has(n)) s -= 3;
+      if (q){
+        if (n.startsWith(q)) s -= 2;
+        else if (n.includes(q)) s -= 1;
+        else s += 5;
       }
-    })();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s || null);
+      return s;
+    };
+    arr.sort((a,b)=>{
+      const sa=score(a), sb=score(b);
+      if (sa!==sb) return sa-sb;
+      return a.localeCompare(b);
     });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (q){
+      const matches = arr.filter(c=>norm(c).includes(q));
+      const rest = arr.filter(c=>!norm(c).includes(q));
+      return [...matches, ...rest];
+    }
+    return arr;
+  },[allCats, local, search]);
 
-  const plannerEmail = session?.user?.email || "";
-
-  async function logout() { try { await supabase.auth.signOut(); } catch {} }
-
-  if (ready && !session) {
-    return (
-      <div className="mx-auto max-w-md p-6">
-        <div className="mb-6 flex items-center justify-center"><BrandLogo /></div>
-        <div className="rounded-2xl border p-4">
-          <div className="mb-2 text-lg font-semibold">Sign in required</div>
-          <div className="mb-4 text-sm text-gray-600">Please sign in to access your users and plans.</div>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } })}
-              className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
-            >
-              Continue with Google
-            </button>
-            <a href="/" className="rounded-xl border px-4 py-2 text-center text-sm hover:bg-gray-50">
-              Use email sign-in page
-            </a>
-          </div>
-        </div>
-      </div>
-    );
+  function toggle(c){
+    const key = c.toLowerCase();
+    const set = new Map(local.map(v=>[v.toLowerCase(), v]));
+    if (set.has(key)) set.delete(key); else set.set(key, c);
+    const next = Array.from(set.values()).sort((a,b)=>a.localeCompare(b));
+    setLocal(next);
+    setDirty(true);
   }
-  if (!ready) {
-    return (
-      <div className="mx-auto max-w-6xl p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <BrandLogo />
-          <div className="h-8 w-24 animate-pulse rounded-xl bg-gray-200" />
+
+  function addFromQuery(){
+    const raw = search.trim();
+    if (!raw){ onToast?.("warn","Type a category name"); return; }
+    const exists = local.some(x=>x.toLowerCase()===raw.toLowerCase()) || allCats.some(x=>x.toLowerCase()===raw.toLowerCase());
+    if (exists){ onToast?.("warn","Category already exists"); return; }
+    const next = dedupeCaseInsensitive([...local, raw]).sort((a,b)=>a.localeCompare(b));
+    setLocal(next);
+    setDirty(true);
+    onToast?.("ok","Category added");
+  }
+
+  function doSave(){ onSave?.(local); }
+  function maybeClose(){
+    if (!dirty) return onClose?.();
+    if (confirm("Discard unsaved changes?")) onClose?.();
+  }
+
+  const canQuickAdd = !!search.trim()
+    && !allCats.some(x=>x.toLowerCase()===search.trim().toLowerCase())
+    && !local.some(x=>x.toLowerCase()===search.trim().toLowerCase());
+
+  return (
+    <Modal title={`Categories`} onClose={maybeClose}>
+      <div className="text-xs text-gray-500 mb-2">User: <b className="text-gray-700">{userEmail}</b></div>
+
+      <div className="mb-2 flex items-center gap-2">
+        <div className="relative w-full">
+          <input
+            value={search}
+            onChange={(e)=>setSearch(e.target.value)}
+            placeholder="Search categories (partial match)…"
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm pr-8"
+            onKeyDown={(e)=>{ if (e.key==="Enter" && canQuickAdd) { e.preventDefault(); addFromQuery(); } }}
+          />
+          {search && (
+            <button
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
+              onClick={()=>setSearch("")}
+              aria-label="Clear search"
+            >×</button>
+          )}
         </div>
-        <div className="rounded-2xl border p-6">
-          <div className="h-5 w-40 animate-pulse rounded bg-gray-200" />
-          <div className="mt-4 h-32 w-full animate-pulse rounded-xl bg-gray-100" />
-        </div>
+        {canQuickAdd && (
+          <button onClick={addFromQuery} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap">Add “{search.trim()}”</button>
+        )}
       </div>
-    );
+
+      <div className="mb-3 max-h-[40vh] overflow-auto rounded-xl border p-2">
+        {filtered.length===0 ? (
+          <div className="p-2 text-sm text-gray-500">No categories yet.</div>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {filtered.map(c=>{
+              const checked = local.some(x=>x.toLowerCase()===c.toLowerCase());
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  title={c}
+                  onClick={()=>toggle(c)}
+                  className={cn(
+                    "max-w-[180px] truncate rounded-full border px-2.5 py-1 text-xs",
+                    checked ? "border-gray-800 bg-gray-900 text-white" : "border-gray-300 bg-white hover:bg-gray-50"
+                  )}
+                >
+                  {c}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={maybeClose} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50">Cancel</button>
+        <button onClick={doSave} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Save</button>
+      </div>
+    </Modal>
+  );
+}
+
+function dedupeCaseInsensitive(arr){
+  const m=new Map();
+  for (const s of (arr||[])){
+    const v=String(s||"").trim();
+    if (!v) continue;
+    const k=v.toLowerCase();
+    if (!m.has(k)) m.set(k, v);
+  }
+  return Array.from(m.values());
+}
+
+/* ───────── Invite modal ───────── */
+function SendInviteModal({ plannerEmail, onClose, onToast }){
+  const [email,setEmail]=useState("");
+  const [previewUrl,setPreviewUrl]=useState("");
+  const [previewRaw,setPreviewRaw]=useState("");
+  const [loading,setLoading]=useState(false);
+
+  function extractFirstUrl(text){
+    const m = String(text||"").match(/https?:\/\/[^\s"'<>]+/);
+    return m ? m[0] : "";
+  }
+  async function parseMaybeJson(resp){
+    const ctype = resp.headers.get("content-type") || "";
+    const txt = await resp.text();
+    if (ctype.includes("application/json")) {
+      try { return { kind:"json", json: JSON.parse(txt), txt }; }
+      catch { /* fall through */ }
+    }
+    return { kind:"text", txt };
+  }
+  async function doPreview(){
+    setLoading(true);
+    setPreviewUrl(""); setPreviewRaw("");
+    try{
+      const qs = new URLSearchParams({ plannerEmail, userEmail: email });
+      const resp = await fetch(`/api/invite/preview?${qs.toString()}`);
+      const parsed = await parseMaybeJson(resp);
+
+      if (!resp.ok) {
+        if (parsed.kind==="json") onToast?.("error", `Preview failed: ${parsed.json?.error || JSON.stringify(parsed.json)}`);
+        else onToast?.("error", `Preview failed: ${parsed.txt.slice(0,120)}`);
+        setLoading(false); return;
+      }
+      if (parsed.kind==="json") {
+        const j = parsed.json;
+        const url = j.url || j.inviteUrl || j.href || "";
+        if (url) { setPreviewUrl(url); onToast?.("ok","Preview generated"); }
+        else { setPreviewRaw(JSON.stringify(j)); onToast?.("warn","Preview returned JSON but no URL field"); }
+      } else {
+        const url = extractFirstUrl(parsed.txt);
+        if (url) { setPreviewUrl(url); onToast?.("ok","Preview URL detected"); }
+        else { setPreviewRaw(parsed.txt); onToast?.("warn","Preview returned non-JSON content"); }
+      }
+    }catch(e){ onToast?.("error", String(e.message||e)); }
+    setLoading(false);
+  }
+  async function doSend(){
+    setLoading(true);
+    try{
+      const resp = await fetch("/api/invite/send",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const parsed = await parseMaybeJson(resp);
+      if (!resp.ok) {
+        if (parsed.kind==="json") onToast?.("error", `Invite failed: ${parsed.json?.error || JSON.stringify(parsed.json)}`);
+        else onToast?.("error", `Invite failed: ${parsed.txt.slice(0,120)}`);
+        setLoading(false); return;
+      }
+      onToast?.("ok", `Invite sent to ${email}`);
+      onClose?.();
+    }catch(e){ onToast?.("error", String(e.message||e)); }
+    setLoading(false);
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-3 sm:p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BrandLogo />
+    <div className="fixed inset-0 z-50 bg-black/10 p-2 sm:p-4">
+      <div className="mx-auto max-w-lg rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-semibold">Send Invite</div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setInviteOpen(true)} className="hidden sm:inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs hover:bg-gray-50">Invite User</button>
-          <button onClick={() => setTab("settings")} className="inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs hover:bg-gray-50"><SettingsIcon size={14} /> Settings</button>
-          <button onClick={logout} className="inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs hover:bg-gray-50"><LogOut size={14} /> Logout</button>
+
+        <div className="space-y-3">
+          <label className="block">
+            <div className="mb-1 text-sm font-medium">User email</div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e)=>setEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            />
+          </label>
+
+          <div className="flex gap-2">
+            <button disabled={!email || loading} onClick={doPreview} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50">Preview</button>
+            <button disabled={!email || loading} onClick={doSend} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">Send Invite</button>
+          </div>
+
+          {!!previewUrl && (
+            <div className="rounded-lg border bg-gray-50 p-2 text-xs break-all">
+              <div className="mb-1 font-semibold text-gray-700">Preview URL</div>
+              <div className="text-gray-700">{previewUrl}</div>
+            </div>
+          )}
+
+          {!!previewRaw && !previewUrl && (
+            <div className="rounded-lg border bg-yellow-50 p-2 text-xs break-all">
+              <div className="mb-1 font-semibold text-yellow-800">Preview (non-JSON response)</div>
+              <div className="text-yellow-900">{previewRaw.slice(0,800)}</div>
+            </div>
+          )}
+
+          <div className="text-[11px] text-gray-500">
+            Invite CTA opens Google OAuth and returns a “Connected” confirmation (no route back to app for users).
+          </div>
         </div>
       </div>
-
-      <div className="mb-4 flex items-center gap-2">
-        <button
-          onClick={() => setTab("users")}
-          className={clsx("inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-sm",
-            tab === "users" ? "bg-gray-900 text-white border-gray-900" : "hover:bg-gray-50")}
-        >
-          <UsersIcon size={16} /> Users
-        </button>
-        <button
-          onClick={() => setTab("plan")}
-          className={clsx("inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-sm",
-            tab === "plan" ? "bg-gray-900 text-white border-gray-900" : "hover:bg-gray-50")}
-        >
-          <Calendar size={16} /> Plan
-        </button>
-        <button
-          onClick={() => setTab("settings")}
-          className={clsx("inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-sm",
-            tab === "settings" ? "bg-gray-900 text-white border-gray-900" : "hover:bg-gray-50")}
-        >
-          <SettingsIcon size={16} /> Settings
-        </button>
-      </div>
-
-      {tab === "users" ? (
-        <UsersView
-          plannerEmail={plannerEmail}
-          onManage={(email) => { setSelectedUserEmail(email); setTab("plan"); }}
-        />
-      ) : tab === "plan" ? (
-        <PlanView
-          plannerEmail={plannerEmail}
-          selectedUserEmail={selectedUserEmail}
-          onChangeUserEmail={setSelectedUserEmail}
-          onPushed={() => {}}
-        />
-      ) : (
-        <SettingsView />
-      )}
-
-      {inviteOpen ? (
-        <InviteModal plannerEmail={plannerEmail} onClose={() => setInviteOpen(false)} />
-      ) : null}
     </div>
   );
 }
 
-export default function Plan2TasksApp() { return <AppShell />; }
+/* ───────── Settings ───────── */
+function SettingsView({ plannerEmail, prefs, onChange, onToast }){
+  const [local,setLocal]=useState(()=>{
+    return {
+      default_view: prefs.default_view || "users",
+      default_timezone: prefs.default_timezone || "America/Chicago",
+      default_push_mode: prefs.default_push_mode || "append",
+      auto_archive_after_assign: !!prefs.auto_archive_after_assign,
+      show_inbox_badge: !!prefs.show_inbox_badge,
+    };
+  });
+  const [saving,setSaving]=useState(false);
+
+  useEffect(()=>{ setLocal({
+    default_view: prefs.default_view || "users",
+    default_timezone: prefs.default_timezone || "America/Chicago",
+    default_push_mode: prefs.default_push_mode || "append",
+    auto_archive_after_assign: !!prefs.auto_archive_after_assign,
+    show_inbox_badge: !!prefs.show_inbox_badge,
+  }); },[prefs]);
+
+  async function save(){
+    setSaving(true);
+    try{
+      const body={ plannerEmail, prefs: local };
+      const r=await fetch("/api/prefs/set",{ method:"POST", headers:{"Content-Type":"application/json" }, body: JSON.stringify(body) });
+      const j=await r.json();
+      if (!r.ok || j.error) throw new Error(j.error||"Save failed");
+      onChange?.(local);
+      onToast?.("ok","Settings saved");
+    }catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+      <div className="mb-3 text-sm font-semibold">Settings</div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default view</div>
+          <select value={local.default_view} onChange={(e)=>setLocal({...local, default_view:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="users">Users</option>
+            <option value="plan">Plan</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default timezone</div>
+          <select value={local.default_timezone} onChange={(e)=>setLocal({...local, default_timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default push mode</div>
+          <select value={local.default_push_mode} onChange={(e)=>setLocal({...local, default_push_mode:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="append">Append</option>
+            <option value="replace">Replace</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Auto-archive after assign</div>
+          <input type="checkbox" checked={!!local.auto_archive_after_assign} onChange={(e)=>setLocal({...local, auto_archive_after_assign:(e.target.checked)})} />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Show inbox badge</div>
+          <input type="checkbox" checked={!!local.show_inbox_badge} onChange={(e)=>setLocal({...local, show_inbox_badge:(e.target.checked)})} />
+        </label>
+      </div>
+
+      <div className="mt-3">
+        <button onClick={save} disabled={saving} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
+          {saving ? "Saving…" : "Save"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Timezones ───────── */
+const TIMEZONES = [
+  "America/Chicago","America/New_York","America/Denver","America/Los_Angeles",
+  "UTC","Europe/London","Europe/Berlin","Asia/Tokyo","Australia/Sydney"
+];

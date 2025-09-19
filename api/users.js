@@ -1,116 +1,87 @@
-// /api/users.js
-import { supabaseAdmin } from "../lib/supabase-admin.js";
+export const config = { runtime: 'nodejs' };
 
-function normEmail(x) {
-  return String(x || "").trim();
+import { createClient } from '@supabase/supabase-js';
+
+function n(v) { return (typeof v === 'string' ? v : '').trim().toLowerCase(); }
+function send(res, status, body) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(body));
+}
+
+function admin() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE; // support both names
+  if (!url || !key) throw new Error('Missing Supabase env vars');
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
 export default async function handler(req, res) {
   try {
-    if (req.method === "GET") {
-      const raw = req.query.plannerEmail;
-      const plannerEmail = normEmail(raw);
-      if (!plannerEmail) return res.status(400).json({ error: "Missing plannerEmail" });
+    if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'Method not allowed' });
 
-      const pe = plannerEmail.toLowerCase();
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const plannerEmail = n(url.searchParams.get('plannerEmail') || '');
+    const status = (url.searchParams.get('status') || 'active').toLowerCase(); // active|archived|deleted|all
 
-      // 1) Pull connections for this planner (case-insensitive)
-      const { data: conns, error: cErr } = await supabaseAdmin
-        .from("user_connections")
-        .select("planner_email, user_email, groups, status, google_refresh_token")
-        .ilike("planner_email", pe); // case-insensitive match
+    if (!plannerEmail || !plannerEmail.includes('@')) {
+      return send(res, 400, { ok: false, error: 'Invalid plannerEmail' });
+    }
+    if (!['active','archived','deleted','all'].includes(status)) {
+      return send(res, 400, { ok: false, error: 'Invalid status' });
+    }
 
-      if (cErr) return res.status(500).json({ error: cErr.message });
+    const sb = admin();
+    const byEmail = new Map();
 
-      // 2) Pull invites for this planner (so invited-but-not-connected also show)
-      const { data: invs, error: iErr } = await supabaseAdmin
-        .from("invites")
-        .select("planner_email, user_email, used_at")
-        .ilike("planner_email", pe);
+    const priority = { connected: 3, invited: 2, archived: 2, deleted: 1 };
 
-      if (iErr) return res.status(500).json({ error: iErr.message });
+    async function addConnections(statuses) {
+      const { data, error } = await sb
+        .from('user_connections')
+        .select('user_email, groups, status, updated_at')
+        .ilike('planner_email', plannerEmail)
+        .in('status', statuses);
+      if (error) throw new Error('Database error (connections)');
 
-      // 3) Merge by user_email
-      const map = new Map();
-
-      // From connections
-      for (const r of conns || []) {
-        const email = normEmail(r.user_email);
-        const groups = Array.isArray(r.groups) ? r.groups : [];
-        const hasToken = !!r.google_refresh_token;
-        const status =
-          r.status === "connected" || hasToken ? "connected" :
-          r.status === "pending" ? "pending" :
-          "not_connected";
-
-        map.set(email, {
-          email,
-          groups,
-          status,
-          source: "conn",
-        });
-      }
-
-      // From invites
-      for (const v of invs || []) {
-        const email = normEmail(v.user_email);
+      for (const c of data || []) {
+        const email = n(c.user_email || '');
         if (!email) continue;
+        const next = { email, groups: Array.isArray(c.groups) ? c.groups : [], status: c.status, updated_at: c.updated_at || null, __source: 'connection' };
+        const prev = byEmail.get(email);
+        if (!prev || (priority[next.status] || 0) >= (priority[prev.status] || 0)) byEmail.set(email, next);
+      }
+    }
 
-        const existed = map.get(email);
-        if (existed) {
-          // If already connected via conn, keep connected
-          // Otherwise, upgrade invited/pending appropriately
-          if (existed.status !== "connected") {
-            const via = v.used_at ? "pending" : "invited";
-            existed.status = existed.status === "pending" ? "pending" : via;
-          }
-        } else {
-          map.set(email, {
-            email,
-            groups: [],
-            status: v.used_at ? "pending" : "invited",
-            source: "invite",
-          });
+    async function addPendingInvites() {
+      const { data, error } = await sb
+        .from('invites')
+        .select('user_email, used_at')
+        .ilike('planner_email', plannerEmail)
+        .is('used_at', null);
+      if (error) throw new Error('Database error (invites)');
+
+      for (const inv of data || []) {
+        const email = n(inv.user_email || '');
+        if (!email) continue;
+        if (!byEmail.has(email)) {
+          byEmail.set(email, { email, groups: [], status: 'invited', updated_at: null, __source: 'invite' });
         }
       }
-
-      // 4) To list (sorted: connected first, then pending, invited, not_connected)
-      const order = { connected: 0, pending: 1, invited: 2, not_connected: 3 };
-      const users = Array.from(map.values()).sort(
-        (a, b) => (order[a.status] - order[b.status]) || a.email.localeCompare(b.email)
-      );
-
-      return res.json({ users });
     }
 
-    if (req.method === "POST") {
-      // Update categories (groups) for a specific user
-      const plannerEmail = normEmail(req.body?.plannerEmail);
-      const userEmail = normEmail(req.body?.userEmail);
-      const groups = Array.isArray(req.body?.groups) ? req.body.groups : [];
-      if (!plannerEmail || !userEmail) {
-        return res.status(400).json({ error: "Missing plannerEmail or userEmail" });
-      }
-
-      const now = new Date().toISOString();
-      const { error: upErr } = await supabaseAdmin
-        .from("user_connections")
-        .upsert(
-          {
-            planner_email: plannerEmail,
-            user_email: userEmail,
-            groups,
-            updated_at: now,
-          },
-          { onConflict: "planner_email,user_email" }
-        );
-
-      if (upErr) return res.status(500).json({ error: upErr.message });
-      return res.json({ ok: true });
+    if (status === 'all') {
+      await addConnections(['connected','archived','deleted']);
+      await addPendingInvites();
+    } else {
+      const wanted = status === 'active' ? ['connected'] : status === 'archived' ? ['archived'] : ['deleted'];
+      await addConnections(wanted);
+      if (status === 'active') await addPendingInvites();
     }
 
-    return res.status(405).json({ error: "Method not allowed" });
+    const users = Array.from(byEmail.values());
+    return send(res, 200, { ok: true, users });
   } catch (e) {
-    return res.status(500).json({ error: e?.message || "Server error" });
+    return send(res, 500, { ok: false, error: e.message || 'Unhandled error' });
   }
 }

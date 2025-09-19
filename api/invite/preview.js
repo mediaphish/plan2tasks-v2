@@ -1,70 +1,129 @@
 // /api/invite/preview.js
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
+// Vercel Serverless Function (ESM)
+// Change 1b: ESM export + input hardening + env-driven invite URL
 
-function siteBase(req) {
-  const envSite = (process.env.SITE_URL || "").replace(/\/$/, "");
-  if (envSite) return envSite;
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
-  return `${proto}://${host}`;
+import { createClient } from '@supabase/supabase-js';
+
+/** Helpers **/
+function normalizeEmail(value) {
+  if (typeof value !== 'string') return '';
+  return value.trim().toLowerCase();
 }
 
+function isLikelyEmail(value) {
+  return typeof value === 'string' && value.includes('@') && value.includes('.');
+}
+
+function sendJson(res, status, body) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(body));
+}
+
+function getSupabaseAdmin() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Supabase admin env vars missing. Ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.');
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+function normalizePath(p) {
+  if (!p) return '/join';
+  return p.startsWith('/') ? p : `/${p}`;
+}
+
+function buildInviteUrl(id) {
+  const site = process.env.SITE_URL || 'http://localhost:3000';
+  const path = normalizePath(process.env.INVITE_PATH || '/join'); // e.g. '/invite'
+  const key = process.env.INVITE_QUERY_KEY || 'i';                // e.g. 'token'
+  return `${site}${path}?${encodeURIComponent(key)}=${encodeURIComponent(id)}`;
+}
+
+/** Main handler (ESM default export) **/
 export default async function handler(req, res) {
   try {
-    const plannerEmail = (req.query.plannerEmail || req.body?.plannerEmail || "").trim();
-    const userEmail = (req.query.userEmail || req.body?.userEmail || "").trim();
-    if (!plannerEmail || !userEmail) {
-      return res.status(400).json({ error: "Missing plannerEmail or userEmail" });
+    if (req.method !== 'GET') {
+      return sendJson(res, 405, { ok: false, error: 'Method not allowed' });
     }
 
-    // 1) Look for ANY existing invite for this pair (used or not)
-    const { data: existing, error: selErr } = await supabaseAdmin
-      .from("invites")
-      .select("id, used_at")
-      .eq("planner_email", plannerEmail)
-      .eq("user_email", userEmail)
-      .maybeSingle();
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const rawPlanner = url.searchParams.get('plannerEmail') || '';
+    const rawUser = url.searchParams.get('userEmail') || '';
 
-    if (selErr) return res.status(500).json({ error: selErr.message });
+    // Normalize & validate
+    const plannerEmail = normalizeEmail(rawPlanner);
+    const userEmail = normalizeEmail(rawUser);
+    if (!plannerEmail || !userEmail || !isLikelyEmail(plannerEmail) || !isLikelyEmail(userEmail)) {
+      return sendJson(res, 400, {
+        ok: false,
+        error: 'Invalid plannerEmail or userEmail',
+        details: 'Both emails are required. They are trimmed + lowercased server-side.',
+      });
+    }
 
-    let inviteId;
+    const supabase = getSupabaseAdmin();
 
-    if (existing?.id) {
-      // If it was already used, "reset" it so it's reusable
-      if (existing.used_at) {
-        const { data: upd, error: upErr } = await supabaseAdmin
-          .from("invites")
-          .update({ used_at: null })
-          .eq("id", existing.id)
-          .select("id")
-          .single();
-        if (upErr) return res.status(500).json({ error: upErr.message });
-        inviteId = upd.id;
-      } else {
-        inviteId = existing.id;
-      }
-    } else {
-      // No row yet → create one
-      const { data: created, error: insErr } = await supabaseAdmin
-        .from("invites")
+    // Find existing (case-insensitive exact match)
+    const { data: existingRows, error: findErr } = await supabase
+      .from('invites')
+      .select('id, used_at, planner_email, user_email')
+      .ilike('planner_email', plannerEmail)
+      .ilike('user_email', userEmail)
+      .limit(1);
+
+    if (findErr) {
+      return sendJson(res, 500, { ok: false, error: 'Database error (select)', details: findErr.message });
+    }
+
+    let inviteRow = existingRows && existingRows[0];
+    let reused = !!inviteRow;
+
+    // Create if none
+    if (!inviteRow) {
+      const { data: inserted, error: insertErr } = await supabase
+        .from('invites')
         .insert({ planner_email: plannerEmail, user_email: userEmail })
-        .select("id")
-        .single();
-      if (insErr) return res.status(500).json({ error: insErr.message });
-      inviteId = created.id;
+        .select('id, used_at')
+        .limit(1);
+
+      if (insertErr) {
+        // Unique index race: fetch instead
+        const { data: afterRace, error: raceFindErr } = await supabase
+          .from('invites')
+          .select('id, used_at')
+          .ilike('planner_email', plannerEmail)
+          .ilike('user_email', userEmail)
+          .limit(1);
+
+        if (raceFindErr || !afterRace || !afterRace[0]) {
+          return sendJson(res, 500, {
+            ok: false,
+            error: 'Database error (insert)',
+            details: insertErr.message || raceFindErr?.message || 'Unknown error',
+          });
+        }
+        inviteRow = afterRace[0];
+        reused = true;
+      } else {
+        inviteRow = inserted && inserted[0];
+      }
     }
 
-    const site = siteBase(req);
-    const inviteUrl = `${site}/api/google/start?invite=${inviteId}`;
+    if (!inviteRow || !inviteRow.id) {
+      return sendJson(res, 500, { ok: false, error: 'Invite not available' });
+    }
 
-    return res.json({
+    const inviteUrl = buildInviteUrl(inviteRow.id);
+
+    return sendJson(res, 200, {
       ok: true,
-      emailed: false,
-      inviteId,
       inviteUrl,
-      emailInfo: null,
+      reused,
+      used: !!inviteRow.used_at,
     });
-  } catch (e) {
-    return res.status(500).json({ error: e?.message || "Server error" });
+  } catch (err) {
+    return sendJson(res, 500, { ok: false, error: 'Unhandled error', details: String(err?.message || err) });
   }
 }

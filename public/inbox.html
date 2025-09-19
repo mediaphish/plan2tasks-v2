@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Inbox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* Existing page styles */
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
+    select, button { font-size: 14px; padding: 6px 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+
+    /* Minimal header (matches app shell vibe; does not change table/layout) */
+    .app-header { border-bottom: 1px solid #e5e7eb; background: #fff; }
+    .app-header .bar { max-width: 1100px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display:flex; align-items:center; gap:8px; font-weight:700; }
+    .brand .ver { font-size: 10px; color:#6b7280; }
+    .nav { display:flex; gap:8px; }
+    .nav a { display:inline-flex; align-items:center; gap:6px; border:1px solid #d1d5db; background:#fff; padding:6px 10px; border-radius:12px; font-size:12px; color:#111827; text-decoration:none; }
+    .nav a:hover { background:#f9fafb; }
+  </style>
+</head>
+<body>
+  <!-- New: lightweight app header for navigation back to the main app -->
+  <header class="app-header" role="banner">
+    <div class="bar">
+      <div class="brand">
+        <span>Plan2Tasks</span>
+        <span class="ver">Inbox</span>
+      </div>
+      <nav class="nav" aria-label="Primary">
+        <!-- Deep-links into the React app (App.jsx already controls visuals) -->
+        <a href="/index.html?view=users" id="navUsers">Users</a>
+        <a href="/index.html?view=plan" id="navPlan">Plan</a>
+        <a href="/index.html?view=settings" id="navSettings">Settings</a>
+        <a href="/inbox.html?view=assigned" id="navInbox">Inbox</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <h1>Inbox — New Bundles</h1>
+
+    <div class="row">
+      <label for="userSelect">Assign to:</label>
+      <select id="userSelect">
+        <option value="" disabled selected>Loading…</option>
+      </select>
+
+      <button id="btnLoadNew">Load NEW</button>
+      <button id="btnLoadAssigned">Load ASSIGNED</button>
+      <button id="btnRefresh">Refresh</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Start Date</th>
+          <th>Timezone</th>
+          <th>Inbox ID</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="5">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Defaults per your rules
+    const plannerEmail = "bartpaden@gmail.com";
+
+    const els = {
+      tbody: document.getElementById('tbody'),
+      userSelect: document.getElementById('userSelect'),
+      btnLoadNew: document.getElementById('btnLoadNew'),
+      btnLoadAssigned: document.getElementById('btnLoadAssigned'),
+      btnRefresh: document.getElementById('btnRefresh'),
+    };
+
+    function fmt(v){ return v ?? ""; }
+
+    function mapBundle(b){
+      // Support both snake_case and camelCase from your API
+      return {
+        id: b.id || b.inboxId,
+        title: b.title,
+        startDate: b.start_date || b.startDate,
+        timezone: b.timezone,
+        assignedEmail: b.assigned_user_email || b.assigned_user || null
+      };
+    }
+
+    function rowTemplate(b, assignedMode){
+      return `
+        <tr data-id="${b.id}">
+          <td>${fmt(b.title)}</td>
+          <td>${fmt(b.startDate)}</td>
+          <td>${fmt(b.timezone)}</td>
+          <td><code>${fmt(b.id)}</code></td>
+          <td>
+            <button data-action="review" data-id="${b.id}">Review</button>
+            <button data-action="assign" data-id="${b.id}" ${assignedMode ? "disabled" : ""}>Assign</button>
+          </td>
+        </tr>
+      `;
+    }
+
+    // Cache-busting fetch to avoid stale lists on return from review
+    async function fetchJSON(url) {
+      const sep = url.includes('?') ? '&' : '?';
+      const noCacheUrl = `${url}${sep}t=${Date.now()}`;
+      const r = await fetch(noCacheUrl, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json().catch(()=> ({}));
+    }
+
+    async function loadUsers(){
+      try {
+        const url = `/api/users?op=list&plannerEmail=${encodeURIComponent(plannerEmail)}&status=all`;
+        const body = await fetchJSON(url);
+        const list = body?.users || body?.data || [];
+        els.userSelect.innerHTML = `<option value="" disabled selected>Select…</option>` +
+          list.map(u => `<option value="${u.email}">${u.email}</option>`).join('');
+      } catch {}
+    }
+
+    function preselectUserIfUniformAssigned(bundles, status) {
+      if (status !== 'assigned') return; // only preselect in Assigned view
+      const emails = (bundles || [])
+        .map(b => (b.assigned_user_email || b.assigned_user || b.assignedEmail || '').toString().trim())
+        .filter(Boolean)
+        .map(e => e.toLowerCase());
+      if (!emails.length) return;
+      const unique = Array.from(new Set(emails));
+      if (unique.length === 1) {
+        const email = unique[0];
+        const opt = Array.from(els.userSelect.options).find(o => (o.value || '').toLowerCase() === email);
+        if (opt) els.userSelect.value = opt.value;
+      }
+    }
+
+    async function renderBundles(status, bundles){
+      const assignedMode = status === "assigned";
+      if (!Array.isArray(bundles) || bundles.length === 0) {
+        els.tbody.innerHTML = `<tr><td colspan="5">No bundles.</td></tr>`;
+        return;
+      }
+      els.tbody.innerHTML = bundles.map(b => rowTemplate(mapBundle(b), assignedMode)).join('');
+      preselectUserIfUniformAssigned(bundles, status);
+    }
+
+    async function loadInbox(status = "new", { fallbackToAssigned = false } = {}) {
+      els.tbody.innerHTML = `<tr><td colspan="5">Loading ${status.toUpperCase()}…</td></tr>`;
+      try {
+        const url = `/api/inbox?plannerEmail=${encodeURIComponent(plannerEmail)}&status=${encodeURIComponent(status)}`;
+        const body = await fetchJSON(url);
+        const bundles = body?.bundles || body?.data || body || [];
+
+        if (status === 'new' && fallbackToAssigned && (!Array.isArray(bundles) || bundles.length === 0)) {
+          return loadInbox('assigned', { fallbackToAssigned: false });
+        }
+        await renderBundles(status, bundles);
+      } catch {
+        els.tbody.innerHTML = `<tr><td colspan="5">Error loading.</td></tr>`;
+      }
+    }
+
+    async function assignBundle(inboxId){
+      const userEmail = els.userSelect.value;
+      if (!userEmail) return; // require selection; no extra UI
+      const payload = { plannerEmail, inboxId, userEmail };
+      try {
+        await fetch('/api/inbox/assign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        // After assignment, reload NEW; if empty, fall back to ASSIGNED
+        loadInbox('new', { fallbackToAssigned: true });
+      } catch {}
+    }
+
+    function onTableClick(e){
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'review') {
+        window.location.href = `/review.html?inboxId=${encodeURIComponent(id)}`;
+      } else if (action === 'assign') {
+        assignBundle(id);
+      }
+    }
+
+    // Events
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#btnLoadNew')) loadInbox('new');
+      if (e.target.closest('#btnLoadAssigned')) loadInbox('assigned');
+      if (e.target.closest('#btnRefresh')) loadInbox('new', { fallbackToAssigned: true });
+      if (e.target.closest('table')) onTableClick(e);
+    });
+
+    // INIT:
+    // 1) Support deep-linking via ?view=assigned or ?view=new
+    // 2) If no param, try NEW first; if empty, auto-load ASSIGNED
+    loadUsers();
+    const viewParam = new URLSearchParams(location.search).get('view');
+    const initial = (viewParam || 'new').toLowerCase();
+    if (initial === 'assigned') {
+      loadInbox('assigned');
+    } else if (initial === 'new') {
+      loadInbox('new', { fallbackToAssigned: true });
+    } else {
+      loadInbox('new', { fallbackToAssigned: true });
+    }
+
+    // When returning from review via BFCache, refresh list with same logic
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        if (initial === 'assigned') loadInbox('assigned');
+        else loadInbox('new', { fallbackToAssigned: true });
+      }
+    });
+  </script>
+</body>
+</html>

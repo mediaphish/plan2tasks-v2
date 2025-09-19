@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Review Plan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Match app styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="mx-auto max-w-6xl p-4">
+    <!-- Header / Nav (mirrors App.jsx) -->
+    <div class="mb-3 sm:mb-6 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="text-lg sm:text-2xl font-bold whitespace-nowrap">Plan2Tasks</div>
+        <span class="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">2025-09-02 · C4</span>
+        <nav class="ml-1 sm:ml-4 flex gap-1 sm:gap-2">
+          <a href="/index.html?view=users" class="inline-flex items-center gap-1 rounded-xl border border-gray-300 bg-white px-2.5 py-1.5 text-xs sm:text-sm hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg>
+            <span class="hidden sm:inline">Users</span>
+          </a>
+          <a href="/index.html?view=plan" class="inline-flex items-center gap-1 rounded-xl border border-gray-300 bg-white px-2.5 py-1.5 text-xs sm:text-sm hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span class="hidden sm:inline">Plan</span>
+          </a>
+          <a href="/index.html?view=settings" class="inline-flex items-center gap-1 rounded-xl border border-gray-300 bg-white px-2.5 py-1.5 text-xs sm:text-sm hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 1 0 0 6Z"/><path d="M19.4 14a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V20a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H4a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 8.04 3.4l.06.06a1.65 1.65 0 0 0 1.82.33H10a1.65 1.65 0 0 0 1-1.51V2a2 2 0 1 1 4 0v.09c0 .67.39 1.27 1 1.51.57.24 1.25.1 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06c-.43.57-.57 1.25-.33 1.82V10c0 .67.39 1.27 1 1.51.57.24 1.25.1 1.82-.33Z"/></svg>
+            <span class="hidden sm:inline">Settings</span>
+          </a>
+          <a href="/index.html?view=inbox" class="inline-flex items-center gap-1 rounded-xl border border-gray-300 bg-white px-2.5 py-1.5 text-xs sm:text-sm hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span class="hidden sm:inline">Inbox</span>
+          </a>
+        </nav>
+      </div>
+      <div class="text-xs text-gray-600">
+        If no inboxId is provided or the bundle is already archived, you’ll be redirected to Inbox.
+      </div>
+    </div>
+
+    <!-- Bundle header -->
+    <div class="rounded-xl border border-gray-200 bg-white p-3 sm:p-4 mb-3">
+      <div class="text-base font-semibold mb-2">Bundle</div>
+      <div class="grid sm:grid-cols-2 gap-2 text-sm">
+        <div><span class="text-gray-500">Title:</span> <span id="bTitle" class="font-medium"></span></div>
+        <div><span class="text-gray-500">Start Date:</span> <span id="bStart" class="font-medium"></span></div>
+        <div><span class="text-gray-500">Timezone:</span> <span id="bTz" class="font-medium"></span></div>
+      </div>
+    </div>
+
+    <!-- Tasks table -->
+    <div class="rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+      <div class="text-base font-semibold mb-2">Tasks (dates only)</div>
+      <div class="overflow-auto rounded border">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr class="text-left text-gray-500">
+              <th class="py-1.5 px-2">Title</th>
+              <th class="py-1.5 px-2">Date</th>
+              <th class="py-1.5 px-2">Time</th>
+              <th class="py-1.5 px-2">Duration</th>
+              <th class="py-1.5 px-2">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" class="py-4 text-center text-gray-500">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-3 flex justify-end">
+        <button id="pushBtn" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50">Push to Google Tasks</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_PLANNER = "bartpaden@gmail.com";
+    // CHANGED: force Assigned + cache-bust on return
+    const INBOX_REDIRECT = "/index.html?view=inbox&ibox=assigned&t=" + Date.now();
+
+    const els = {
+      tbody: document.getElementById('tbody'),
+      listTitle: document.getElementById('listTitle'),
+      bTitle: document.getElementById('bTitle'),
+      bStart: document.getElementById('bStart'),
+      bTz: document.getElementById('bTz'),
+      pushBtn: document.getElementById('pushBtn')
+    };
+
+    function fmt(v){ return (v==null||v==="") ? "—" : String(v); }
+
+    // Parse inboxId from query
+    const usp = new URLSearchParams(location.search);
+    const inboxId = usp.get("inboxId");
+    const plannerEmail = usp.get("plannerEmail") || (localStorage.getItem("plannerEmail") || DEFAULT_PLANNER);
+
+    // No inboxId? Go back to integrated Inbox
+    // (Ensures the integrated app fetches fresh Assigned list)
+    if (!inboxId) {
+      location.replace(INBOX_REDIRECT);
+    } else {
+      // Load bundle details for review (dates only)
+      (async () => {
+        try {
+          const url = `/api/inbox/get?inboxId=${encodeURIComponent(inboxId)}`;
+          const r = await fetch(url, { cache:"no-store" });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const j = await r.json();
+
+          function normalizeBundle(b){
+            return {
+              id: b.id || b.inboxId,
+              title: b.title,
+              startDate: b.start_date || b.startDate,
+              timezone: b.timezone,
+              assignedUser: b.assigned_user || b.assigned_user_email || b.assigned_user_email?.email || "",
+              archivedAt: b.archived_at || b.archivedAt || null,
+              tasks: Array.isArray(b.tasks) ? b.tasks.map(t => ({
+                title: t.title,
+                date: t.date || t.day || t.when || t.start || t.dateStr || null,
+                time: t.time || t.startTime || null,
+                durationMins: t.durationMins || t.duration || null,
+                notes: t.notes || ""
+              })) : []
+            };
+          }
+
+          const bundle = normalizeBundle(j.bundle || j || {});
+          if (!bundle.id){ throw new Error("Not found"); }
+          // Already archived? Bounce to Inbox (Assigned tab) to reflect current state
+          if (bundle.archivedAt) {
+            location.replace(INBOX_REDIRECT);
+            return;
+          }
+          // Fill meta
+          els.bTitle.textContent = fmt(bundle.title);
+          els.bStart.textContent = fmt(bundle.startDate);
+          els.bTz.textContent = fmt(bundle.timezone);
+
+          // Render tasks (dates only)
+          const rows = bundle.tasks.map(t => `
+            <tr>
+              <td class="py-1.5 px-2">${fmt(t.title)}</td>
+              <td class="py-1.5 px-2">${fmt(t.date)}</td>
+              <td class="py-1.5 px-2">${fmt(t.time)}</td>
+              <td class="py-1.5 px-2">${fmt(t.durationMins)}</td>
+              <td class="py-1.5 px-2">${fmt(t.notes)}</td>
+            </tr>
+          `);
+          els.tbody.innerHTML = rows.length ? rows.join("") : `<tr><td colspan="5" class="py-4 text-center text-gray-500">No tasks.</td></tr>`;
+
+          // Wire Push
+          els.pushBtn.onclick = async () => {
+            try{
+              const body = {
+                plannerEmail,
+                userEmail: bundle.assignedUser || "",
+                listTitle: `Plan: ${bundle.title}`,
+                timezone: bundle.timezone || "America/Chicago",
+                startDate: bundle.startDate,
+                mode: "append",
+                inboxId: bundle.id,
+                items: bundle.tasks.map(t => ({
+                  title: t.title,
+                  date: t.date || bundle.startDate,
+                  time: t.time || null,
+                  durationMins: t.durationMins || null,
+                  notes: t.notes || ""
+                }))
+              };
+              const rr = await fetch("/api/push", {
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body: JSON.stringify(body)
+              });
+              const pj = await rr.json().catch(()=> ({}));
+              if (!pj.ok) throw new Error(pj.error || "Push failed");
+              alert("Success — plan pushed to Google Tasks.");
+              // CHANGED: always land on ASSIGNED with cache-busting param
+              location.assign(INBOX_REDIRECT);
+            }catch(e){
+              alert("Error: " + String(e.message||e));
+            }
+          };
+        }catch(e){
+          els.tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-red-600">Error: ${String(e.message||e)}</td></tr>`;
+        }
+      })();
+    }
+  </script>
+</body>
+</html>

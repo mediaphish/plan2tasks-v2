@@ -1,109 +1,181 @@
-export default async function handler(req, res) {
-  const { userEmail } = req.query;
+// /api/connections/status.js
+import { createClient } from '@supabase/supabase-js';
 
-  if (!userEmail) {
-    return res.status(400).json({ error: 'userEmail parameter is required' });
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+async function fetchTasklists(accessToken) {
+  const r = await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=1', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  const text = await r.text();
+  let json;
+  try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
+  return { status: r.status, json };
+}
+
+async function refreshAccessToken(refreshToken) {
+  // Google OAuth2 token endpoint
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID || '',
+    client_secret: GOOGLE_CLIENT_SECRET || '',
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken
+  });
+
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  });
+
+  const data = await r.json();
+  if (!r.ok || !data.access_token) {
+    const err = data && (data.error_description || data.error) ? `${data.error}: ${data.error_description || ''}`.trim() : `HTTP ${r.status}`;
+    throw new Error(err);
   }
 
-  try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+  // expires_in is seconds from now
+  const now = Math.floor(Date.now() / 1000);
+  const google_token_expiry = now + (data.expires_in || 3600);
+  const google_expires_at = new Date(google_token_expiry * 1000).toISOString();
 
-    if (!supabaseUrl || !supabaseKey) {
-      return res.status(500).json({ error: 'Database not configured' });
+  return {
+    google_access_token: data.access_token,
+    google_token_type: data.token_type || 'Bearer',
+    google_scope: data.scope || undefined, // Google may omit; keep previous if missing
+    google_token_expiry,
+    google_expires_at
+  };
+}
+
+export default async function handler(req, res) {
+  try {
+    const userEmail = (req.query.userEmail || '').toString().trim();
+    if (!userEmail) {
+      res.status(400).json({ ok: false, error: 'Missing userEmail' });
+      return;
     }
 
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get user connection
-    const { data: connection, error } = await supabase
+    const { data: row, error } = await supabase
       .from('user_connections')
-      .select('*')
+      .select('provider, user_email, google_access_token, google_refresh_token, google_scope, google_token_type, google_token_expiry, google_expires_at, google_tasklist_id')
       .eq('user_email', userEmail)
-      .eq('planner_email', 'bartpaden@gmail.com')
       .single();
 
-    if (error || !connection) {
-      return res.json({
-        ok: false,
+    if (error || !row) {
+      res.status(200).json({
+        ok: true,
         userEmail,
+        tableUsed: 'user_connections',
+        hasAccessToken: false,
+        hasRefreshToken: false,
+        provider: row?.provider || 'google',
+        google_scope: row?.google_scope || null,
+        google_token_type: row?.google_token_type || null,
+        google_token_expiry: row?.google_token_expiry || null,
+        google_expires_at: row?.google_expires_at || null,
+        google_tasklist_id: row?.google_tasklist_id || null,
         canCallTasks: false,
-        error: 'No connection found'
+        googleError: 'not_connected'
       });
+      return;
     }
 
-    // Check if token is expired
-    const now = new Date();
-    const expiresAt = new Date(connection.expires_at);
-    const isExpired = now >= expiresAt;
+    const hasAccessToken = !!row.google_access_token;
+    const hasRefreshToken = !!row.google_refresh_token;
 
+    // Try current token first
     let canCallTasks = false;
     let googleError = null;
+    let currentAccessToken = row.google_access_token;
 
-    if (isExpired && connection.refresh_token) {
-      // Try to refresh token
-      try {
-        const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            refresh_token: connection.refresh_token,
-            grant_type: 'refresh_token',
-          }),
-        });
+    if (hasAccessToken) {
+      const firstTry = await fetchTasklists(currentAccessToken);
+      if (firstTry.status >= 200 && firstTry.status < 300) {
+        canCallTasks = true;
+      } else if (firstTry.status === 401 || firstTry.status === 403) {
+        // Attempt silent refresh if we can
+        if (hasRefreshToken) {
+          try {
+            const refreshed = await refreshAccessToken(row.google_refresh_token);
 
-        const refreshData = await refreshResponse.json();
+            // Persist refreshed token (and scope/type if present)
+            const updatePayload = {
+              google_access_token: refreshed.google_access_token,
+              google_token_type: refreshed.google_token_type,
+              google_token_expiry: refreshed.google_token_expiry,
+              google_expires_at: refreshed.google_expires_at
+            };
+            if (refreshed.google_scope) {
+              updatePayload.google_scope = refreshed.google_scope;
+            }
 
-        if (refreshResponse.ok) {
-          // Update tokens in database
-          const newExpiresAt = new Date(Date.now() + (refreshData.expires_in * 1000)).toISOString();
-          
-          await supabase
-            .from('user_connections')
-            .update({
-              access_token: refreshData.access_token,
-              expires_at: newExpiresAt,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', connection.id);
+            const { error: upErr } = await supabase
+              .from('user_connections')
+              .update(updatePayload)
+              .eq('user_email', userEmail);
 
-          canCallTasks = true;
+            if (upErr) {
+              googleError = `refresh_persist_failed: ${upErr.message}`;
+            } else {
+              currentAccessToken = refreshed.google_access_token;
+              // Retry with new token
+              const secondTry = await fetchTasklists(currentAccessToken);
+              if (secondTry.status >= 200 && secondTry.status < 300) {
+                canCallTasks = true;
+              } else {
+                googleError = (secondTry.json && (secondTry.json.error?.message || secondTry.json.error)) || `HTTP ${secondTry.status}`;
+              }
+            }
+          } catch (e) {
+            googleError = `refresh_failed: ${e.message}`;
+          }
         } else {
-          googleError = `refresh_failed: ${refreshData.error}`;
+          googleError = (firstTry.json && (firstTry.json.error?.message || firstTry.json.error)) || 'auth_error_no_refresh_token';
         }
-      } catch (refreshError) {
-        googleError = `refresh_failed: ${refreshError.message}`;
+      } else {
+        googleError = (firstTry.json && (firstTry.json.error?.message || firstTry.json.error)) || `HTTP ${firstTry.status}`;
       }
-    } else if (!isExpired) {
-      canCallTasks = true;
+    } else {
+      googleError = 'no_access_token';
     }
 
-    // Check if scope includes tasks
-    const hasTasksScope = connection.scope && connection.scope.includes('https://www.googleapis.com/auth/tasks');
-
-    return res.json({
+    res.status(200).json({
       ok: true,
       userEmail,
       tableUsed: 'user_connections',
-      hasAccessToken: !!connection.access_token,
-      hasRefreshToken: !!connection.refresh_token,
-      provider: connection.provider,
-      google_scope: connection.scope,
-      google_token_type: 'Bearer',
-      google_token_expiry: Math.floor(expiresAt.getTime() / 1000),
-      google_expires_at: connection.expires_at,
-      google_tasklist_id: connection.google_tasklist_id,
-      canCallTasks: canCallTasks && hasTasksScope,
+      hasAccessToken: !!currentAccessToken,
+      hasRefreshToken,
+      provider: row.provider || 'google',
+      google_scope: row.google_scope || null,
+      google_token_type: row.google_token_type || 'Bearer',
+      google_token_expiry: row.google_token_expiry || null,
+      google_expires_at: row.google_expires_at || null,
+      google_tasklist_id: row.google_tasklist_id || null,
+      canCallTasks,
       googleError
     });
-
-  } catch (error) {
-    console.error('Status check error:', error);
-    res.status(500).json({ error: 'Failed to check connection status' });
+  } catch (err) {
+    res.status(200).json({
+      ok: true,
+      userEmail: (req.query.userEmail || '').toString().trim(),
+      tableUsed: 'user_connections',
+      hasAccessToken: false,
+      hasRefreshToken: false,
+      provider: 'google',
+      google_scope: null,
+      google_token_type: null,
+      google_token_expiry: null,
+      google_expires_at: null,
+      google_tasklist_id: null,
+      canCallTasks: false,
+      googleError: `internal_error: ${err.message}`
+    });
   }
 }
