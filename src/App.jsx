@@ -169,7 +169,7 @@ function MainApp(){
       <div className="mx-auto max-w-6xl">
         <div className="mb-3 sm:mb-6 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="text-lg sm:text-2xl font-bold whitespace-nowrap">Plan2Tasks</div>
+            <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-6 sm:h-8" />
             <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">{APP_VERSION}</span>
             <nav className="ml-1 sm:ml-4 flex gap-1 sm:gap-2">
               <NavBtn active={view==="users"} onClick={()=>{ setView("users"); updateQueryView("users"); }} icon={<Users className="h-4 w-4" />}><span className="hidden sm:inline">Users</span></NavBtn>
