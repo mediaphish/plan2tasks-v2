@@ -8,6 +8,9 @@ export default async function handler(req, res) {
 
     const auth = req.headers.authorization || '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    console.log('Received auth header:', auth);
+    console.log('Extracted token:', token);
+    console.log('Planner email:', planner_email);
     if (!token) return res.status(401).json({ error: 'Missing API key (Authorization: Bearer ...)' });
 
     const body = req.body || {};
