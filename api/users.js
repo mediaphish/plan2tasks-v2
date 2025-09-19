@@ -18,7 +18,21 @@ function admin() {
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'Method not allowed' });
+    if (req.method === 'GET') {
+      return handleGet(req, res);
+    } else if (req.method === 'POST') {
+      return handlePost(req, res);
+    } else {
+      return send(res, 405, { ok: false, error: 'Method not allowed' });
+    }
+  } catch (e) {
+    console.error('users error', e);
+    return send(res, 500, { ok: false, error: 'Server error' });
+  }
+}
+
+async function handleGet(req, res) {
+  try {
 
     const url = new URL(req.url, `http://${req.headers.host}`);
     const plannerEmail = n(url.searchParams.get('plannerEmail') || '');
@@ -46,7 +60,7 @@ export default async function handler(req, res) {
 
       for (const c of data || []) {
         const email = n(c.user_email || '');
-        if (!email) continue;
+        if (!email || email === n(plannerEmail)) continue; // Skip planner email
         const next = { email, groups: Array.isArray(c.groups) ? c.groups : [], status: c.status, updated_at: c.updated_at || null, __source: 'connection' };
         const prev = byEmail.get(email);
         if (!prev || (priority[next.status] || 0) >= (priority[prev.status] || 0)) byEmail.set(email, next);
@@ -81,6 +95,33 @@ export default async function handler(req, res) {
 
     const users = Array.from(byEmail.values());
     return send(res, 200, { ok: true, users });
+  } catch (e) {
+    return send(res, 500, { ok: false, error: e.message || 'Unhandled error' });
+  }
+}
+
+async function handlePost(req, res) {
+  try {
+    const { plannerEmail, userEmail, groups } = req.body;
+    
+    if (!plannerEmail || !userEmail) {
+      return send(res, 400, { ok: false, error: 'Missing plannerEmail or userEmail' });
+    }
+
+    const sb = admin();
+    
+    // Update user categories
+    const { error } = await sb
+      .from('user_connections')
+      .update({ groups: groups || [] })
+      .eq('planner_email', plannerEmail)
+      .eq('user_email', userEmail);
+
+    if (error) {
+      return send(res, 500, { ok: false, error: error.message });
+    }
+
+    return send(res, 200, { ok: true });
   } catch (e) {
     return send(res, 500, { ok: false, error: e.message || 'Unhandled error' });
   }
