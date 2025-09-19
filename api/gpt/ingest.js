@@ -16,13 +16,13 @@ export default async function handler(req, res) {
     console.log('Received body:', JSON.stringify(body, null, 2));
     
     const {
-      planner_email,
+      planner_email = body.plannerEmail,
       source = 'gpt',
-      task_list_title,
-      start_date,
+      task_list_title = body.title || body.taskListTitle,
+      start_date = body.startDate,
       timezone = 'America/Chicago',
       tasks = [],
-      suggest_user = null
+      suggest_user = body.suggestUser || body.userEmail || null
     } = body;
 
     console.log('Planner email:', planner_email);
