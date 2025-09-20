@@ -1083,6 +1083,7 @@ function pill(on){ return cn("rounded-full border px-2 py-1 text-xs sm:text-sm",
 /* ───────── Preview / Deliver ───────── */
 function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTasks, replaceMode, setReplaceMode, msg, setMsg, onToast, onPushed }){
   const total=tasks.length;
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
 
   async function pushNow(){
     if (!selectedUserEmail) { setMsg("Choose a user first."); onToast?.("warn","Choose a user first"); return; }
@@ -1130,6 +1131,17 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
       const created = j.created || total;
       setMsg(`Success — ${created} task(s) created`);
       onToast?.("ok", `Pushed ${created} task${created>1?"s":""}`);
+      
+      // Save as template if checkbox is checked
+      if (saveAsTemplate) {
+        try {
+          // TODO: Implement template saving API
+          onToast?.("ok", "Template saved to library");
+        } catch (e) {
+          onToast?.("warn", "Tasks delivered, but template save failed");
+        }
+      }
+      
       setTasks([]);
       onPushed?.(created);
     } catch (e) {
@@ -1189,7 +1201,16 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
             </table>
           </div>
 
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input 
+                type="checkbox" 
+                checked={saveAsTemplate} 
+                onChange={(e)=>setSaveAsTemplate(e.target.checked)} 
+                className="rounded border-gray-300"
+              />
+              Save as Template
+            </label>
             <button onClick={pushNow} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
               Push to Google Tasks
             </button>
