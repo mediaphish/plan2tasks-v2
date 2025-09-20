@@ -155,7 +155,7 @@ function MainApp(){
     try{
       const qs=new URLSearchParams({ plannerEmail, status:"new" });
       const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
-      setInboxBadge((j.bumpCount||0));
+      setInboxBadge((j.count||0));
     }catch(e){/* noop */}
   }
   useEffect(()=>{ if (prefs.show_inbox_badge) loadBadge(); },[plannerEmail,prefs.show_inbox_badge]);
