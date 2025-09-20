@@ -155,8 +155,9 @@ function MainApp(){
     try{
       const qs=new URLSearchParams({ plannerEmail, status:"new" });
       const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
-      setInboxBadge((j.bumpCount||0));
-    }catch(e){/* noop */}
+      console.log('Badge API response:', j);
+      setInboxBadge((j.total||0));
+    }catch(e){console.error('Badge load error:', e);}
   }
   useEffect(()=>{ if (prefs.show_inbox_badge) loadBadge(); },[plannerEmail,prefs.show_inbox_badge]);
 
@@ -164,10 +165,10 @@ function MainApp(){
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-4 sm:mb-8 flex flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mb-6 sm:mb-10 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-6 sm:h-8" />
             <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">{APP_VERSION}</span>
@@ -228,6 +229,7 @@ function MainApp(){
           <InboxViewIntegrated
             plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
+            onBadgeRefresh={loadBadge}
           />
         )}
 
@@ -289,7 +291,7 @@ function Toasts({ items, dismiss }){
 }
 
 /* ───────── Inbox: integrated view (no iframe, no new header) ───────── */
-function InboxViewIntegrated({ plannerEmail, onToast }){
+function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
   const [users,setUsers]=useState([]);
   const [selectedUser,setSelectedUser]=useState("");
   const [rows,setRows]=useState([]);
@@ -375,6 +377,8 @@ function InboxViewIntegrated({ plannerEmail, onToast }){
       });
       // After assignment, reload NEW; if empty, fall back to ASSIGNED
       loadInbox("new", { fallbackToAssigned:true });
+      // Refresh badge count after assignment
+      onBadgeRefresh?.();
       onToast?.("ok","Assigned");
     }catch{
       onToast?.("error","Assign failed");
@@ -382,10 +386,10 @@ function InboxViewIntegrated({ plannerEmail, onToast }){
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="text-base sm:text-lg font-semibold">Inbox — New Bundles</div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <label htmlFor="inboxUserSelect" className="text-sm">Assign to:</label>
           <select
             id="inboxUserSelect"
@@ -1332,7 +1336,7 @@ function UsersView({ plannerEmail, onToast, onManage }){
   const visible = rows.filter(r=>!filter || (r.email||"").toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="text-sm font-semibold">Users</div>
@@ -1826,7 +1830,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-3 text-sm font-semibold">Settings</div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
