@@ -137,6 +137,7 @@ function MainApp(){
   const [prefs,setPrefs]=useState({});
   const [inboxOpen,setInboxOpen]=useState(false); // legacy; not used anymore
   const [inboxBadge,setInboxBadge]=useState(0);
+  const [inviteOpen,setInviteOpen]=useState(false);
   const [toasts,setToasts]=useState([]);
 
   // Load prefs, but do NOT override URL-driven view
@@ -180,6 +181,12 @@ function MainApp(){
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <button 
+              onClick={()=>setInviteOpen(true)} 
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 whitespace-nowrap"
+            >
+              <Mail className="h-4 w-4" /> <span className="hidden sm:inline">Invite User</span>
+            </button>
             {/* NOW: routes to internal Inbox view (no modal, no external page) */}
             <a
               href="/index.html?view=inbox"
@@ -239,6 +246,15 @@ function MainApp(){
           <InboxDrawer
             plannerEmail={plannerEmail}
             onClose={()=>setInboxOpen(false)}
+          />
+        )}
+
+        {/* Global Invite Modal */}
+        {inviteOpen && (
+          <SendInviteModal
+            plannerEmail={plannerEmail}
+            onClose={()=>setInviteOpen(false)}
+            onToast={(t,m)=>toast(t,m)}
           />
         )}
       </div>
@@ -1208,7 +1224,6 @@ function UsersView({ plannerEmail, onToast, onManage }){
   const [rows,setRows]=useState([]);
   const [filter,setFilter]=useState("");
   const [groups,setGroups]=useState({});
-  const [inviteOpen,setInviteOpen]=useState(false);
 
   // Tabs: active | archived | deleted
   const [tab,setTab]=useState("active");
@@ -1367,9 +1382,6 @@ function UsersView({ plannerEmail, onToast, onManage }){
         <div className="flex items-center gap-2">
           <input value={filter} onChange={(e)=>setFilter(e.target.value)} placeholder="Search…" className="rounded-xl border border-gray-300 px-2 py-1 text-sm" />
           <button onClick={load} className="rounded-xl border px-2 py-1 text-sm hover:bg-gray-50"><RotateCcw className="h-4 w-4" /></button>
-          <button onClick={()=>setInviteOpen(true)} className="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">
-            <Mail className="h-4 w-4" /> Send Invite
-          </button>
         </div>
       </div>
 
@@ -1510,13 +1522,6 @@ function UsersView({ plannerEmail, onToast, onManage }){
         </table>
       </div>
 
-      {inviteOpen && (
-        <SendInviteModal
-          plannerEmail={plannerEmail}
-          onClose={()=>setInviteOpen(false)}
-          onToast={onToast}
-        />
-      )}
 
       {catOpen && (
         <CategoriesModal
