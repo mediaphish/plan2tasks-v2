@@ -664,44 +664,56 @@ function PlanView({ plannerEmail, selectedUserEmailProp, onToast }){
   },[onToast]);
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-5 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <div className="text-base sm:text-lg font-semibold">Plan (create & deliver tasks)</div>
-          <div className="text-[11px] sm:text-xs text-gray-500">Set the <b>Plan Name</b>, timezone, and start date. Add tasks, preview, then push.</div>
-          {!!msg && <div className="mt-1 text-xs text-gray-600">{msg}</div>}
+    <div className="space-y-6">
+      {/* Plan Setup Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
+            <div className="text-base sm:text-lg font-semibold">Plan Setup</div>
+          </div>
+          <div className="text-sm text-gray-600 ml-8">Configure your plan details and select the user to receive tasks</div>
+          {!!msg && <div className="mt-2 ml-8 text-xs text-gray-600">{msg}</div>}
         </div>
-        <div className="w-full sm:w-72">
-          <select
-            value={selectedUserEmail || ""}
-            onChange={(e)=>setSelectedUserEmail(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-            title={selectedUserEmail || "— Choose user —"}
-          >
-            <option value="">— Choose user —</option>
-            {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
-              {u.email}
-            </option>))}
-          </select>
-        </div>
-      </div>
 
-      <div className="mb-3 grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))]">
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Plan Name</div>
-          <input value={plan.title} onChange={(e)=>setPlan({...plan, title:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
-        </label>
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Timezone</div>
-          <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
-            {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
-          </select>
-        </label>
-        <div className="block">
-          <div className="mb-1 text-sm font-medium">Plan start date</div>
-          <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap">
-            <Calendar className="h-4 w-4" /> Choose Plan Start Date: {planDateText}
-          </button>
+        <div className="ml-8 space-y-4">
+          {/* User Selection */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <label className="block">
+              <div className="mb-1 text-sm font-medium">Select User</div>
+              <select
+                value={selectedUserEmail || ""}
+                onChange={(e)=>setSelectedUserEmail(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                title={selectedUserEmail || "— Choose user —"}
+              >
+                <option value="">— Choose user —</option>
+                {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+                  {u.email}
+                </option>))}
+              </select>
+            </label>
+          </div>
+
+          {/* Plan Details */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <label className="block">
+              <div className="mb-1 text-sm font-medium">Plan Name</div>
+              <input value={plan.title} onChange={(e)=>setPlan({...plan, title:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
+            </label>
+            <label className="block">
+              <div className="mb-1 text-sm font-medium">Timezone</div>
+              <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+              </select>
+            </label>
+            <div className="block">
+              <div className="mb-1 text-sm font-medium">Plan start date</div>
+              <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap w-full justify-start">
+                <Calendar className="h-4 w-4" /> {planDateText}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -715,31 +727,70 @@ function PlanView({ plannerEmail, selectedUserEmailProp, onToast }){
         </Modal>
       )}
 
-      <TaskEditor
-        planStartDate={plan.startDate}
-        onAdd={(items)=>{
-          setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
-          onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
-        }}
-      />
+      {/* Tasks Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
+            <div className="text-base sm:text-lg font-semibold">Add Tasks</div>
+          </div>
+          <div className="text-sm text-gray-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
+        </div>
 
+        <div className="ml-8">
+          <TaskEditor
+            planStartDate={plan.startDate}
+            onAdd={(items)=>{
+              setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+              onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Deliver Section */}
       {tasks.length>0 && (
-        <ComposerPreview
-          plannerEmail={plannerEmail}
-          selectedUserEmail={selectedUserEmail}
-          plan={plan}
-          tasks={tasks}
-          setTasks={setTasks}
-          replaceMode={replaceMode}
-          setReplaceMode={setReplaceMode}
-          msg={msg}
-          setMsg={setMsg}
-          onToast={onToast}
-          onPushed={()=>{ /* can reload history */ }}
-        />
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">3</div>
+              <div className="text-base sm:text-lg font-semibold">Deliver to User</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">Review your plan and deliver tasks to the selected user's Google Tasks.</div>
+          </div>
+
+          <div className="ml-8">
+            <ComposerPreview
+              plannerEmail={plannerEmail}
+              selectedUserEmail={selectedUserEmail}
+              plan={plan}
+              tasks={tasks}
+              setTasks={setTasks}
+              replaceMode={replaceMode}
+              setReplaceMode={setReplaceMode}
+              msg={msg}
+              setMsg={setMsg}
+              onToast={onToast}
+              onPushed={()=>{ /* can reload history */ }}
+            />
+          </div>
+        </div>
       )}
 
-      <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+      {/* History Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
+            <div className="text-base sm:text-lg font-semibold">Plan History</div>
+          </div>
+          <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
+        </div>
+
+        <div className="ml-8">
+          <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+        </div>
+      </div>
     </div>
   );
 }
