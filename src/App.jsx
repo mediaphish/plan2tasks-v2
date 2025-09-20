@@ -189,7 +189,7 @@ function MainApp(){
             >
               <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
               {prefs.show_inbox_badge && inboxBadge>0 && (
-                <span className="absolute top-0 right-0 translate-x-1/2 translate-y-0 rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-bold text-white min-w-[16px] text-center">{inboxBadge}</span>
+                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-2 rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-bold text-white min-w-[16px] text-center">{inboxBadge}</span>
               )}
             </a>
             <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
