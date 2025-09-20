@@ -169,7 +169,7 @@ function MainApp(){
     <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-6 sm:mb-10 flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-6 sm:mb-6 flex flex-wrap items-center justify-between gap-4 pt-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-6 sm:h-8" />
             <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">{APP_VERSION}</span>
@@ -189,7 +189,7 @@ function MainApp(){
             >
               <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
               {prefs.show_inbox_badge && inboxBadge>0 && (
-                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-bold text-white min-w-[16px] text-center">{inboxBadge}</span>
+                <span className="absolute top-0 right-0 translate-x-1/2 translate-y-0 rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-bold text-white min-w-[16px] text-center">{inboxBadge}</span>
               )}
             </a>
             <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
