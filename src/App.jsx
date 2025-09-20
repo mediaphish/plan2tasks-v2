@@ -156,8 +156,9 @@ function MainApp(){
       const qs=new URLSearchParams({ plannerEmail, status:"new" });
       const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
       console.log('Badge API response:', j);
-      setInboxBadge((j.total||0));
-    }catch(e){console.error('Badge load error:', e);}
+      console.log('Setting badge to:', j.count);
+      setInboxBadge((j.count||0));
+    }catch(e){console.error('Badge error:', e);}
   }
   useEffect(()=>{ if (prefs.show_inbox_badge) loadBadge(); },[plannerEmail,prefs.show_inbox_badge]);
 
@@ -188,7 +189,7 @@ function MainApp(){
             >
               <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
               {prefs.show_inbox_badge && inboxBadge>0 && (
-                <span className="absolute -top-1 -right-1 rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-bold text-white">{inboxBadge}</span>
+                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1.5 py-[2px] text-[10px] font-bold text-white min-w-[16px] text-center">{inboxBadge}</span>
               )}
             </a>
             <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
