@@ -741,9 +741,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         <div className="flex">
           <button
             onClick={() => setActiveTab("plan")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 shadow-sm"
+                ? "bg-white text-gray-900 border-gray-300 shadow-sm border-b-white"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -751,9 +751,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </button>
           <button
             onClick={() => setActiveTab("assigned")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors relative ${
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 shadow-sm"
+                ? "bg-white text-gray-900 border-gray-300 shadow-sm border-b-white"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -766,9 +766,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 shadow-sm"
+                ? "bg-white text-gray-900 border-gray-300 shadow-sm border-b-white"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
