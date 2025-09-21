@@ -741,20 +741,20 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         <div className="flex">
           <button
             onClick={() => setActiveTab("plan")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+            className={`px-4 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)]"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)] py-3"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 py-1.5"
             }`}
           >
             Plan
           </button>
           <button
             onClick={() => setActiveTab("assigned")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
+            className={`px-4 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)]"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)] py-3"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 py-1.5"
             }`}
           >
             Assigned
@@ -766,10 +766,10 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+            className={`px-4 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)]"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)] py-3"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 py-1.5"
             }`}
           >
             Templates & History
@@ -801,7 +801,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       {activeTab === "plan" && (
         <>
           {/* Plan Setup Section */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-2">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-3">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
