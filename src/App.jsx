@@ -641,6 +641,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [msg,setMsg]=useState("");
   const [planDateOpen,setPlanDateOpen]=useState(false);
   const [histReloadKey,setHistReloadKey]=useState(0);
+  const [activeTab,setActiveTab]=useState("plan");
+  const [newBundleCount,setNewBundleCount]=useState(0);
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -669,6 +671,26 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   })(); },[plannerEmail]);
 
   useEffect(()=>{ setTasks([]); setMsg(""); },[selectedUserEmail]);
+
+  async function loadNewBundleCount(){
+    if (!selectedUserEmail) { setNewBundleCount(0); return; }
+    try{
+      const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
+      const r = await fetch(`/api/inbox?${qs.toString()}`);
+      const j = await r.json();
+      
+      const userBundles = (j.bundles || []).filter(b => 
+        (b.assigned_user_email || b.assigned_user) === selectedUserEmail
+      );
+      
+      const newCount = userBundles.filter(b => !b.reviewed_at).length;
+      setNewBundleCount(newCount);
+    }catch(e){
+      setNewBundleCount(0);
+    }
+  }
+
+  useEffect(()=>{ loadNewBundleCount(); },[selectedUserEmail, plannerEmail]);
 
   const planDateText = format(parseYMDLocal(plan.startDate)||new Date(),"EEE MMM d, yyyy");
 
@@ -1480,7 +1502,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast }){
         <div className="flex items-center gap-2">
           <div className="text-sm font-semibold">Assigned Bundles</div>
           {bundles.filter(b => !b.reviewed_at).length > 0 && (
-            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 border border-blue-200">
+            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 border border-red-200">
               {bundles.filter(b => !b.reviewed_at).length} new
             </span>
           )}
@@ -1507,12 +1529,12 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast }){
             ) : bundles.map(b=>{
               const isNew = !b.reviewed_at;
               return (
-                <tr key={b.id} className="border-t">
+                <tr key={b.id} className={`border-t ${isNew ? 'bg-blue-50' : ''}`}>
                   <td className="py-1.5 px-2">
                     <div className="flex items-center gap-2">
                       {b.title || "Untitled Bundle"}
                       {isNew && (
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 border border-blue-200">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600">
                           New
                         </span>
                       )}
@@ -1766,7 +1788,7 @@ function UsersView({ plannerEmail, onToast, onManage }){
 
               const bundleInfo = bundleCounts[r.email] || { new: 0, total: 0 };
               return (
-                <tr key={r.email} className="border-t align-top">
+                <tr key={r.email} className={`border-t align-top ${bundleInfo.new > 0 ? 'bg-blue-50' : ''}`}>
                   <td className="py-1.5 px-2">{r.email || "Unknown"}</td>
                   <td className="py-1.5 px-2">
                     <span className={cn(
@@ -1812,7 +1834,7 @@ function UsersView({ plannerEmail, onToast, onManage }){
                           >
                             Plan
                             {bundleInfo.new > 0 && (
-                              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-800 text-[10px] font-medium w-4 h-4 border border-blue-200">
+                              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold w-4 h-4">
                                 {bundleInfo.new}
                               </span>
                             )}
