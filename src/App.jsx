@@ -807,6 +807,21 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         </div>
       )}
 
+      {/* Assigned Bundles Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
+            <div className="text-base sm:text-lg font-semibold">Assigned Bundles</div>
+          </div>
+          <div className="text-sm text-gray-600 ml-8">Review and work with bundles assigned to this user.</div>
+        </div>
+
+        <div className="ml-8">
+          <AssignedBundlesPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} onToast={onToast} />
+        </div>
+      </div>
+
       {/* History Section */}
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
         <div className="mb-4">
@@ -1399,6 +1414,119 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-lg border px-2 py-1 text-xs"><ChevronLeft className="h-3 w-3" /></button>
         <div className="text-xs">Page {page}</div>
         <button onClick={()=>setPage(p=>p+1)} className="rounded-lg border px-2 py-1 text-xs"><ChevronRight className="h-3 w-3" /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Assigned Bundles Panel ───────── */
+function AssignedBundlesPanel({ plannerEmail, userEmail, onToast }){
+  const [bundles,setBundles]=useState([]);
+  const [loading,setLoading]=useState(false);
+
+  async function load(){
+    if (!userEmail) { setBundles([]); return; }
+    setLoading(true);
+    try{
+      const qs=new URLSearchParams({ plannerEmail, status:"assigned" });
+      const r=await fetch(`/api/inbox?${qs.toString()}`);
+      const j=await r.json();
+      
+      // Filter bundles assigned to the current user
+      const userBundles = (j.bundles||[]).filter(b => 
+        (b.assigned_user_email || b.assigned_user) === userEmail
+      );
+      setBundles(userBundles);
+    }catch(e){
+      console.error('Failed to load assigned bundles:', e);
+      onToast?.("error", "Failed to load assigned bundles");
+    }
+    setLoading(false);
+  }
+
+  async function archiveBundle(inboxId){
+    try{
+      const r=await fetch('/api/inbox/archive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, inboxId })
+      });
+      const j=await r.json();
+      if (r.ok && !j.error) {
+        onToast?.("ok", "Bundle archived");
+        load(); // Reload the list
+      } else {
+        throw new Error(j.error || "Archive failed");
+      }
+    }catch(e){
+      console.error('Archive failed:', e);
+      onToast?.("error", "Failed to archive bundle");
+    }
+  }
+
+  useEffect(()=>{ load(); },[plannerEmail, userEmail]);
+
+  if (!userEmail) {
+    return (
+      <div className="text-sm text-gray-500 py-4 text-center">
+        Select a user to view their assigned bundles
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-sm font-semibold">Assigned Bundles</div>
+        <div className="text-xs text-gray-500">{bundles.length} bundle(s)</div>
+      </div>
+
+      <div className="rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr className="text-left text-gray-500">
+              <th className="py-1.5 px-2">Title</th>
+              <th className="py-1.5 px-2">Start Date</th>
+              <th className="py-1.5 px-2">Timezone</th>
+              <th className="py-1.5 px-2">Tasks</th>
+              <th className="py-1.5 px-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="py-6 text-center text-gray-500">Loading...</td></tr>
+            ) : bundles.length === 0 ? (
+              <tr><td colSpan={5} className="py-6 text-center text-gray-500">No assigned bundles</td></tr>
+            ) : bundles.map(b=>(
+              <tr key={b.id} className="border-t">
+                <td className="py-1.5 px-2">{b.title || "Untitled Bundle"}</td>
+                <td className="py-1.5 px-2">{b.start_date || b.startDate || "—"}</td>
+                <td className="py-1.5 px-2">{b.timezone || "—"}</td>
+                <td className="py-1.5 px-2">{b.tasks?.length || 0}</td>
+                <td className="py-1.5 px-2">
+                  <div className="flex justify-end gap-1">
+                    <button 
+                      onClick={()=>window.open(`/review.html?inboxId=${b.id}`, '_blank')}
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                    >
+                      Review
+                    </button>
+                    <button 
+                      onClick={()=>archiveBundle(b.id)}
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
+                    >
+                      Archive
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-2 text-xs text-gray-500">
+        Click "Review" to edit tasks before pushing to Google Tasks, or "Archive" to remove from assigned list.
       </div>
     </div>
   );
