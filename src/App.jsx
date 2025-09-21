@@ -1518,35 +1518,80 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
   );
 }
 
-/* ───────── History ───────── */
+/* ───────── History + Templates ───────── */
 function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   const [rows,setRows]=useState([]);
+  const [templates,setTemplates]=useState([]);
   const [page,setPage]=useState(1);
   const [total,setTotal]=useState(0);
+  const [templateTotal,setTemplateTotal]=useState(0);
   const [loading,setLoading]=useState(false);
+  const [filter,setFilter]=useState('all'); // 'all', 'history', 'templates'
 
   async function load(){
-    if (!userEmail) { setRows([]); setTotal(0); return; }
+    if (!userEmail) { setRows([]); setTemplates([]); setTotal(0); setTemplateTotal(0); return; }
     setLoading(true);
     try{
-      const r=await fetch(`/api/history/list`, {
+      // Load history
+      const historyR=await fetch(`/api/history/list`, {
         method: "POST",
         headers: { "Content-Type":"application/json" },
         body: JSON.stringify({ plannerEmail, userEmail, status: "active", page })
       });
-      const j=await r.json();
-      setRows(j.rows||[]);
-      setTotal(j.total||0);
+      const historyJ=await historyR.json();
+      setRows(historyJ.rows||[]);
+      setTotal(historyJ.total||0);
+
+      // Load templates
+      const templateR=await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}&page=${page}`);
+      const templateJ=await templateR.json();
+      setTemplates(templateJ.templates||[]);
+      setTemplateTotal(templateJ.total||0);
     }catch(e){/* noop */}
     setLoading(false);
   }
   useEffect(()=>{ load(); },[plannerEmail,userEmail,page,reloadKey]);
 
+  // Combine and filter data
+  const allItems = [
+    ...rows.map(r => ({ ...r, isTemplate: false })),
+    ...templates.map(t => ({ ...t, isTemplate: true, startDate: 'Template' }))
+  ].sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
+
+  const filteredItems = filter === 'all' ? allItems : 
+                       filter === 'history' ? rows.map(r => ({ ...r, isTemplate: false })) :
+                       templates.map(t => ({ ...t, isTemplate: true, startDate: 'Template' }));
+
+  const totalItems = filter === 'all' ? (total + templateTotal) :
+                     filter === 'history' ? total : templateTotal;
+
   return (
     <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
-        <div className="text-sm font-semibold">History</div>
-        <div className="text-xs text-gray-500">{total} plan(s)</div>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-sm font-semibold">History & Templates</div>
+        <div className="text-xs text-gray-500">{totalItems} item(s)</div>
+      </div>
+
+      {/* Filter Controls */}
+      <div className="mb-3 flex gap-2">
+        <button 
+          onClick={()=>setFilter('all')} 
+          className={`px-3 py-1 text-xs rounded-lg border ${filter === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+        >
+          All ({total + templateTotal})
+        </button>
+        <button 
+          onClick={()=>setFilter('history')} 
+          className={`px-3 py-1 text-xs rounded-lg border ${filter === 'history' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+        >
+          History ({total})
+        </button>
+        <button 
+          onClick={()=>setFilter('templates')} 
+          className={`px-3 py-1 text-xs rounded-lg border ${filter === 'templates' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+        >
+          Templates ({templateTotal})
+        </button>
       </div>
 
       <div className="rounded-lg border overflow-x-auto">
@@ -1554,26 +1599,68 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
           <thead className="bg-gray-50">
             <tr className="text-left text-gray-500">
               <th className="py-1.5 px-2">Title</th>
+              <th className="py-1.5 px-2">Type</th>
               <th className="py-1.5 px-2">Start</th>
               <th className="py-1.5 px-2">Items</th>
               <th className="py-1.5 px-2 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(r=>(
-              <tr key={r.id} className="border-t">
-                <td className="py-1.5 px-2">{r.title}</td>
-                <td className="py-1.5 px-2">{r.startDate}</td>
-                <td className="py-1.5 px-2">{r.itemsCount||"—"}</td>
+            {filteredItems.map(item=>(
+              <tr key={`${item.isTemplate ? 'template' : 'history'}-${item.id}`} className="border-t">
+                <td className="py-1.5 px-2">
+                  <div className="flex items-center gap-2">
+                    {item.title}
+                    {item.isTemplate && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        Template
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-1.5 px-2">
+                  {item.isTemplate ? (
+                    <span className="text-blue-600 text-xs">Template</span>
+                  ) : (
+                    <span className="text-gray-600 text-xs">History</span>
+                  )}
+                </td>
+                <td className="py-1.5 px-2">{item.startDate}</td>
+                <td className="py-1.5 px-2">{item.itemsCount||"—"}</td>
                 <td className="py-1.5 px-2">
                   <div className="flex justify-end">
-                    <button onClick={()=>onPrefill?.({ plan:{ title:r.title, startDate:r.startDate, timezone:r.timezone }, tasks:r.tasks, mode:r.mode })} className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50">Restore</button>
+                    {item.isTemplate ? (
+                      <button 
+                        onClick={()=>onPrefill?.({ 
+                          plan:{ title:item.title, description:item.description, startDate:format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" }, 
+                          tasks:item.tasks, 
+                          mode:"append" 
+                        })} 
+                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-blue-600 border-blue-200"
+                      >
+                        Apply Template
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={()=>onPrefill?.({ 
+                          plan:{ title:item.title, startDate:item.startDate, timezone:item.timezone }, 
+                          tasks:item.tasks, 
+                          mode:item.mode 
+                        })} 
+                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                      >
+                        Restore
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
             ))}
-            {(!rows || rows.length===0) && (
-              <tr><td colSpan={4} className="py-6 text-center text-gray-500">No history yet</td></tr>
+            {filteredItems.length === 0 && (
+              <tr><td colSpan={5} className="py-6 text-center text-gray-500">
+                {filter === 'all' ? 'No history or templates yet' :
+                 filter === 'history' ? 'No history yet' : 'No templates yet'}
+              </td></tr>
             )}
           </tbody>
         </table>
