@@ -845,21 +845,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         </div>
       )}
 
-      {/* History Section */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
-            <div className="text-base sm:text-lg font-semibold">Plan History</div>
-          </div>
-          <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
-        </div>
-
-        <div className="ml-8">
-          <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
-        </div>
-      </div>
-
       {/* Assigned Bundles Section */}
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
         <div className="mb-4">
@@ -901,6 +886,21 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onToast?.("ok", `Loaded bundle "${bundle.title}" into plan. Current tasks replaced.`);
             }}
           />
+        </div>
+      </div>
+
+      {/* History Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
+            <div className="text-base sm:text-lg font-semibold">Plan History</div>
+          </div>
+          <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
+        </div>
+
+        <div className="ml-8">
+          <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
         </div>
       </div>
     </div>
