@@ -692,6 +692,22 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
   useEffect(()=>{ loadNewBundleCount(); },[selectedUserEmail, plannerEmail]);
 
+  async function markBundleAsReviewed(inboxId){
+    try{
+      const r = await fetch('/api/inbox/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, inboxId })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) {
+        console.error('Failed to mark bundle as reviewed:', j.error);
+      }
+    }catch(e){
+      console.error('Failed to mark bundle as reviewed:', e);
+    }
+  }
+
   const planDateText = format(parseYMDLocal(plan.startDate)||new Date(),"EEE MMM d, yyyy");
 
   const applyPrefill = useCallback(({ plan: rp, tasks: rt, mode })=>{
@@ -855,7 +871,36 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         </div>
 
         <div className="ml-8">
-          <AssignedBundlesPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} onToast={onToast} />
+          <AssignedBundlesPanel 
+            plannerEmail={plannerEmail} 
+            userEmail={selectedUserEmail} 
+            onToast={onToast}
+            onReviewBundle={(bundle) => {
+              // Load bundle data into the plan view
+              const bundleTasks = (bundle.tasks || []).map(t => ({
+                id: uid(),
+                title: t.title,
+                dayOffset: t.day_offset || 0,
+                time: t.time || '',
+                durationMins: t.duration_mins || null,
+                notes: t.notes || ''
+              }));
+              
+              // Replace current tasks and plan details
+              setTasks(bundleTasks);
+              setPlan({
+                title: bundle.title || "Bundle Plan",
+                startDate: bundle.start_date || bundle.startDate || format(new Date(), "yyyy-MM-dd"),
+                timezone: bundle.timezone || "America/Chicago"
+              });
+              
+              // Mark bundle as reviewed
+              markBundleAsReviewed(bundle.id);
+              
+              // Show toast message
+              onToast?.("ok", `Loaded bundle "${bundle.title}" into plan. Current tasks replaced.`);
+            }}
+          />
         </div>
       </div>
     </div>
@@ -1442,7 +1487,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
 }
 
 /* ───────── Assigned Bundles Panel ───────── */
-function AssignedBundlesPanel({ plannerEmail, userEmail, onToast }){
+function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle }){
   const [bundles,setBundles]=useState([]);
   const [loading,setLoading]=useState(false);
 
@@ -1545,12 +1590,12 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast }){
                   <td className="py-1.5 px-2">{b.tasks?.length || 0}</td>
                   <td className="py-1.5 px-2">
                     <div className="flex justify-end gap-1">
-                      <button 
-                        onClick={()=>window.open(`/review.html?inboxId=${b.id}`, '_blank')}
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
-                      >
-                        Review
-                      </button>
+                    <button 
+                      onClick={()=>onReviewBundle?.(b)}
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                    >
+                      Review
+                    </button>
                       <button 
                         onClick={()=>archiveBundle(b.id)}
                         className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
