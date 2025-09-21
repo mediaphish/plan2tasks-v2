@@ -736,66 +736,64 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
   return (
     <div className="space-y-6">
-      {/* Tabbed Navigation */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-200 pb-4">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab("plan")}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors ${
-                activeTab === "plan"
-                  ? "bg-white text-gray-900 border-gray-300 shadow-sm"
-                  : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              Plan
-            </button>
-            <button
-              onClick={() => setActiveTab("assigned")}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors relative ${
-                activeTab === "assigned"
-                  ? "bg-white text-gray-900 border-gray-300 shadow-sm"
-                  : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              Assigned
-              {newBundleCount > 0 && (
-                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
-                  {newBundleCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("history")}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors ${
-                activeTab === "history"
-                  ? "bg-white text-gray-900 border-gray-300 shadow-sm"
-                  : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              Templates & History
-            </button>
-          </div>
-          
-          {/* User Selection */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">User:</label>
-            <select
-              value={selectedUserEmail || ""}
-              onChange={(e)=>{
-                const newUser = e.target.value;
-                setSelectedUserEmail(newUser);
-                onUserChange?.(newUser);
-              }}
-              className="rounded-xl border border-gray-300 px-3 py-2 text-sm min-w-[200px]"
-              title={selectedUserEmail || "— Choose user —"}
-            >
-              <option value="">— Choose user —</option>
-              {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
-                {u.email}
-              </option>))}
-            </select>
-          </div>
+      {/* Folder Tabs Navigation */}
+      <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-t-lg">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab("plan")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors ${
+              activeTab === "plan"
+                ? "bg-white text-gray-900 border-gray-300 shadow-sm"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Plan
+          </button>
+          <button
+            onClick={() => setActiveTab("assigned")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors relative ${
+              activeTab === "assigned"
+                ? "bg-white text-gray-900 border-gray-300 shadow-sm"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Assigned
+            {newBundleCount > 0 && (
+              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
+                {newBundleCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-colors ${
+              activeTab === "history"
+                ? "bg-white text-gray-900 border-gray-300 shadow-sm"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Templates & History
+          </button>
+        </div>
+        
+        {/* User Selection */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">User:</label>
+          <select
+            value={selectedUserEmail || ""}
+            onChange={(e)=>{
+              const newUser = e.target.value;
+              setSelectedUserEmail(newUser);
+              onUserChange?.(newUser);
+            }}
+            className="rounded-xl border border-gray-300 px-3 py-2 text-sm min-w-[200px] bg-white"
+            title={selectedUserEmail || "— Choose user —"}
+          >
+            <option value="">— Choose user —</option>
+            {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+              {u.email}
+            </option>))}
+          </select>
         </div>
       </div>
 
