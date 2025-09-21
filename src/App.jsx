@@ -738,42 +738,64 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     <div className="space-y-6">
       {/* Tabbed Navigation */}
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-        <div className="flex border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab("plan")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "plan"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Plan
-          </button>
-          <button
-            onClick={() => setActiveTab("assigned")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors relative ${
-              activeTab === "assigned"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Assigned
-            {newBundleCount > 0 && (
-              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
-                {newBundleCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "history"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            History
-          </button>
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("plan")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "plan"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Plan
+            </button>
+            <button
+              onClick={() => setActiveTab("assigned")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors relative ${
+                activeTab === "assigned"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Assigned
+              {newBundleCount > 0 && (
+                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
+                  {newBundleCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "history"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              History
+            </button>
+          </div>
+          
+          {/* User Selection */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">User:</label>
+            <select
+              value={selectedUserEmail || ""}
+              onChange={(e)=>{
+                const newUser = e.target.value;
+                setSelectedUserEmail(newUser);
+                onUserChange?.(newUser);
+              }}
+              className="rounded-xl border border-gray-300 px-3 py-2 text-sm min-w-[200px]"
+              title={selectedUserEmail || "— Choose user —"}
+            >
+              <option value="">— Choose user —</option>
+              {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+                {u.email}
+              </option>))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -787,33 +809,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
             <div className="text-base sm:text-lg font-semibold">Plan Setup</div>
           </div>
-          <div className="text-sm text-gray-600 ml-8">Configure your plan details and select the user to receive tasks</div>
+          <div className="text-sm text-gray-600 ml-8">Configure your plan details and settings</div>
           {!!msg && <div className="mt-2 ml-8 text-xs text-gray-600">{msg}</div>}
         </div>
 
         <div className="ml-8 space-y-4">
-          {/* User Selection */}
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <label className="block">
-              <div className="mb-1 text-sm font-medium">Select User</div>
-              <select
-                value={selectedUserEmail || ""}
-                onChange={(e)=>{
-                  const newUser = e.target.value;
-                  setSelectedUserEmail(newUser);
-                  onUserChange?.(newUser);
-                }}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                title={selectedUserEmail || "— Choose user —"}
-              >
-                <option value="">— Choose user —</option>
-                {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
-                  {u.email}
-                </option>))}
-              </select>
-            </label>
-          </div>
-
           {/* Plan Details */}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <label className="block">
