@@ -807,21 +807,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         </div>
       )}
 
-      {/* Assigned Bundles Section */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
-            <div className="text-base sm:text-lg font-semibold">Assigned Bundles</div>
-          </div>
-          <div className="text-sm text-gray-600 ml-8">Review and work with bundles assigned to this user.</div>
-        </div>
-
-        <div className="ml-8">
-          <AssignedBundlesPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} onToast={onToast} />
-        </div>
-      </div>
-
       {/* History Section */}
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
         <div className="mb-4">
@@ -834,6 +819,21 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
         <div className="ml-8">
           <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+        </div>
+      </div>
+
+      {/* Assigned Bundles Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
+            <div className="text-base sm:text-lg font-semibold">Assigned Bundles</div>
+          </div>
+          <div className="text-sm text-gray-600 ml-8">Review and work with bundles assigned to this user.</div>
+        </div>
+
+        <div className="ml-8">
+          <AssignedBundlesPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} onToast={onToast} />
         </div>
       </div>
     </div>
@@ -1477,7 +1477,14 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast }){
   return (
     <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-sm font-semibold">Assigned Bundles</div>
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-semibold">Assigned Bundles</div>
+          {bundles.filter(b => !b.reviewed_at).length > 0 && (
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 border border-blue-200">
+              {bundles.filter(b => !b.reviewed_at).length} new
+            </span>
+          )}
+        </div>
         <div className="text-xs text-gray-500">{bundles.length} bundle(s)</div>
       </div>
 
@@ -1497,30 +1504,42 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast }){
               <tr><td colSpan={5} className="py-6 text-center text-gray-500">Loading...</td></tr>
             ) : bundles.length === 0 ? (
               <tr><td colSpan={5} className="py-6 text-center text-gray-500">No assigned bundles</td></tr>
-            ) : bundles.map(b=>(
-              <tr key={b.id} className="border-t">
-                <td className="py-1.5 px-2">{b.title || "Untitled Bundle"}</td>
-                <td className="py-1.5 px-2">{b.start_date || b.startDate || "—"}</td>
-                <td className="py-1.5 px-2">{b.timezone || "—"}</td>
-                <td className="py-1.5 px-2">{b.tasks?.length || 0}</td>
-                <td className="py-1.5 px-2">
-                  <div className="flex justify-end gap-1">
-                    <button 
-                      onClick={()=>window.open(`/review.html?inboxId=${b.id}`, '_blank')}
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
-                    >
-                      Review
-                    </button>
-                    <button 
-                      onClick={()=>archiveBundle(b.id)}
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
-                    >
-                      Archive
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            ) : bundles.map(b=>{
+              const isNew = !b.reviewed_at;
+              return (
+                <tr key={b.id} className="border-t">
+                  <td className="py-1.5 px-2">
+                    <div className="flex items-center gap-2">
+                      {b.title || "Untitled Bundle"}
+                      {isNew && (
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 border border-blue-200">
+                          New
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-1.5 px-2">{b.start_date || b.startDate || "—"}</td>
+                  <td className="py-1.5 px-2">{b.timezone || "—"}</td>
+                  <td className="py-1.5 px-2">{b.tasks?.length || 0}</td>
+                  <td className="py-1.5 px-2">
+                    <div className="flex justify-end gap-1">
+                      <button 
+                        onClick={()=>window.open(`/review.html?inboxId=${b.id}`, '_blank')}
+                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                      >
+                        Review
+                      </button>
+                      <button 
+                        onClick={()=>archiveBundle(b.id)}
+                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
+                      >
+                        Archive
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -1537,6 +1556,7 @@ function UsersView({ plannerEmail, onToast, onManage }){
   const [rows,setRows]=useState([]);
   const [filter,setFilter]=useState("");
   const [groups,setGroups]=useState({});
+  const [bundleCounts,setBundleCounts]=useState({});
 
   // Tabs: active | archived | deleted
   const [tab,setTab]=useState("active");
@@ -1566,6 +1586,33 @@ function UsersView({ plannerEmail, onToast, onManage }){
     const r=await fetch(`/api/users?${qs.toString()}`); const j=await r.json();
     const arr = (j.users||[]).map(u => ({ ...u, email: u.email || u.userEmail || u.user_email || "" }));
     setRows(arr);
+    
+    // Load bundle counts for each user
+    loadBundleCounts(arr);
+  }
+
+  async function loadBundleCounts(users){
+    const counts = {};
+    for (const user of users) {
+      try {
+        const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
+        const r = await fetch(`/api/inbox?${qs.toString()}`);
+        const j = await r.json();
+        
+        // Filter bundles assigned to this user
+        const userBundles = (j.bundles || []).filter(b => 
+          (b.assigned_user_email || b.assigned_user) === user.email
+        );
+        
+        const newCount = userBundles.filter(b => !b.reviewed_at).length;
+        const totalCount = userBundles.length;
+        
+        counts[user.email] = { new: newCount, total: totalCount };
+      } catch (e) {
+        counts[user.email] = { new: 0, total: 0 };
+      }
+    }
+    setBundleCounts(counts);
   }
 
   async function saveGroups(email, nextList){
@@ -1717,6 +1764,7 @@ function UsersView({ plannerEmail, onToast, onManage }){
               const isDeleted = (r.status||"").toLowerCase()==="deleted";
               const isPendingInvite = !isArchived && !isDeleted && ((r.status||"").toLowerCase()==="pending") && (r.__source==="invite");
 
+              const bundleInfo = bundleCounts[r.email] || { new: 0, total: 0 };
               return (
                 <tr key={r.email} className="border-t align-top">
                   <td className="py-1.5 px-2">{r.email || "Unknown"}</td>
@@ -1759,10 +1807,15 @@ function UsersView({ plannerEmail, onToast, onManage }){
                         <>
                           <button
                             onClick={()=>onManage?.(r.email)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 relative"
                             title="Open Plan view for this user"
                           >
                             Plan
+                            {bundleInfo.new > 0 && (
+                              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-800 text-[10px] font-medium w-4 h-4 border border-blue-200">
+                                {bundleInfo.new}
+                              </span>
+                            )}
                           </button>
 
                           {/* NEW: Cancel invite for pending invite-only rows */}
