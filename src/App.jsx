@@ -691,6 +691,13 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   }
 
   useEffect(()=>{ loadNewBundleCount(); },[selectedUserEmail, plannerEmail]);
+  
+  // Reload bundle count when switching to Assigned tab
+  useEffect(()=>{ 
+    if (activeTab === "assigned") {
+      loadNewBundleCount(); 
+    }
+  },[activeTab]);
 
   async function markBundleAsReviewed(inboxId){
     try{
@@ -729,8 +736,52 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
   return (
     <div className="space-y-6">
-      {/* Plan Setup Section */}
+      {/* Tabbed Navigation */}
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab("plan")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "plan"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Plan
+          </button>
+          <button
+            onClick={() => setActiveTab("assigned")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors relative ${
+              activeTab === "assigned"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Assigned
+            {newBundleCount > 0 && (
+              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
+                {newBundleCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "history"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            History
+          </button>
+        </div>
+      </div>
+
+      {/* Plan Tab Content */}
+      {activeTab === "plan" && (
+        <>
+          {/* Plan Setup Section */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
@@ -844,9 +895,12 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </div>
         </div>
       )}
+        </>
+      )}
 
-      {/* Assigned Bundles Section */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+      {/* Assigned Tab Content */}
+      {activeTab === "assigned" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
@@ -893,6 +947,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                 // Mark bundle as reviewed
                 await markBundleAsReviewed(bundle.id);
                 
+                // Switch to Plan tab to show the loaded bundle
+                setActiveTab("plan");
+                
                 // Show toast message
                 onToast?.("ok", `Loaded bundle "${fullBundle.title}" into plan. Current tasks replaced.`);
               } catch (e) {
@@ -903,21 +960,24 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           />
         </div>
       </div>
+      )}
 
-      {/* History Section */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
-            <div className="text-base sm:text-lg font-semibold">Plan History</div>
+      {/* History Tab Content */}
+      {activeTab === "history" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
+              <div className="text-base sm:text-lg font-semibold">Plan History</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
           </div>
-          <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
-        </div>
 
-        <div className="ml-8">
-          <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+          <div className="ml-8">
+            <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
