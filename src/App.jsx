@@ -743,7 +743,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("plan")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 shadow-sm border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)]"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -753,7 +753,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("assigned")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 shadow-sm border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)]"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -768,7 +768,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 shadow-sm border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white shadow-[0_-1px_0_0_rgb(0_0_0_/_0.05),_1px_0_0_0_rgb(0_0_0_/_0.05),_-1px_0_0_0_rgb(0_0_0_/_0.05)]"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
