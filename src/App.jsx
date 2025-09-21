@@ -1518,15 +1518,17 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
   );
 }
 
-/* ───────── History + Templates ───────── */
+/* ───────── Templates & History ───────── */
 function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   const [rows,setRows]=useState([]);
   const [templates,setTemplates]=useState([]);
   const [page,setPage]=useState(1);
+  const [pageSize,setPageSize]=useState(25);
   const [total,setTotal]=useState(0);
   const [templateTotal,setTemplateTotal]=useState(0);
   const [loading,setLoading]=useState(false);
   const [filter,setFilter]=useState('all'); // 'all', 'history', 'templates'
+  const [searchQuery,setSearchQuery]=useState('');
 
   async function load(){
     if (!userEmail) { setRows([]); setTemplates([]); setTotal(0); setTemplateTotal(0); return; }
@@ -1543,14 +1545,14 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
       setTotal(historyJ.total||0);
 
       // Load templates
-      const templateR=await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}&page=${page}`);
+      const templateR=await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}&page=${page}&pageSize=${pageSize}`);
       const templateJ=await templateR.json();
       setTemplates(templateJ.templates||[]);
       setTemplateTotal(templateJ.total||0);
     }catch(e){/* noop */}
     setLoading(false);
   }
-  useEffect(()=>{ load(); },[plannerEmail,userEmail,page,reloadKey]);
+  useEffect(()=>{ load(); },[plannerEmail,userEmail,page,pageSize,reloadKey]);
 
   // Combine and filter data
   const allItems = [
@@ -1558,9 +1560,15 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
     ...templates.map(t => ({ ...t, isTemplate: true, startDate: 'Template' }))
   ].sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
 
-  const filteredItems = filter === 'all' ? allItems : 
-                       filter === 'history' ? rows.map(r => ({ ...r, isTemplate: false })) :
-                       templates.map(t => ({ ...t, isTemplate: true, startDate: 'Template' }));
+  // Apply search filter
+  const searchFilteredItems = searchQuery ? allItems.filter(item => 
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) : allItems;
+
+  const filteredItems = filter === 'all' ? searchFilteredItems : 
+                       filter === 'history' ? searchFilteredItems.filter(item => !item.isTemplate) :
+                       searchFilteredItems.filter(item => item.isTemplate);
 
   const totalItems = filter === 'all' ? (total + templateTotal) :
                      filter === 'history' ? total : templateTotal;
@@ -1568,30 +1576,61 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   return (
     <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm font-semibold">History & Templates</div>
-        <div className="text-xs text-gray-500">{totalItems} item(s)</div>
+        <div className="text-sm font-semibold">Templates & History</div>
+        <div className="text-xs text-gray-500">{filteredItems.length} of {totalItems} item(s)</div>
       </div>
 
-      {/* Filter Controls */}
-      <div className="mb-3 flex gap-2">
-        <button 
-          onClick={()=>setFilter('all')} 
-          className={`px-3 py-1 text-xs rounded-lg border ${filter === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
-        >
-          All ({total + templateTotal})
-        </button>
-        <button 
-          onClick={()=>setFilter('history')} 
-          className={`px-3 py-1 text-xs rounded-lg border ${filter === 'history' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
-        >
-          History ({total})
-        </button>
-        <button 
-          onClick={()=>setFilter('templates')} 
-          className={`px-3 py-1 text-xs rounded-lg border ${filter === 'templates' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
-        >
-          Templates ({templateTotal})
-        </button>
+      {/* Search and Controls */}
+      <div className="mb-4 space-y-3">
+        {/* Search Box */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search templates and history..."
+            value={searchQuery}
+            onChange={(e)=>setSearchQuery(e.target.value)}
+            className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        {/* Filter Controls and Page Size */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex gap-2">
+            <button 
+              onClick={()=>setFilter('all')} 
+              className={`px-3 py-1 text-xs rounded-lg border ${filter === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+            >
+              All ({total + templateTotal})
+            </button>
+            <button 
+              onClick={()=>setFilter('history')} 
+              className={`px-3 py-1 text-xs rounded-lg border ${filter === 'history' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+            >
+              History ({total})
+            </button>
+            <button 
+              onClick={()=>setFilter('templates')} 
+              className={`px-3 py-1 text-xs rounded-lg border ${filter === 'templates' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+            >
+              Templates ({templateTotal})
+            </button>
+          </div>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Show:</span>
+            <select 
+              value={pageSize} 
+              onChange={(e)=>setPageSize(Number(e.target.value))}
+              className="rounded-lg border border-gray-300 px-2 py-1 text-xs"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-lg border overflow-x-auto">
@@ -1638,7 +1677,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
                         })} 
                         className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-blue-600 border-blue-200"
                       >
-                        Apply Template
+                        Use Template
                       </button>
                     ) : (
                       <button 
