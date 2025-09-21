@@ -804,7 +804,7 @@ function TaskEditor({ planStartDate, onAdd }){
   const [time,setTime]=useState("");
   const [dur,setDur]=useState(60);
 
-  const [repeat,setRepeat]=useState("none");    // none | daily | weekly | monthly
+  const [repeat,setRepeat]=useState("none");    // none | daily | weekly | monthly | custom
   const [interval,setInterval]=useState(1);     // every N units (1 = every day/week/month)
   const [endMode,setEndMode]=useState("count"); // "horizon" | "until" | "count"
   const [count,setCount]=useState(4);
@@ -901,6 +901,57 @@ function TaskEditor({ planStartDate, onAdd }){
       }
     }
 
+    if (repeat==="custom"){
+      // Custom repeat uses weekly logic with selected days
+      const checked=weeklyDays.map((v,i)=>v?i:null).filter(v=>v!==null);
+      if (checked.length===0) { alert("Pick at least one weekday for custom repeat."); return; }
+
+      const baseDow=base.getDay();
+      const baseStartOfWeek=addDaysLocal(base, -baseDow);
+      const emitWeek=(weekIndex)=>{
+        for(const dow of checked){
+          const d=addDaysLocal(baseStartOfWeek, dow + weekIndex*7*step);
+          if (d>=base) push(d);
+        }
+      };
+
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        let week=0; let total=0;
+        while (total<n){
+          emitWeek(week);
+          total += checked.length;
+          week++;
+        }
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
+        let week=0;
+        while (week<2000){
+          let anyAdded=false;
+          for(const dow of checked){
+            const d=addDaysLocal(baseStartOfWeek, dow + week*7*step);
+            if (d>until) return;
+            if (d>=base) { push(d); anyAdded=true; }
+          }
+          if (!anyAdded) break;
+          week++;
+        }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let week=0;
+        while (week<2000){
+          let anyAdded=false;
+          for(const dow of checked){
+            const d=addDaysLocal(baseStartOfWeek, dow + week*7*step);
+            if (d>end) return;
+            if (d>=base) { push(d); anyAdded=true; }
+          }
+          if (!anyAdded) break;
+          week++;
+        }
+      }
+    }
+
     if (added.length===0) return;
     onAdd(added);
     setTitle(""); setNotes("");
@@ -952,96 +1003,128 @@ function TaskEditor({ planStartDate, onAdd }){
       )}
 
       {/* Recurrence */}
-      <div className="mt-2 rounded-xl border border-gray-200 bg-white p-2 sm:p-3">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="mt-2 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
           <div className="text-sm font-medium">Repeat</div>
-          <select value={repeat} onChange={(e)=>setRepeat(e.target.value)} className="rounded-xl border border-gray-300 px-2 py-1 text-sm">
-            <option value="none">Doesn’t repeat</option>
+          <select value={repeat} onChange={(e)=>setRepeat(e.target.value)} className="rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="none">Doesn't repeat</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
+            <option value="custom">Custom</option>
           </select>
-
-          {repeat==="daily" && (
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-sm">Every</span>
-              <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
-              <span className="text-sm">day(s)</span>
-            </div>
-          )}
-
-          {repeat==="weekly" && (
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>(
-                <button key={d} type="button" className={pill(weeklyDays[i])} onClick={()=>setWeeklyDays(v=>{const n=[...v]; n[i]=!n[i]; return n;})}>{d}</button>
-              ))}
-            </div>
-          )}
-
-          {repeat==="monthly" && (
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-sm">Every</span>
-              <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
-              <span className="text-sm">month(s)</span>
-            </div>
-          )}
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="text-sm font-medium">Ends</div>
-          <select
-            value={endMode}
-            onChange={(e)=>setEndMode(e.target.value)}
-            className="rounded-xl border border-gray-300 px-2 py-1 text-sm"
-          >
-            <option value="horizon">No end date</option>
-            <option value="until">On date</option>
-            <option value="count">After</option>
-          </select>
+        {/* Progressive disclosure - only show options when repeat is selected */}
+        {repeat !== "none" && (
+          <div className="space-y-3">
+            {/* Daily options */}
+            {repeat === "daily" && (
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="text-sm">Every</span>
+                <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                <span className="text-sm">day(s)</span>
+              </div>
+            )}
 
-          {endMode==="count" && (
-            <>
-              <input
-                type="number"
-                min={1}
-                value={count}
-                onChange={(e)=>setCount(e.target.value)}
-                className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
-              />
-              <span className="text-sm">occurrence(s)</span>
-            </>
-          )}
+            {/* Weekly options */}
+            {repeat === "weekly" && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Every</span>
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <span className="text-sm">week(s) on:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>(
+                    <button key={d} type="button" className={pill(weeklyDays[i])} onClick={()=>setWeeklyDays(v=>{const n=[...v]; n[i]=!n[i]; return n;})}>{d}</button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {endMode==="until" && (
-            <>
-              <span className="text-sm">Date</span>
-              <UntilDatePicker value={untilDate} setValue={setUntilDate} planStartDate={planStartDate} />
-            </>
-          )}
+            {/* Monthly options */}
+            {repeat === "monthly" && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Every</span>
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <span className="text-sm">month(s)</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Pattern:</span>
+                  <select value={monthlyMode} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded-xl border border-gray-300 px-2 py-1 text-sm">
+                    <option value="dom">Same day of month</option>
+                    <option value="dow">Same weekday pattern</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
-          {endMode==="horizon" && (
-            <>
-              <span className="text-sm">Planning window (months)</span>
-              <input
-                type="number"
-                min={1}
-                value={horizonMonths}
-                onChange={(e)=>setHorizonMonths(e.target.value)}
-                className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
-              />
-            </>
-          )}
+            {/* Custom options - "daily on Monday, Wednesday, Friday" */}
+            {repeat === "custom" && (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Every</span>
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <span className="text-sm">week(s) on:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>(
+                    <button key={d} type="button" className={pill(weeklyDays[i])} onClick={()=>setWeeklyDays(v=>{const n=[...v]; n[i]=!n[i]; return n;})}>{d}</button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {repeat==="monthly" && (
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-sm">Pattern</span>
-              <select value={monthlyMode} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded-xl border border-gray-300 px-2 py-1 text-sm">
-                <option value="dom">Same day of month</option>
-                <option value="dow">Same weekday pattern</option>
+            {/* End conditions - show for all repeat types except none */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 border-t border-gray-100">
+              <div className="text-sm font-medium">Ends</div>
+              <select
+                value={endMode}
+                onChange={(e)=>setEndMode(e.target.value)}
+                className="rounded-xl border border-gray-300 px-2 py-1 text-sm"
+              >
+                <option value="horizon">No end date</option>
+                <option value="until">On date</option>
+                <option value="count">After</option>
               </select>
+
+              {endMode==="count" && (
+                <>
+                  <input
+                    type="number"
+                    min={1}
+                    value={count}
+                    onChange={(e)=>setCount(e.target.value)}
+                    className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+                  />
+                  <span className="text-sm">occurrence(s)</span>
+                </>
+              )}
+
+              {endMode==="until" && (
+                <>
+                  <span className="text-sm">Date</span>
+                  <UntilDatePicker value={untilDate} setValue={setUntilDate} planStartDate={planStartDate} />
+                </>
+              )}
+
+              {endMode==="horizon" && (
+                <>
+                  <span className="text-sm">Planning window (months)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={horizonMonths}
+                    onChange={(e)=>setHorizonMonths(e.target.value)}
+                    className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+                  />
+                </>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-3 flex items-center justify-between">
