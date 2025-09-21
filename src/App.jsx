@@ -860,30 +860,45 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             plannerEmail={plannerEmail} 
             userEmail={selectedUserEmail} 
             onToast={onToast}
-            onReviewBundle={(bundle) => {
-              // Load bundle data into the plan view
-              const bundleTasks = (bundle.tasks || []).map(t => ({
-                id: uid(),
-                title: t.title,
-                dayOffset: t.day_offset || 0,
-                time: t.time || '',
-                durationMins: t.duration_mins || null,
-                notes: t.notes || ''
-              }));
-              
-              // Replace current tasks and plan details
-              setTasks(bundleTasks);
-              setPlan({
-                title: bundle.title || "Bundle Plan",
-                startDate: bundle.start_date || bundle.startDate || format(new Date(), "yyyy-MM-dd"),
-                timezone: bundle.timezone || "America/Chicago"
-              });
-              
-              // Mark bundle as reviewed
-              markBundleAsReviewed(bundle.id);
-              
-              // Show toast message
-              onToast?.("ok", `Loaded bundle "${bundle.title}" into plan. Current tasks replaced.`);
+            onReviewBundle={async (bundle) => {
+              try {
+                // First, fetch the full bundle data including tasks
+                const qs = new URLSearchParams({ inboxId: bundle.id });
+                const r = await fetch(`/api/inbox/get?${qs.toString()}`);
+                const j = await r.json();
+                
+                if (!r.ok || j.error) {
+                  onToast?.("error", `Failed to load bundle: ${j.error}`);
+                  return;
+                }
+                
+                const fullBundle = j.bundle;
+                const bundleTasks = (fullBundle.tasks || []).map(t => ({
+                  id: uid(),
+                  title: t.title,
+                  dayOffset: t.day_offset || 0,
+                  time: t.time || '',
+                  durationMins: t.duration_mins || null,
+                  notes: t.notes || ''
+                }));
+                
+                // Replace current tasks and plan details
+                setTasks(bundleTasks);
+                setPlan({
+                  title: fullBundle.title || "Bundle Plan",
+                  startDate: fullBundle.start_date || format(new Date(), "yyyy-MM-dd"),
+                  timezone: fullBundle.timezone || "America/Chicago"
+                });
+                
+                // Mark bundle as reviewed
+                await markBundleAsReviewed(bundle.id);
+                
+                // Show toast message
+                onToast?.("ok", `Loaded bundle "${fullBundle.title}" into plan. Current tasks replaced.`);
+              } catch (e) {
+                console.error('Review error:', e);
+                onToast?.("error", `Failed to load bundle: ${e.message}`);
+              }
             }}
           />
         </div>
