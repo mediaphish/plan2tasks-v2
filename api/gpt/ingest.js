@@ -56,17 +56,25 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid API key' });
     }
 
-    // Create bundle
+    // Create bundle - auto-assign if user is suggested
+    const bundleData = {
+      planner_email,
+      source,
+      title: task_list_title,
+      start_date,
+      timezone,
+      suggested_user: suggest_user || null
+    };
+
+    // If a user is suggested, auto-assign the bundle
+    if (suggest_user) {
+      bundleData.assigned_user_email = suggest_user;
+      bundleData.assigned_at = new Date().toISOString();
+    }
+
     const { data: bundle, error: berr } = await supabaseAdmin
       .from('inbox_bundles')
-      .insert({
-        planner_email,
-        source,
-        title: task_list_title,
-        start_date,
-        timezone,
-        suggested_user: suggest_user || null
-      })
+      .insert(bundleData)
       .select()
       .single();
 
@@ -85,7 +93,12 @@ export default async function handler(req, res) {
     const { error: terr } = await supabaseAdmin.from('inbox_tasks').insert(cleaned);
     if (terr) return res.status(500).json({ error: terr.message });
 
-    return res.status(200).json({ inbox_id: bundle.id, count: cleaned.length });
+    return res.status(200).json({ 
+      inbox_id: bundle.id, 
+      count: cleaned.length,
+      assigned: !!suggest_user,
+      user_email: suggest_user || null
+    });
   } catch (e) {
     console.error('ingest error', e);
     console.error('Error details:', e.message, e.stack);
