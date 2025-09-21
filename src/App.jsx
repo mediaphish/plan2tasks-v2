@@ -635,7 +635,7 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
 function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange }){
   const [users,setUsers]=useState([]);
   const [selectedUserEmail,setSelectedUserEmail]=useState("");
-  const [plan,setPlan]=useState({ title:"Weekly Plan", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
+  const [plan,setPlan]=useState({ title:"Weekly Plan", description:"", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
   const [tasks,setTasks]=useState([]);
   const [replaceMode,setReplaceMode]=useState(false);
   const [msg,setMsg]=useState("");
@@ -819,6 +819,10 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             <label className="block">
               <div className="mb-1 text-sm font-medium">Plan Name</div>
               <input value={plan.title} onChange={(e)=>setPlan({...plan, title:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
+            </label>
+            <label className="block md:col-span-2">
+              <div className="mb-1 text-sm font-medium">Plan Description</div>
+              <input value={plan.description} onChange={(e)=>setPlan({...plan, description:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
             </label>
             <label className="block">
               <div className="mb-1 text-sm font-medium">Timezone</div>
@@ -1405,10 +1409,26 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
       // Save as template if checkbox is checked
       if (saveAsTemplate) {
         try {
-          // TODO: Implement template saving API
-          onToast?.("ok", "Template saved to library");
+          const templateResponse = await fetch('/api/templates/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plannerEmail,
+              name: plan.title,
+              description: plan.description || `Template created from plan: ${plan.title}`,
+              tasks: tasks
+            })
+          });
+          
+          const templateResult = await templateResponse.json();
+          
+          if (templateResult.ok) {
+            onToast?.("ok", `Template "${plan.title}" saved to your library`);
+          } else {
+            throw new Error(templateResult.error || 'Template save failed');
+          }
         } catch (e) {
-          onToast?.("warn", "Tasks delivered, but template save failed");
+          onToast?.("warn", `Tasks delivered successfully, but template save failed: ${e.message}`);
         }
       }
       
@@ -1479,7 +1499,14 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                 onChange={(e)=>setSaveAsTemplate(e.target.checked)} 
                 className="rounded border-gray-300"
               />
-              Save as Template
+              <span>
+                Save as Template
+                {saveAsTemplate && (
+                  <span className="ml-1 text-xs text-gray-500">
+                    (will save "{plan.title}" to your template library)
+                  </span>
+                )}
+              </span>
             </label>
             <button onClick={pushNow} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
               Deliver to {selectedUserEmail || 'User'}
