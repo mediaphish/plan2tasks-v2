@@ -127,13 +127,14 @@ function MainApp(){
   const usp = typeof window!=="undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
+  const urlUser = usp.get("user") || "";
   const validViews = new Set(["users","plan","settings","inbox"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
   const plannerEmail = (urlPE || storedPE || "bartpaden@gmail.com");
   if (urlPE) { try { localStorage.setItem("plannerEmail", urlPE); } catch {} }
   const [view,setView]=useState(validViews.has(urlView) ? urlView : "users");
-  const [selectedUserEmail,setSelectedUserEmail]=useState("");
+  const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
   const [inboxOpen,setInboxOpen]=useState(false); // legacy; not used anymore
   const [inboxBadge,setInboxBadge]=useState(0);
@@ -211,7 +212,8 @@ function MainApp(){
             onToast={(t,m)=>toast(t,m)}
             onManage={(email)=>{ 
               setSelectedUserEmail(email);
-              setView("plan"); updateQueryView("plan");
+              setView("plan"); 
+              updateQueryUser(email);
             }}
           />
         )}
@@ -220,7 +222,9 @@ function MainApp(){
           <PlanView
             plannerEmail={plannerEmail}
             selectedUserEmailProp={selectedUserEmail}
+            urlUser={urlUser}
             onToast={(t,m)=>toast(t,m)}
+            onUserChange={(email)=>updateQueryUser(email)}
           />
         )}
 
@@ -266,6 +270,19 @@ function updateQueryView(next){
   try{
     const url = new URL(window.location.href);
     url.searchParams.set("view", next);
+    window.history.replaceState({}, "", url.toString());
+  }catch{/* noop */}
+}
+
+function updateQueryUser(userEmail){
+  try{
+    const url = new URL(window.location.href);
+    if (userEmail) {
+      url.searchParams.set("user", userEmail);
+    } else {
+      url.searchParams.delete("user");
+    }
+    url.searchParams.set("view", "plan");
     window.history.replaceState({}, "", url.toString());
   }catch{/* noop */}
 }
@@ -615,7 +632,7 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
 }
 
 /* ───────── Plan view ───────── */
-function PlanView({ plannerEmail, selectedUserEmailProp, onToast }){
+function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange }){
   const [users,setUsers]=useState([]);
   const [selectedUserEmail,setSelectedUserEmail]=useState("");
   const [plan,setPlan]=useState({ title:"Weekly Plan", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
@@ -626,8 +643,12 @@ function PlanView({ plannerEmail, selectedUserEmailProp, onToast }){
   const [histReloadKey,setHistReloadKey]=useState(0);
 
   useEffect(()=>{ 
-    if (selectedUserEmailProp) setSelectedUserEmail(selectedUserEmailProp);
-  },[selectedUserEmailProp]);
+    if (urlUser) {
+      setSelectedUserEmail(urlUser);
+    } else if (selectedUserEmailProp) {
+      setSelectedUserEmail(selectedUserEmailProp);
+    }
+  },[urlUser, selectedUserEmailProp]);
 
   useEffect(()=>{ (async ()=>{
     const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
@@ -635,10 +656,15 @@ function PlanView({ plannerEmail, selectedUserEmailProp, onToast }){
     const arr = (j.users||[]).map(u => ({ ...u, email: u.email || u.userEmail || u.user_email || "" }));
     setUsers(arr);
     if (!selectedUserEmail) {
+      const fromUrl = urlUser && arr.find(a=>a.email===urlUser)?.email;
       const fromProp = selectedUserEmailProp && arr.find(a=>a.email===selectedUserEmailProp)?.email;
       const connected = arr.find(u=>u.status==="connected")?.email;
       const fallback = arr[0]?.email || "";
-      setSelectedUserEmail(fromProp || connected || fallback || "");
+      const newUser = fromUrl || fromProp || connected || fallback || "";
+      setSelectedUserEmail(newUser);
+      if (newUser && !urlUser) {
+        onUserChange?.(newUser);
+      }
     }
   })(); },[plannerEmail]);
 
@@ -683,7 +709,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, onToast }){
               <div className="mb-1 text-sm font-medium">Select User</div>
               <select
                 value={selectedUserEmail || ""}
-                onChange={(e)=>setSelectedUserEmail(e.target.value)}
+                onChange={(e)=>{
+                  const newUser = e.target.value;
+                  setSelectedUserEmail(newUser);
+                  onUserChange?.(newUser);
+                }}
                 className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
                 title={selectedUserEmail || "— Choose user —"}
               >
