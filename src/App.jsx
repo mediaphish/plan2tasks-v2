@@ -735,9 +735,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   },[onToast]);
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Folder Tabs Navigation - Floating on Gray Background */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-4">
         <div className="flex">
           <button
             onClick={() => setActiveTab("plan")}
@@ -777,7 +777,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         </div>
         
         {/* User Selection - Floating on Gray Background */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pb-2">
           <label className="text-sm font-medium text-gray-700">User:</label>
           <select
             value={selectedUserEmail || ""}
