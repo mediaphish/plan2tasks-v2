@@ -1201,7 +1201,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
             </table>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-end gap-4">
             <label className="inline-flex items-center gap-2 text-sm">
               <input 
                 type="checkbox" 
@@ -1212,7 +1212,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
               Save as Template
             </label>
             <button onClick={pushNow} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
-              Push to Google Tasks
+              Deliver to {selectedUserEmail || 'User'}
             </button>
           </div>
         </>
