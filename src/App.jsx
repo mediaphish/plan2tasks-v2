@@ -768,13 +768,13 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     <div>
       {/* Folder Tabs Navigation - Floating on Gray Background */}
       <div className="flex items-center justify-between px-4">
-        <div className="flex gap-1">
+        <div className="flex">
           <button
             onClick={() => setActiveTab("plan")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
             }`}
           >
             Plan
@@ -783,8 +783,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("assigned")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0"
             }`}
           >
             Assigned
@@ -798,8 +798,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("notes")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "notes"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
             }`}
           >
             User Notes
@@ -808,8 +808,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
             }`}
           >
             Templates & History
