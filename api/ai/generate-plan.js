@@ -126,6 +126,7 @@ You should:
 - Research and provide insights
 - Build understanding of what the planner wants
 - When ready, generate a complete plan with tasks
+- ALWAYS provide insights about the user when you have enough information
 
 Previous conversation:
 ${conversationHistory ? conversationHistory.map(msg => `${msg.type}: ${msg.content}`).join('\n') : 'This is the start of the conversation.'}
@@ -146,13 +147,13 @@ When generating a plan, return BOTH a conversational response AND a JSON array o
       "notes": "Optional notes"
     }
   ],
-  "aiInsights": "Optional insights about this user that could be useful for future planning sessions"
+  "aiInsights": "REQUIRED: Insights about this user's preferences, goals, constraints, or patterns that should be remembered for future planning sessions"
 }
 
 If just responding conversationally, return:
 {
   "response": "Your conversational response here",
-  "aiInsights": "Optional insights about this user that could be useful for future planning sessions"
+  "aiInsights": "REQUIRED: Insights about this user's preferences, goals, constraints, or patterns that should be remembered for future planning sessions"
 }`;
 
   const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
