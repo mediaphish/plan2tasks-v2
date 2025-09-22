@@ -768,7 +768,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     <div>
       {/* Folder Tabs Navigation - Floating on Gray Background */}
       <div className="flex items-center justify-between px-4">
-        <div className="flex">
+        <div className="flex gap-1">
           <button
             onClick={() => setActiveTab("plan")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
