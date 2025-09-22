@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag
+  Plus, RotateCcw, Info, Mail, Tag, Edit
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -1400,6 +1400,38 @@ function pill(on){ return cn("rounded-full border px-2 py-1 text-xs sm:text-sm",
 function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTasks, replaceMode, setReplaceMode, msg, setMsg, onToast, onPushed }){
   const total=tasks.length;
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editTaskData, setEditTaskData] = useState({});
+
+  function editTask(task) {
+    setEditingTask(task);
+    setEditTaskData({
+      title: task.title,
+      dayOffset: task.dayOffset || 0,
+      time: task.time || '',
+      durationMins: task.durationMins || 60,
+      notes: task.notes || ''
+    });
+  }
+
+  function saveEditedTask() {
+    if (!editingTask) return;
+    
+    setTasks(prev => prev.map(t => 
+      t.id === editingTask.id 
+        ? { ...t, ...editTaskData }
+        : t
+    ));
+    
+    setEditingTask(null);
+    setEditTaskData({});
+    onToast?.("ok", "Task updated successfully");
+  }
+
+  function cancelEdit() {
+    setEditingTask(null);
+    setEditTaskData({});
+  }
 
   async function pushNow(){
     if (!selectedUserEmail) { setMsg("Choose a user first."); onToast?.("warn","Choose a user first"); return; }
@@ -1521,6 +1553,10 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                     <td className="py-1.5 px-2 text-gray-500 truncate max-w-[200px]">{t.notes||"—"}</td>
                     <td className="py-1.5 px-2">
                       <div className="flex flex-nowrap items-center justify-end gap-1.5 whitespace-nowrap">
+                        <button onClick={()=>editTask(t)} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-gray-50" title="Edit">
+                          <Edit className="h-3.5 w-3.5" />
+                          <span className="sr-only">Edit</span>
+                        </button>
                         <button onClick={()=>setTasks(prev=>prev.filter(x=>x.id!==t.id))} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-gray-50" title="Remove">
                           <Trash2 className="h-3.5 w-3.5" />
                           <span className="sr-only">Remove</span>
@@ -1532,6 +1568,89 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
               </tbody>
             </table>
           </div>
+
+          {/* Task Editing Interface */}
+          {editingTask && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Edit className="h-4 w-4 text-blue-600" />
+                  <div className="font-semibold text-blue-800">Edit Task</div>
+                </div>
+                <div className="text-sm text-blue-600">Modify the task details below</div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Task Title</label>
+                  <input
+                    value={editTaskData.title}
+                    onChange={(e) => setEditTaskData(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter task title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Day Offset</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editTaskData.dayOffset}
+                    onChange={(e) => setEditTaskData(prev => ({ ...prev, dayOffset: parseInt(e.target.value) || 0 }))}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Time (optional)</label>
+                  <TimeSelect 
+                    value={editTaskData.time} 
+                    onChange={(time) => setEditTaskData(prev => ({ ...prev, time }))} 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+                  <input
+                    type="number"
+                    min="15"
+                    step="15"
+                    value={editTaskData.durationMins}
+                    onChange={(e) => setEditTaskData(prev => ({ ...prev, durationMins: parseInt(e.target.value) || 60 }))}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="60"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+                <textarea
+                  value={editTaskData.notes}
+                  onChange={(e) => setEditTaskData(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-20 resize-none"
+                  placeholder="Add any notes for this task"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={saveEditedTask}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-4">
             <label className="inline-flex items-center gap-2 text-sm">
