@@ -2958,10 +2958,15 @@ What type of plan would you like to create? For example: "Create a workout plan"
       setMessages(prev => [...prev, aiMessage]);
 
       // If AI generated a complete plan
-      if (j.plan && j.tasks) {
+      if (j.tasks && Array.isArray(j.tasks)) {
         setCurrentStep("plan-ready");
         onPlanGenerated({
-          plan: j.plan,
+          plan: {
+            title: j.planTitle || "AI Generated Plan",
+            description: j.planDescription || "",
+            startDate: j.startDate || new Date().toISOString().split('T')[0],
+            timezone: j.timezone || "America/Chicago"
+          },
           tasks: j.tasks
         });
       }
