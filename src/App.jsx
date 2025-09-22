@@ -1015,21 +1015,20 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onPushed={()=>{ /* can reload history */ }}
             />
           </div>
-
-          </div>
-
-          {/* Right Sidebar - User Notes */}
-          {selectedUserEmail && (
-            <div className="w-80 flex-shrink-0">
-              <UserNotesDrawer
-                userEmail={selectedUserEmail}
-                plannerEmail={plannerEmail}
-                onToast={onToast}
-              />
-            </div>
-          )}
         </div>
-      )}
+
+        {/* Right Sidebar - User Notes */}
+        {selectedUserEmail && (
+          <div className="w-80 flex-shrink-0">
+            <UserNotesDrawer
+              userEmail={selectedUserEmail}
+              plannerEmail={plannerEmail}
+              onToast={onToast}
+            />
+          </div>
+        )}
+      </div>
+    )}
 
       {/* Assigned Tab Content */}
       {activeTab === "assigned" && (
