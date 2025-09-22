@@ -944,6 +944,29 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             <div className="text-sm text-gray-600 ml-8">Review your plan and deliver tasks to the selected user's Google Tasks.</div>
           </div>
 
+          {/* Plan Details Review */}
+          <div className="ml-8 mb-6 p-4 bg-gray-50 rounded-xl">
+            <div className="text-sm font-medium text-gray-700 mb-3">Plan Details</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Plan Name:</span>
+                <div className="text-gray-800">{plan.title || "Untitled Plan"}</div>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Start Date:</span>
+                <div className="text-gray-800">{planDateText}</div>
+              </div>
+              <div className="md:col-span-2">
+                <span className="font-medium text-gray-600">Description:</span>
+                <div className="text-gray-800">{plan.description || "No description"}</div>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Timezone:</span>
+                <div className="text-gray-800">{plan.timezone}</div>
+              </div>
+            </div>
+          </div>
+
           <div className="ml-8">
             <ComposerPreview
               plannerEmail={plannerEmail}
@@ -2849,6 +2872,7 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
   const [userNotes, setUserNotes] = useState("");
   const [currentStep, setCurrentStep] = useState("welcome");
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
@@ -2858,6 +2882,7 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
       setShowScrollButton(!isNearBottom);
+      setUserHasScrolled(!isNearBottom);
     }
   };
 
@@ -2865,7 +2890,15 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     setShowScrollButton(false);
+    setUserHasScrolled(false);
   };
+
+  // Auto-scroll to new messages (like this chat)
+  useEffect(() => {
+    if (!userHasScrolled) {
+      scrollToBottom();
+    }
+  }, [messages, isLoading]);
 
   // Load user notes on mount
   useEffect(() => {
