@@ -801,22 +801,15 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
-        <>
-          {/* User Notes Section */}
-          {selectedUserEmail && (
-            <UserNotesManager
-              userEmail={selectedUserEmail}
-              plannerEmail={plannerEmail}
-              onToast={onToast}
+        <div className="flex gap-6">
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* AI Decision Interface */}
+            <AIPlanningDecision
+              selectedUserEmail={selectedUserEmail}
+              onModeSelect={(mode) => setPlanningMode(mode)}
+              planningMode={planningMode}
             />
-          )}
-
-          {/* AI Decision Interface */}
-          <AIPlanningDecision
-            selectedUserEmail={selectedUserEmail}
-            onModeSelect={(mode) => setPlanningMode(mode)}
-            planningMode={planningMode}
-          />
 
           {/* Plan Setup Section - Only show for AI-Assisted and Manual modes */}
           {planningMode !== "full-ai" && (
@@ -1022,9 +1015,19 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onPushed={()=>{ /* can reload history */ }}
             />
           </div>
+          </div>
+
+          {/* Right Sidebar - User Notes */}
+          {selectedUserEmail && (
+            <div className="w-80 flex-shrink-0">
+              <UserNotesDrawer
+                userEmail={selectedUserEmail}
+                plannerEmail={plannerEmail}
+                onToast={onToast}
+              />
+            </div>
+          )}
         </div>
-      )}
-        </>
       )}
 
       {/* Assigned Tab Content */}
@@ -2788,8 +2791,8 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
   );
 }
 
-/* ───────── User Notes Manager ───────── */
-function UserNotesManager({ userEmail, plannerEmail, onToast }){
+/* ───────── User Notes Drawer ───────── */
+function UserNotesDrawer({ userEmail, plannerEmail, onToast }){
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -2858,24 +2861,24 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
           <div className="text-base sm:text-lg font-semibold">User Notes</div>
         </div>
-        <div className="text-sm text-gray-600 ml-8">
+        <div className="text-sm text-gray-600">
           AI context and rules for <strong>{userEmail}</strong>
           {lastUpdated && (
-            <span className="text-xs text-gray-500 ml-2">
-              • Last updated: {new Date(lastUpdated).toLocaleString()}
-            </span>
+            <div className="text-xs text-gray-500 mt-1">
+              Last updated: {new Date(lastUpdated).toLocaleString()}
+            </div>
           )}
         </div>
       </div>
 
-      <div className="ml-8">
-        <div className="mb-3">
+      <div className="space-y-4">
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Notes & Context
           </label>
@@ -2885,7 +2888,7 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-32"
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-40"
             placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
           />
         </div>
