@@ -761,7 +761,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           >
             Assigned
             {newBundleCount > 0 && (
-              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
+              <span className="absolute top-1 right-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white min-w-[16px] h-[16px] text-center leading-none flex items-center justify-center">
                 {newBundleCount}
               </span>
             )}
