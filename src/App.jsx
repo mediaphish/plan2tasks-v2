@@ -643,6 +643,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [histReloadKey,setHistReloadKey]=useState(0);
   const [activeTab,setActiveTab]=useState("plan");
   const [newBundleCount,setNewBundleCount]=useState(0);
+  const [taskMode,setTaskMode]=useState("manual");
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -859,13 +860,56 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         </div>
 
         <div className="ml-8">
-          <TaskEditor
-            planStartDate={plan.startDate}
-            onAdd={(items)=>{
-              setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
-              onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
-            }}
-          />
+          <div className="mb-4">
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => setTaskMode("manual")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                  taskMode === "manual"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                Manual Entry
+              </button>
+              <button
+                onClick={() => setTaskMode("ai")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                  taskMode === "ai"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                AI Generate
+              </button>
+            </div>
+          </div>
+
+          {taskMode === "manual" && (
+            <TaskEditor
+              planStartDate={plan.startDate}
+              onAdd={(items)=>{
+                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+                onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+              }}
+            />
+          )}
+
+          {taskMode === "ai" && (
+            <AITaskGenerator
+              userEmail={selectedUserEmail}
+              plannerEmail={plannerEmail}
+              planTitle={plan.title}
+              planDescription={plan.description}
+              planStartDate={plan.startDate}
+              planTimezone={plan.timezone}
+              onAdd={(items)=>{
+                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+                onToast?.("ok", `Added ${items.length} AI-generated task${items.length>1?"s":""} to plan`);
+              }}
+              onToast={onToast}
+            />
+          )}
         </div>
       </div>
 
@@ -2540,6 +2584,205 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
       </div>
     </div>
   );
+}
+
+/* ───────── AI Task Generator ───────── */
+function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, planStartDate, planTimezone, onAdd, onToast }){
+  const [userNotes, setUserNotes] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState("welcome");
+  const [userPrompt, setUserPrompt] = useState("");
+  const [generatedTasks, setGeneratedTasks] = useState([]);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Load user notes on mount
+  useEffect(() => {
+    if (userEmail && plannerEmail) {
+      loadUserNotes();
+    }
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok && j.notes) {
+        setUserNotes(j.notes);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+    }
+  }
+
+  async function generateTasks() {
+    if (!userPrompt.trim()) {
+      onToast?.("warn", "Please describe what tasks you want to create");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const resp = await fetch("/api/ai/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle,
+          planDescription,
+          startDate: planStartDate,
+          timezone: planTimezone,
+          userPrompt: userPrompt.trim(),
+          userNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (!resp.ok || j.error) {
+        throw new Error(j.error || "AI generation failed");
+      }
+
+      setGeneratedTasks(j.tasks || []);
+      setShowPreview(true);
+      setCurrentStep("preview");
+      
+    } catch (e) {
+      console.error('AI generation error:', e);
+      onToast?.("error", `AI generation failed: ${e.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function addTasksToPlan() {
+    if (generatedTasks.length > 0) {
+      onAdd(generatedTasks);
+      setCurrentStep("complete");
+      onToast?.("ok", `Added ${generatedTasks.length} AI-generated tasks to plan`);
+    }
+  }
+
+  function resetGenerator() {
+    setCurrentStep("welcome");
+    setUserPrompt("");
+    setGeneratedTasks([]);
+    setShowPreview(false);
+  }
+
+  if (currentStep === "welcome") {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-blue-50 p-4">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">🤖</div>
+            <div className="text-base font-semibold">AI Task Generator</div>
+          </div>
+          <div className="text-sm text-gray-600">
+            Hi! Let's create a plan for <strong>{userEmail}</strong>. What should we call this plan?
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Plan Name</label>
+            <input 
+              value={planTitle} 
+              readOnly
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-gray-50"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Describe the tasks you want to create</label>
+            <textarea
+              value={userPrompt}
+              onChange={(e) => setUserPrompt(e.target.value)}
+              placeholder="e.g., Create a workout plan for someone who wants to get in shape, or Generate a study schedule for exam preparation..."
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-20 resize-none"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={generateTasks}
+              disabled={isLoading || !userPrompt.trim()}
+              className="flex-1 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isLoading ? "Generating..." : "Generate Tasks"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentStep === "preview" && showPreview) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">✅</div>
+            <div className="text-base font-semibold">Generated Tasks</div>
+          </div>
+          <div className="text-sm text-gray-600">
+            Review the tasks below. You can add them to your plan or generate new ones.
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+          {generatedTasks.map((task, i) => (
+            <div key={i} className="flex items-center gap-2 p-2 bg-white rounded-lg border">
+              <div className="flex-1">
+                <div className="font-medium text-sm">{task.title}</div>
+                <div className="text-xs text-gray-500">
+                  Day {task.dayOffset} • {task.time || 'No time'} • {task.durationMins || 60} min
+                  {task.notes && ` • ${task.notes}`}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={addTasksToPlan}
+            className="flex-1 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+          >
+            Add {generatedTasks.length} Tasks to Plan
+          </button>
+          <button
+            onClick={resetGenerator}
+            className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50"
+          >
+            Generate New
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentStep === "complete") {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+        <div className="text-center">
+          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-lg mx-auto mb-2">✓</div>
+          <div className="font-semibold text-green-800 mb-1">Tasks Added Successfully!</div>
+          <div className="text-sm text-green-600 mb-3">
+            {generatedTasks.length} AI-generated tasks have been added to your plan.
+          </div>
+          <button
+            onClick={resetGenerator}
+            className="px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-100"
+          >
+            Generate More Tasks
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 /* ───────── Timezones ───────── */
