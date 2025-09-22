@@ -802,6 +802,15 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
         <>
+          {/* User Notes Section */}
+          {selectedUserEmail && (
+            <UserNotesManager
+              userEmail={selectedUserEmail}
+              plannerEmail={plannerEmail}
+              onToast={onToast}
+            />
+          )}
+
           {/* AI Decision Interface */}
           <AIPlanningDecision
             selectedUserEmail={selectedUserEmail}
@@ -2774,6 +2783,134 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
         <button onClick={save} disabled={saving} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
           {saving ? "Saving…" : "Save"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── User Notes Manager ───────── */
+function UserNotesManager({ userEmail, plannerEmail, onToast }){
+  const [notes, setNotes] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Load user notes on mount
+  useEffect(() => {
+    loadUserNotes();
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    setIsLoading(true);
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok) {
+        setNotes(j.notes || "");
+        setLastUpdated(j.updatedAt);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+      onToast?.("error", "Failed to load user notes");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveUserNotes() {
+    setIsSaving(true);
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          notes: notes.trim()
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        setLastUpdated(new Date().toISOString());
+        onToast?.("ok", "User notes saved successfully");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+        <div className="text-center py-4">
+          <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
+          <div className="text-sm text-gray-600">Loading user notes...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
+          <div className="text-base sm:text-lg font-semibold">User Notes</div>
+        </div>
+        <div className="text-sm text-gray-600 ml-8">
+          AI context and rules for <strong>{userEmail}</strong>
+          {lastUpdated && (
+            <span className="text-xs text-gray-500 ml-2">
+              • Last updated: {new Date(lastUpdated).toLocaleString()}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="ml-8">
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notes & Context
+          </label>
+          <div className="text-xs text-gray-500 mb-2">
+            These notes are automatically considered by AI in all planning sessions for this user.
+          </div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-32"
+            placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-500">
+            {notes.length} characters
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={loadUserNotes}
+              disabled={isSaving}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Reload
+            </button>
+            <button
+              onClick={saveUserNotes}
+              disabled={isSaving || !notes.trim()}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? "Saving..." : "Save Notes"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
