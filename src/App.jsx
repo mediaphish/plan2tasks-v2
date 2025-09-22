@@ -174,7 +174,6 @@ function MainApp(){
         <div className="mb-6 sm:mb-6 flex flex-wrap items-center justify-between gap-4 pt-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-6 sm:h-8" />
-            <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">{APP_VERSION}</span>
             <nav className="ml-1 sm:ml-4 flex gap-1 sm:gap-2">
               <NavBtn active={view==="users"} onClick={()=>{ setView("users"); updateQueryView("users"); }} icon={<Users className="h-4 w-4" />}><span className="hidden sm:inline">Users</span></NavBtn>
               <NavBtn active={view==="plan"} onClick={()=>{ setView("plan"); updateQueryView("plan"); }} icon={<Calendar className="h-4 w-4" />}><span className="hidden sm:inline">Plan</span></NavBtn>
@@ -197,7 +196,9 @@ function MainApp(){
             >
               <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
               {prefs.show_inbox_badge && inboxBadge>0 && (
-                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">{inboxBadge}</span>
+                <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                  {inboxBadge} New
+                </span>
               )}
             </a>
             <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
@@ -761,8 +762,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           >
             Assigned
             {newBundleCount > 0 && (
-              <span className="absolute top-1 right-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white min-w-[16px] h-[16px] text-center leading-none flex items-center justify-center">
-                {newBundleCount}
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                {newBundleCount} New
               </span>
             )}
           </button>
@@ -2474,6 +2475,33 @@ function UsersView({ plannerEmail, onToast, onManage }){
           onToast={onToast}
         />
       )}
+      
+      {/* Footer */}
+      <footer className="mt-12 border-t border-gray-200 bg-white px-4 py-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-5" />
+                <span className="text-gray-500">Professional Task Planning</span>
+              </div>
+              <div className="hidden sm:block text-gray-300">|</div>
+              <div className="flex items-center gap-4 text-xs">
+                <span>Planner: <strong>{plannerEmail}</strong></span>
+                <span>•</span>
+                <span>Google Tasks Integration</span>
+                <span>•</span>
+                <span>AI-Powered Planning</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              <span>Version {APP_VERSION}</span>
+              <span>•</span>
+              <span>© 2025 Plan2Tasks</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
