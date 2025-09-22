@@ -767,6 +767,16 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             )}
           </button>
           <button
+            onClick={() => setActiveTab("notes")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+              activeTab === "notes"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            User Notes
+          </button>
+          <button
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
@@ -801,9 +811,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
-        <div className="flex gap-6">
-          {/* Main Content */}
-          <div className="flex-1">
+        <>
             {/* AI Decision Interface */}
             <AIPlanningDecision
               selectedUserEmail={selectedUserEmail}
@@ -1017,19 +1025,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </div>
         </div>
       )}
-          </div>
-
-          {/* Right Sidebar - User Notes */}
-          {selectedUserEmail && (
-            <div className="w-80 flex-shrink-0">
-              <UserNotesManager
-                userEmail={selectedUserEmail}
-                plannerEmail={plannerEmail}
-                onToast={onToast}
-              />
-            </div>
-          )}
-        </div>
+        </>
       )}
 
       {/* Assigned Tab Content */}
@@ -1094,6 +1090,41 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           />
         </div>
       </div>
+      )}
+
+      {/* User Notes Tab Content */}
+      {activeTab === "notes" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
+              <div className="text-base sm:text-lg font-semibold">User Notes</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">
+              {selectedUserEmail ? (
+                <>AI context and rules for <strong>{selectedUserEmail}</strong></>
+              ) : (
+                "Select a user to view and edit their notes"
+              )}
+            </div>
+          </div>
+
+          <div className="ml-8">
+            {selectedUserEmail ? (
+              <UserNotesManager
+                userEmail={selectedUserEmail}
+                plannerEmail={plannerEmail}
+                onToast={onToast}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">👤</div>
+                <div className="font-semibold mb-1">No User Selected</div>
+                <div className="text-sm">Choose a user from the dropdown above to view and edit their notes</div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* History Tab Content */}
@@ -2853,33 +2884,20 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
-        <div className="text-center py-4">
-          <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
-          <div className="text-sm text-gray-600">Loading user notes...</div>
-        </div>
+      <div className="text-center py-4">
+        <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
+        <div className="text-sm text-gray-600">Loading user notes...</div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
-          <div className="text-base sm:text-lg font-semibold">User Notes</div>
+    <>
+      {lastUpdated && (
+        <div className="text-xs text-gray-500 mb-4">
+          Last updated: {new Date(lastUpdated).toLocaleString()}
         </div>
-        <div className="text-sm text-gray-600 ml-8">
-          AI context and rules for <strong>{userEmail}</strong>
-          {lastUpdated && (
-            <span className="text-xs text-gray-500 ml-2">
-              • Last updated: {new Date(lastUpdated).toLocaleString()}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="ml-8">
+      )}
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Notes & Context
@@ -2916,8 +2934,7 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </>
   );
 }
 
