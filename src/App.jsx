@@ -2727,7 +2727,6 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
 
 /* ───────── AI Planning Decision ───────── */
 function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
-  const [aiEnabled, setAiEnabled] = useState(true);
 
   if (!selectedUserEmail) {
     return (
@@ -2751,41 +2750,18 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         <div className="text-sm text-gray-600 ml-8">Choose your planning approach for <strong>{selectedUserEmail}</strong></div>
       </div>
 
-      <div className="ml-8 space-y-3">
-        {/* AI Toggle */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="font-medium text-sm">AI Assistance</div>
-            <div className="text-xs text-gray-500">Enable AI suggestions and smart recommendations</div>
-          </div>
-          <button
-            onClick={() => setAiEnabled(!aiEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              aiEnabled ? 'bg-blue-600' : 'bg-gray-300'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                aiEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Planning Mode Options */}
+             <div className="ml-8 space-y-3">
+               {/* Planning Mode Options */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Full AI Option */}
-          <button
-            onClick={() => onModeSelect("full-ai")}
-            disabled={!aiEnabled}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              planningMode === "full-ai"
-                ? "border-blue-500 bg-blue-50"
-                : aiEnabled
-                ? "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                : "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
-            }`}
-          >
+                 <button
+                   onClick={() => onModeSelect("full-ai")}
+                   className={`p-4 rounded-xl border-2 text-left transition-all ${
+                     planningMode === "full-ai"
+                       ? "border-blue-500 bg-blue-50"
+                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                   }`}
+                 >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
               <div className="font-semibold text-sm">Full AI Planning</div>
@@ -2796,17 +2772,14 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
           </button>
 
           {/* AI-Assisted Manual Option */}
-          <button
-            onClick={() => onModeSelect("ai-assisted")}
-            disabled={!aiEnabled}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              planningMode === "ai-assisted"
-                ? "border-blue-500 bg-blue-50"
-                : aiEnabled
-                ? "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                : "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
-            }`}
-          >
+                 <button
+                   onClick={() => onModeSelect("ai-assisted")}
+                   className={`p-4 rounded-xl border-2 text-left transition-all ${
+                     planningMode === "ai-assisted"
+                       ? "border-blue-500 bg-blue-50"
+                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                   }`}
+                 >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤝</div>
               <div className="font-semibold text-sm">AI-Assisted Manual</div>
