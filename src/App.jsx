@@ -644,6 +644,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [activeTab,setActiveTab]=useState("plan");
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
+  const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -801,6 +802,13 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
         <>
+          {/* AI Decision Interface */}
+          <AIPlanningDecision
+            selectedUserEmail={selectedUserEmail}
+            onModeSelect={(mode) => setPlanningMode(mode)}
+            planningMode={planningMode}
+          />
+
           {/* Plan Setup Section */}
           <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
         <div className="mb-4">
@@ -2700,6 +2708,149 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
         <button onClick={save} disabled={saving} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
           {saving ? "Saving…" : "Save"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── AI Planning Decision ───────── */
+function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
+  const [aiEnabled, setAiEnabled] = useState(true);
+
+  if (!selectedUserEmail) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">👤</div>
+          <div className="font-semibold text-gray-700 mb-1">Choose a User First</div>
+          <div className="text-sm text-gray-500">Select a user to begin planning</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">🤖</div>
+          <div className="text-base sm:text-lg font-semibold">How would you like to create this plan?</div>
+        </div>
+        <div className="text-sm text-gray-600 ml-8">Choose your planning approach for <strong>{selectedUserEmail}</strong></div>
+      </div>
+
+      <div className="ml-8 space-y-3">
+        {/* AI Toggle */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="font-medium text-sm">AI Assistance</div>
+            <div className="text-xs text-gray-500">Enable AI suggestions and smart recommendations</div>
+          </div>
+          <button
+            onClick={() => setAiEnabled(!aiEnabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              aiEnabled ? 'bg-blue-600' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                aiEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Planning Mode Options */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Full AI Option */}
+          <button
+            onClick={() => onModeSelect("full-ai")}
+            disabled={!aiEnabled}
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              planningMode === "full-ai"
+                ? "border-blue-500 bg-blue-50"
+                : aiEnabled
+                ? "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                : "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
+              <div className="font-semibold text-sm">Full AI Planning</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              Conversational AI creates your entire plan through research and dialogue
+            </div>
+          </button>
+
+          {/* AI-Assisted Manual Option */}
+          <button
+            onClick={() => onModeSelect("ai-assisted")}
+            disabled={!aiEnabled}
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              planningMode === "ai-assisted"
+                ? "border-blue-500 bg-blue-50"
+                : aiEnabled
+                ? "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                : "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤝</div>
+              <div className="font-semibold text-sm">AI-Assisted Manual</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              You create tasks manually with smart AI suggestions and recommendations
+            </div>
+          </button>
+
+          {/* Pure Manual Option */}
+          <button
+            onClick={() => onModeSelect("manual")}
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              planningMode === "manual"
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-xs">✏️</div>
+              <div className="font-semibold text-sm">Pure Manual</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              Traditional task creation without AI assistance
+            </div>
+          </button>
+        </div>
+
+        {/* Mode Description */}
+        {planningMode === "full-ai" && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="text-sm font-medium text-blue-800 mb-1">Full AI Planning</div>
+            <div className="text-xs text-blue-600">
+              AI will research, analyze user notes, and create a complete plan through conversation. 
+              You'll review and refine the final plan before delivery.
+            </div>
+          </div>
+        )}
+
+        {planningMode === "ai-assisted" && (
+          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="text-sm font-medium text-green-800 mb-1">AI-Assisted Manual</div>
+            <div className="text-xs text-green-600">
+              Create tasks manually with AI providing smart suggestions, gap analysis, and best practice recommendations.
+            </div>
+          </div>
+        )}
+
+        {planningMode === "manual" && (
+          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="text-sm font-medium text-gray-800 mb-1">Pure Manual</div>
+            <div className="text-xs text-gray-600">
+              Complete control over task creation without AI assistance. Perfect when you prefer full manual control.
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
