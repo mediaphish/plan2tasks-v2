@@ -801,22 +801,15 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
-        <>
-          {/* User Notes Section */}
-          {selectedUserEmail && (
-            <UserNotesManager
-              userEmail={selectedUserEmail}
-              plannerEmail={plannerEmail}
-              onToast={onToast}
+        <div className="flex gap-6">
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* AI Decision Interface */}
+            <AIPlanningDecision
+              selectedUserEmail={selectedUserEmail}
+              onModeSelect={(mode) => setPlanningMode(mode)}
+              planningMode={planningMode}
             />
-          )}
-
-          {/* AI Decision Interface */}
-          <AIPlanningDecision
-            selectedUserEmail={selectedUserEmail}
-            onModeSelect={(mode) => setPlanningMode(mode)}
-            planningMode={planningMode}
-          />
 
           {/* Plan Setup Section - Only show for AI-Assisted and Manual modes */}
           {planningMode !== "full-ai" && (
@@ -1024,7 +1017,19 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </div>
         </div>
       )}
-        </>
+          </div>
+
+          {/* Right Sidebar - User Notes */}
+          {selectedUserEmail && (
+            <div className="w-80 flex-shrink-0">
+              <UserNotesManager
+                userEmail={selectedUserEmail}
+                plannerEmail={plannerEmail}
+                onToast={onToast}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Assigned Tab Content */}
