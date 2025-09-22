@@ -125,14 +125,33 @@ You should:
 - Ask clarifying questions when needed
 - Research and provide insights
 - Build understanding of what the planner wants
-- Eventually offer to generate a complete plan when ready
+- When ready, generate a complete plan with tasks
 
 Previous conversation:
 ${conversationHistory ? conversationHistory.map(msg => `${msg.type}: ${msg.content}`).join('\n') : 'This is the start of the conversation.'}
 
 Current message: ${userPrompt}
 
-Respond naturally and helpfully. If the planner seems ready for a complete plan, offer to generate one.`;
+If the planner is ready for a complete plan, generate one. Otherwise, respond conversationally.
+
+When generating a plan, return BOTH a conversational response AND a JSON array of tasks in this format:
+{
+  "response": "Your conversational response here",
+  "tasks": [
+    {
+      "title": "Task title",
+      "dayOffset": 0,
+      "time": "09:00",
+      "durationMins": 60,
+      "notes": "Optional notes"
+    }
+  ]
+}
+
+If just responding conversationally, return:
+{
+  "response": "Your conversational response here"
+}`;
 
   const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -144,7 +163,7 @@ Respond naturally and helpfully. If the planner seems ready for a complete plan,
       model: 'gpt-4',
       messages: [{ role: 'system', content: systemPrompt }],
       temperature: 0.8,
-      max_tokens: 1500
+      max_tokens: 2000
     })
   });
 
@@ -155,11 +174,23 @@ Respond naturally and helpfully. If the planner seems ready for a complete plan,
   const aiData = await openaiResponse.json();
   const aiContent = aiData.choices?.[0]?.message?.content;
 
-  return send(res, 200, {
-    ok: true,
-    response: aiContent,
-    message: 'AI response generated'
-  });
+  try {
+    // Try to parse as JSON first (if AI returned structured response)
+    const parsedResponse = JSON.parse(aiContent);
+    return send(res, 200, {
+      ok: true,
+      response: parsedResponse.response,
+      tasks: parsedResponse.tasks || null,
+      message: 'AI response generated'
+    });
+  } catch (e) {
+    // If not JSON, return as conversational response
+    return send(res, 200, {
+      ok: true,
+      response: aiContent,
+      message: 'AI response generated'
+    });
+  }
 }
 
 async function handlePlanGenerationMode(req, res, openaiApiKey, userEmail, plannerEmail, planTitle, planDescription, startDate, timezone, userPrompt, userNotes) {
