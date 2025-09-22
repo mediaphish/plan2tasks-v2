@@ -145,12 +145,14 @@ When generating a plan, return BOTH a conversational response AND a JSON array o
       "durationMins": 60,
       "notes": "Optional notes"
     }
-  ]
+  ],
+  "aiInsights": "Optional insights about this user that could be useful for future planning sessions"
 }
 
 If just responding conversationally, return:
 {
-  "response": "Your conversational response here"
+  "response": "Your conversational response here",
+  "aiInsights": "Optional insights about this user that could be useful for future planning sessions"
 }`;
 
   const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -181,6 +183,7 @@ If just responding conversationally, return:
       ok: true,
       response: parsedResponse.response,
       tasks: parsedResponse.tasks || null,
+      aiInsights: parsedResponse.aiInsights || null,
       message: 'AI response generated'
     });
   } catch (e) {
@@ -188,6 +191,7 @@ If just responding conversationally, return:
     return send(res, 200, {
       ok: true,
       response: aiContent,
+      aiInsights: null,
       message: 'AI response generated'
     });
   }
