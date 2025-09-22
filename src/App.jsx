@@ -1015,7 +1015,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onPushed={()=>{ /* can reload history */ }}
             />
           </div>
-          </div>
 
           {/* Right Sidebar - User Notes */}
           {selectedUserEmail && (
