@@ -264,30 +264,12 @@ function MainApp(){
         )}
       </div>
       
-      {/* Footer - Appears on all views */}
-      <footer className="mt-12 border-t border-gray-200 bg-white px-4 py-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-5" />
-                <span className="text-gray-500">Professional Task Planning</span>
-              </div>
-              <div className="hidden sm:block text-gray-300">|</div>
-              <div className="flex items-center gap-4 text-xs">
-                <span>Planner: <strong>{plannerEmail}</strong></span>
-                <span>•</span>
-                <span>Google Tasks Integration</span>
-                <span>•</span>
-                <span>AI-Powered Planning</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              <span>Version {APP_VERSION}</span>
-              <span>•</span>
-              <span>© 2025 Plan2Tasks</span>
-            </div>
-          </div>
+      {/* Footer */}
+      <footer className="mt-8 border-t border-gray-200 py-4 text-center text-xs text-gray-500">
+        <div className="flex items-center justify-center gap-4">
+          <span>Version {APP_VERSION}</span>
+          <span>•</span>
+          <span>© 2025 Plan2Tasks</span>
         </div>
       </footer>
     </div>
@@ -773,8 +755,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("plan")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
             Plan
@@ -783,8 +765,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("assigned")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
             Assigned
@@ -798,8 +780,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("notes")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "notes"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
             User Notes
@@ -808,8 +790,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
             Templates & History
@@ -1171,33 +1153,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </div>
         </div>
       )}
-      
-      {/* Footer */}
-      <footer className="mt-12 border-t border-gray-200 bg-white px-4 py-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-5" />
-                <span className="text-gray-500">Professional Task Planning</span>
-              </div>
-              <div className="hidden sm:block text-gray-300">|</div>
-              <div className="flex items-center gap-4 text-xs">
-                <span>Planner: <strong>{plannerEmail}</strong></span>
-                <span>•</span>
-                <span>Google Tasks Integration</span>
-                <span>•</span>
-                <span>AI-Powered Planning</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              <span>Version {APP_VERSION}</span>
-              <span>•</span>
-              <span>© 2025 Plan2Tasks</span>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
