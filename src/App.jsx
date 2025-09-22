@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
@@ -2848,6 +2848,24 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
   const [isLoading, setIsLoading] = useState(false);
   const [userNotes, setUserNotes] = useState("");
   const [currentStep, setCurrentStep] = useState("welcome");
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+  // Check if user has scrolled up
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+    }
+  };
+
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setShowScrollButton(false);
+  };
 
   // Load user notes on mount
   useEffect(() => {
@@ -2989,7 +3007,11 @@ What type of plan would you like to create? For example: "Create a workout plan"
   return (
     <div className="rounded-xl border border-gray-200 bg-white">
       {/* Chat Messages */}
-      <div className="h-96 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="h-96 overflow-y-auto p-4 space-y-4 relative"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -3016,6 +3038,22 @@ What type of plan would you like to create? For example: "Create a workout plan"
               </div>
             </div>
           </div>
+        )}
+        
+        {/* Scroll target */}
+        <div ref={messagesEndRef} />
+        
+        {/* Floating scroll button */}
+        {showScrollButton && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2 shadow-lg hover:bg-blue-700 transition-colors"
+            title="Scroll to bottom"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
         )}
       </div>
 
