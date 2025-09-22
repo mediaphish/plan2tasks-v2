@@ -3073,6 +3073,8 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
   const [currentStep, setCurrentStep] = useState("welcome");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userHasScrolled, setUserHasScrolled] = useState(false);
+  const [showSaveNotesPrompt, setShowSaveNotesPrompt] = useState(false);
+  const [pendingNotes, setPendingNotes] = useState("");
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
@@ -3117,6 +3119,31 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
       }
     } catch (e) {
       console.error('Load user notes error:', e);
+    }
+  }
+
+  async function saveUserNotes(newNotes) {
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          notes: newNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        setUserNotes(newNotes);
+        onToast?.("ok", "User notes updated with AI insights");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
     }
   }
 
@@ -3193,6 +3220,12 @@ What type of plan would you like to create? For example: "Create a workout plan"
           },
           tasks: j.tasks
         });
+        
+        // Prompt to save notes if AI provided insights
+        if (j.aiInsights && j.aiInsights.trim()) {
+          setPendingNotes(j.aiInsights);
+          setShowSaveNotesPrompt(true);
+        }
       }
 
     } catch (e) {
@@ -3289,6 +3322,48 @@ What type of plan would you like to create? For example: "Create a workout plan"
           </button>
         )}
       </div>
+
+      {/* Save Notes Prompt */}
+      {showSaveNotesPrompt && (
+        <div className="border-t bg-blue-50 p-4">
+          <div className="mb-3">
+            <div className="text-sm font-medium text-blue-800 mb-2">
+              💡 AI Insights for User Notes
+            </div>
+            <div className="text-xs text-blue-600 mb-3">
+              The AI has generated insights about this user that could be useful for future planning sessions.
+            </div>
+            <textarea
+              value={pendingNotes}
+              onChange={(e) => setPendingNotes(e.target.value)}
+              className="w-full rounded-lg border border-blue-200 px-3 py-2 text-sm resize-none h-24"
+              placeholder="AI insights about this user..."
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                const updatedNotes = userNotes ? `${userNotes}\n\n--- AI Insights (${new Date().toLocaleDateString()}) ---\n${pendingNotes}` : pendingNotes;
+                saveUserNotes(updatedNotes);
+                setShowSaveNotesPrompt(false);
+                setPendingNotes("");
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            >
+              Save to User Notes
+            </button>
+            <button
+              onClick={() => {
+                setShowSaveNotesPrompt(false);
+                setPendingNotes("");
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Skip
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="border-t p-4">
