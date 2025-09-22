@@ -809,43 +809,71 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             planningMode={planningMode}
           />
 
-          {/* Plan Setup Section */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
-            <div className="text-base sm:text-lg font-semibold">Plan Setup</div>
-          </div>
-          <div className="text-sm text-gray-600 ml-8">Configure your plan details and settings</div>
-          {!!msg && <div className="mt-2 ml-8 text-xs text-gray-600">{msg}</div>}
-        </div>
+          {/* Plan Setup Section - Only show for AI-Assisted and Manual modes */}
+          {planningMode !== "full-ai" && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
+                  <div className="text-base sm:text-lg font-semibold">Plan Setup</div>
+                </div>
+                <div className="text-sm text-gray-600 ml-8">Configure your plan details and settings</div>
+                {!!msg && <div className="mt-2 ml-8 text-xs text-gray-600">{msg}</div>}
+              </div>
 
-        <div className="ml-8 space-y-4">
-          {/* Plan Details */}
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <label className="block">
-              <div className="mb-1 text-sm font-medium">Plan Name</div>
-              <input value={plan.title} onChange={(e)=>setPlan({...plan, title:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
-            </label>
-            <label className="block md:col-span-2">
-              <div className="mb-1 text-sm font-medium">Plan Description</div>
-              <input value={plan.description} onChange={(e)=>setPlan({...plan, description:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
-            </label>
-            <label className="block">
-              <div className="mb-1 text-sm font-medium">Timezone</div>
-              <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
-                {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
-              </select>
-            </label>
-            <div className="block">
-              <div className="mb-1 text-sm font-medium">Plan start date</div>
-              <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap w-full justify-start">
-                <Calendar className="h-4 w-4" /> {planDateText}
-              </button>
+              <div className="ml-8 space-y-4">
+                {/* Plan Details */}
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <label className="block">
+                    <div className="mb-1 text-sm font-medium">Plan Name</div>
+                    <input value={plan.title} onChange={(e)=>setPlan({...plan, title:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="mb-1 text-sm font-medium">Plan Description</div>
+                    <input value={plan.description} onChange={(e)=>setPlan({...plan, description:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
+                  </label>
+                  <label className="block">
+                    <div className="mb-1 text-sm font-medium">Timezone</div>
+                    <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                      {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+                    </select>
+                  </label>
+                  <div className="block">
+                    <div className="mb-1 text-sm font-medium">Plan start date</div>
+                    <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap w-full justify-start">
+                      <Calendar className="h-4 w-4" /> {planDateText}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          )}
+
+          {/* Full AI Planning Interface */}
+          {planningMode === "full-ai" && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">💬</div>
+                  <div className="text-base sm:text-lg font-semibold">AI Planning Assistant</div>
+                </div>
+                <div className="text-sm text-gray-600 ml-8">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</div>
+              </div>
+
+              <div className="ml-8">
+                <ConversationalAI
+                  userEmail={selectedUserEmail}
+                  plannerEmail={plannerEmail}
+                  onPlanGenerated={(generatedPlan) => {
+                    setPlan(generatedPlan.plan);
+                    setTasks(generatedPlan.tasks);
+                    onToast?.("ok", "AI has generated your complete plan!");
+                  }}
+                  onToast={onToast}
+                />
+              </div>
+            </div>
+          )}
 
       {planDateOpen && (
         <Modal title="Choose Plan Start Date" onClose={()=>setPlanDateOpen(false)}>
@@ -857,43 +885,43 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         </Modal>
       )}
 
-      {/* Tasks Section */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
-            <div className="text-base sm:text-lg font-semibold">Add Tasks</div>
-          </div>
-          <div className="text-sm text-gray-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
-        </div>
-
-        <div className="ml-8">
+      {/* Tasks Section - Different behavior based on planning mode */}
+      {planningMode === "ai-assisted" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
-            <div className="flex gap-2 mb-3">
-              <button
-                onClick={() => setTaskMode("manual")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                  taskMode === "manual"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                Manual Entry
-              </button>
-              <button
-                onClick={() => setTaskMode("ai")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                  taskMode === "ai"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                AI Generate
-              </button>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
+              <div className="text-base sm:text-lg font-semibold">Add Tasks with AI Assistance</div>
             </div>
+            <div className="text-sm text-gray-600 ml-8">Create tasks manually with AI providing smart suggestions and recommendations.</div>
           </div>
 
-          {taskMode === "manual" && (
+          <div className="ml-8">
+            <AIAssistedTaskEditor
+              planStartDate={plan.startDate}
+              userEmail={selectedUserEmail}
+              plannerEmail={plannerEmail}
+              onAdd={(items)=>{
+                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+                onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+              }}
+              onToast={onToast}
+            />
+          </div>
+        </div>
+      )}
+
+      {planningMode === "manual" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
+              <div className="text-base sm:text-lg font-semibold">Add Tasks</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
+          </div>
+
+          <div className="ml-8">
             <TaskEditor
               planStartDate={plan.startDate}
               onAdd={(items)=>{
@@ -901,25 +929,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                 onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
               }}
             />
-          )}
-
-          {taskMode === "ai" && (
-            <AITaskGenerator
-              userEmail={selectedUserEmail}
-              plannerEmail={plannerEmail}
-              planTitle={plan.title}
-              planDescription={plan.description}
-              planStartDate={plan.startDate}
-              planTimezone={plan.timezone}
-              onAdd={(items)=>{
-                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
-                onToast?.("ok", `Added ${items.length} AI-generated task${items.length>1?"s":""} to plan`);
-              }}
-              onToast={onToast}
-            />
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Deliver Section */}
       {tasks.length>0 && (
@@ -2851,6 +2863,412 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Conversational AI ───────── */
+function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast }){
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [userNotes, setUserNotes] = useState("");
+  const [currentStep, setCurrentStep] = useState("welcome");
+
+  // Load user notes on mount
+  useEffect(() => {
+    if (userEmail && plannerEmail) {
+      loadUserNotes();
+    }
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok && j.notes) {
+        setUserNotes(j.notes);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+    }
+  }
+
+  // Initialize conversation
+  useEffect(() => {
+    if (currentStep === "welcome" && userEmail) {
+      const welcomeMessage = {
+        id: Date.now(),
+        type: "ai",
+        content: `Hi! I'm your AI planning assistant. I'm here to help you create a comprehensive plan for ${userEmail}. 
+
+I can research best practices, analyze user preferences, and build a complete plan through our conversation. 
+
+What type of plan would you like to create? For example: "Create a workout plan" or "Build a study schedule" or "Design a project timeline".`
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [currentStep, userEmail]);
+
+  async function sendMessage() {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: "user",
+      content: inputMessage.trim()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      // Call AI API for conversational response
+      const resp = await fetch("/api/ai/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle: "AI Generated Plan",
+          planDescription: "",
+          startDate: new Date().toISOString().split('T')[0],
+          timezone: "America/Chicago",
+          userPrompt: inputMessage.trim(),
+          userNotes,
+          conversational: true,
+          conversationHistory: messages
+        })
+      });
+
+      const j = await resp.json();
+      if (!resp.ok || j.error) {
+        throw new Error(j.error || "AI conversation failed");
+      }
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        type: "ai",
+        content: j.response || "I understand. Let me help you with that."
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      // If AI generated a complete plan
+      if (j.plan && j.tasks) {
+        setCurrentStep("plan-ready");
+        onPlanGenerated({
+          plan: j.plan,
+          tasks: j.tasks
+        });
+      }
+
+    } catch (e) {
+      console.error('AI conversation error:', e);
+      onToast?.("error", `AI conversation failed: ${e.message}`);
+      
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: "ai",
+        content: "I'm sorry, I encountered an error. Could you please try again?"
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  if (currentStep === "plan-ready") {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+        <div className="text-center py-8">
+          <div className="text-green-600 mb-2">✅</div>
+          <div className="font-semibold text-green-800 mb-1">Plan Generated Successfully!</div>
+          <div className="text-sm text-green-600 mb-3">
+            Your AI-generated plan is ready for review and delivery.
+          </div>
+          <button
+            onClick={() => setCurrentStep("welcome")}
+            className="px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-100"
+          >
+            Start New Conversation
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      {/* Chat Messages */}
+      <div className="h-96 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                message.type === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-800'
+              }`}
+            >
+              <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+            </div>
+          </div>
+        ))}
+        
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                <span className="text-sm">AI is thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input Area */}
+      <div className="border-t p-4">
+        <div className="flex gap-2">
+          <textarea
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+            className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-20"
+            disabled={isLoading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!inputMessage.trim() || isLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── AI-Assisted Task Editor ───────── */
+function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, onToast }){
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDayOffset, setTaskDayOffset] = useState(0);
+  const [taskTime, setTaskTime] = useState("");
+  const [taskDuration, setTaskDuration] = useState("");
+  const [taskNotes, setTaskNotes] = useState("");
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [userNotes, setUserNotes] = useState("");
+
+  // Load user notes on mount
+  useEffect(() => {
+    if (userEmail && plannerEmail) {
+      loadUserNotes();
+    }
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok && j.notes) {
+        setUserNotes(j.notes);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+    }
+  }
+
+  async function getAISuggestions() {
+    if (!taskTitle.trim()) return;
+    
+    setIsLoadingSuggestions(true);
+    try {
+      const resp = await fetch("/api/ai/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle: "AI Suggestions",
+          planDescription: "",
+          startDate: planStartDate,
+          timezone: "America/Chicago",
+          userPrompt: `Suggest improvements for this task: "${taskTitle}". Consider user notes: "${userNotes}". Provide 3-5 specific suggestions.`,
+          userNotes,
+          suggestionsOnly: true
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok && j.suggestions) {
+        setAiSuggestions(j.suggestions);
+      }
+    } catch (e) {
+      console.error('AI suggestions error:', e);
+      onToast?.("error", "Failed to get AI suggestions");
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  }
+
+  function addTask() {
+    if (!taskTitle.trim()) {
+      onToast?.("error", "Task title is required");
+      return;
+    }
+
+    const newTask = {
+      title: taskTitle.trim(),
+      dayOffset: parseInt(taskDayOffset) || 0,
+      time: taskTime || null,
+      durationMins: taskDuration ? parseInt(taskDuration) : null,
+      notes: taskNotes.trim() || null
+    };
+
+    onAdd([newTask]);
+    
+    // Reset form
+    setTaskTitle("");
+    setTaskDayOffset(0);
+    setTaskTime("");
+    setTaskDuration("");
+    setTaskNotes("");
+    setAiSuggestions([]);
+  }
+
+  function applySuggestion(suggestion) {
+    setTaskTitle(suggestion.title || taskTitle);
+    setTaskNotes(suggestion.notes || taskNotes);
+    if (suggestion.time) setTaskTime(suggestion.time);
+    if (suggestion.duration) setTaskDuration(suggestion.duration);
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* AI Assistance Indicator */}
+      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
+        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤖</div>
+        <div className="text-sm text-green-700">
+          <strong>AI Assistant Active:</strong> I'll provide smart suggestions as you create tasks
+        </div>
+      </div>
+
+      {/* Task Form */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <label className="block md:col-span-2">
+          <div className="mb-1 text-sm font-medium">Task Title *</div>
+          <div className="flex gap-2">
+            <input
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+              className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              placeholder="e.g., Morning workout"
+            />
+            <button
+              onClick={getAISuggestions}
+              disabled={!taskTitle.trim() || isLoadingSuggestions}
+              className="px-3 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-50 disabled:opacity-50"
+            >
+              {isLoadingSuggestions ? "..." : "Get AI Help"}
+            </button>
+          </div>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Day (from start)</div>
+          <input
+            type="number"
+            value={taskDayOffset}
+            onChange={(e) => setTaskDayOffset(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            placeholder="0"
+            min="0"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Time (optional)</div>
+          <input
+            type="time"
+            value={taskTime}
+            onChange={(e) => setTaskTime(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Duration (minutes)</div>
+          <input
+            type="number"
+            value={taskDuration}
+            onChange={(e) => setTaskDuration(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            placeholder="60"
+            min="15"
+          />
+        </label>
+
+        <label className="block md:col-span-2">
+          <div className="mb-1 text-sm font-medium">Notes (optional)</div>
+          <textarea
+            value={taskNotes}
+            onChange={(e) => setTaskNotes(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            placeholder="Additional details or context..."
+            rows="2"
+          />
+        </label>
+      </div>
+
+      {/* AI Suggestions */}
+      {aiSuggestions.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💡</div>
+            <div className="text-sm font-medium text-blue-800">AI Suggestions</div>
+          </div>
+          <div className="space-y-2">
+            {aiSuggestions.map((suggestion, idx) => (
+              <div key={idx} className="flex items-start gap-2 p-2 bg-white border border-blue-200 rounded-lg">
+                <div className="flex-1 text-sm text-gray-700">{suggestion}</div>
+                <button
+                  onClick={() => applySuggestion({ title: suggestion })}
+                  className="px-2 py-1 text-xs font-medium text-blue-700 border border-blue-300 rounded hover:bg-blue-50"
+                >
+                  Apply
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add Task Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={addTask}
+          className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium"
+        >
+          Add Task with AI Assistance
+        </button>
       </div>
     </div>
   );
