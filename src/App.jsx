@@ -944,25 +944,56 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             <div className="text-sm text-gray-600 ml-8">Review your plan and deliver tasks to the selected user's Google Tasks.</div>
           </div>
 
-          {/* Plan Details Review */}
+          {/* Plan Details - Editable */}
           <div className="ml-8 mb-6 p-4 bg-gray-50 rounded-xl">
             <div className="text-sm font-medium text-gray-700 mb-3">Plan Details</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="font-medium text-gray-600">Plan Name:</span>
-                <div className="text-gray-800">{plan.title || "Untitled Plan"}</div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Plan Name:</span>
+                  <input
+                    value={plan.title}
+                    onChange={(e) => setPlan({...plan, title: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter plan name"
+                  />
+                </label>
               </div>
               <div>
-                <span className="font-medium text-gray-600">Start Date:</span>
-                <div className="text-gray-800">{planDateText}</div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Start Date:</span>
+                  <button
+                    type="button"
+                    onClick={() => setPlanDateOpen(true)}
+                    className="w-full mt-1 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 justify-start"
+                  >
+                    <Calendar className="h-4 w-4" /> {planDateText}
+                  </button>
+                </label>
               </div>
               <div className="md:col-span-2">
-                <span className="font-medium text-gray-600">Description:</span>
-                <div className="text-gray-800">{plan.description || "No description"}</div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Description:</span>
+                  <textarea
+                    value={plan.description}
+                    onChange={(e) => setPlan({...plan, description: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter plan description"
+                    rows="2"
+                  />
+                </label>
               </div>
               <div>
-                <span className="font-medium text-gray-600">Timezone:</span>
-                <div className="text-gray-800">{plan.timezone}</div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Timezone:</span>
+                  <select
+                    value={plan.timezone}
+                    onChange={(e) => setPlan({...plan, timezone: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
+                  </select>
+                </label>
               </div>
             </div>
           </div>
