@@ -774,7 +774,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
                 ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 -z-10 relative"
             }`}
           >
             Plan
@@ -784,7 +784,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
                 ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 -z-10"
             }`}
           >
             Assigned
@@ -799,7 +799,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "notes"
                 ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 -z-10 relative"
             }`}
           >
             User Notes
@@ -809,7 +809,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
                 ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1 z-10 relative"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 z-0 relative"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 -z-10 relative"
             }`}
           >
             Templates & History
