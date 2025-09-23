@@ -3233,9 +3233,9 @@ What type of plan would you like to create? For example: "Create a workout plan"
         // Continue conversation with AI insights
         if (j.aiInsights) {
           const insightsMessage = {
-            id: Date.now() + 2,
+            id: Date.now() + 1000,
             type: "ai",
-            content: `Here are my insights about this user based on the plan I generated:\n\n${j.aiInsights}\n\nWould you like me to save these insights to the user's notes for future reference?`
+            content: `INSIGHTS: ${j.aiInsights}`
           };
           console.log('Adding insights message:', insightsMessage);
           setMessages(prev => {
