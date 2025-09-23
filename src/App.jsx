@@ -914,6 +914,12 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     setPlan(generatedPlan.plan);
                     setTasks(generatedPlan.tasks);
                     onToast?.("ok", "AI has generated your complete plan!");
+                    // Show save notes prompt after AI plan generation
+                    const insightsText = generatedPlan.aiInsights ? 
+                      `AI Insights: ${generatedPlan.aiInsights}\n\nAdditional notes:` : 
+                      "AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.";
+                    setPendingNotes(insightsText);
+                    setShowSaveNotesPrompt(true);
                   }}
                   onToast={onToast}
                 />
@@ -3232,23 +3238,11 @@ What type of plan would you like to create? For example: "Create a workout plan"
             content: `Here are my insights about this user based on the plan I generated:\n\n${j.aiInsights}\n\nWould you like me to save these insights to the user's notes for future reference?`
           };
           console.log('Adding insights message:', insightsMessage);
-          setTimeout(() => {
-            setMessages(prev => {
-              const newMessages = [...prev, insightsMessage];
-              console.log('Updated messages:', newMessages);
-              return newMessages;
-            });
-          }, 100);
-        } else {
-          // Test message to verify chat system is working
-          const testMessage = {
-            id: Date.now() + 2,
-            type: "ai",
-            content: "TEST: AI insights were not found in the response. This is a test message to verify the chat system is working."
-          };
-          setTimeout(() => {
-            setMessages(prev => [...prev, testMessage]);
-          }, 100);
+          setMessages(prev => {
+            const newMessages = [...prev, insightsMessage];
+            console.log('Updated messages:', newMessages);
+            return newMessages;
+          });
         }
         
       }
