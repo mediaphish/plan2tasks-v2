@@ -157,8 +157,6 @@ function MainApp(){
     try{
       const qs=new URLSearchParams({ plannerEmail, status:"new" });
       const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
-      console.log('Badge API response:', j);
-      console.log('Setting badge to:', j.count);
       setInboxBadge((j.count||0));
     }catch(e){console.error('Badge error:', e);}
   }
@@ -3208,6 +3206,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
 
       setMessages(prev => [...prev, aiMessage]);
 
+
       // If AI generated a complete plan
       if (j.tasks && Array.isArray(j.tasks)) {
         setCurrentStep("plan-ready");
@@ -3221,11 +3220,9 @@ What type of plan would you like to create? For example: "Create a workout plan"
           tasks: j.tasks
         });
         
-        // Prompt to save notes if AI provided insights
-        if (j.aiInsights && j.aiInsights.trim()) {
-          setPendingNotes(j.aiInsights);
-          setShowSaveNotesPrompt(true);
-        }
+        // Always prompt to save notes after plan generation
+        setPendingNotes("AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.");
+        setShowSaveNotesPrompt(true);
       }
 
     } catch (e) {
