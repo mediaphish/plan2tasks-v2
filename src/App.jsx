@@ -3223,7 +3223,8 @@ What type of plan would you like to create? For example: "Create a workout plan"
             startDate: j.startDate || new Date().toISOString().split('T')[0],
             timezone: j.timezone || "America/Chicago"
           },
-          tasks: j.tasks
+          tasks: j.tasks,
+          aiInsights: j.aiInsights || null
         });
         
       }
