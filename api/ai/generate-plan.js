@@ -176,6 +176,7 @@ If just responding conversationally, return your response as plain text.`;
   try {
     // Try to parse as JSON first (if AI returned structured response)
     const parsedResponse = JSON.parse(aiContent);
+    console.log('AI Response parsed:', JSON.stringify(parsedResponse, null, 2));
     return send(res, 200, {
       ok: true,
       response: parsedResponse.response,
@@ -185,6 +186,7 @@ If just responding conversationally, return your response as plain text.`;
     });
   } catch (e) {
     // If not JSON, return as conversational response
+    console.log('AI Response not JSON:', aiContent);
     return send(res, 200, {
       ok: true,
       response: aiContent,
