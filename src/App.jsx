@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
@@ -157,8 +157,6 @@ function MainApp(){
     try{
       const qs=new URLSearchParams({ plannerEmail, status:"new" });
       const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
-      console.log('Badge API response:', j);
-      console.log('Setting badge to:', j.count);
       setInboxBadge((j.count||0));
     }catch(e){console.error('Badge error:', e);}
   }
@@ -167,6 +165,32 @@ function MainApp(){
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
 
+  async function saveUserNotes(newNotes) {
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: selectedUserEmail,
+          plannerEmail,
+          notes: newNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        onToast?.("ok", "User notes updated with AI insights");
+        setShowSaveNotesPrompt(false);
+        setPendingNotes("");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
@@ -174,7 +198,6 @@ function MainApp(){
         <div className="mb-6 sm:mb-6 flex flex-wrap items-center justify-between gap-4 pt-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-6 sm:h-8" />
-            <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">{APP_VERSION}</span>
             <nav className="ml-1 sm:ml-4 flex gap-1 sm:gap-2">
               <NavBtn active={view==="users"} onClick={()=>{ setView("users"); updateQueryView("users"); }} icon={<Users className="h-4 w-4" />}><span className="hidden sm:inline">Users</span></NavBtn>
               <NavBtn active={view==="plan"} onClick={()=>{ setView("plan"); updateQueryView("plan"); }} icon={<Calendar className="h-4 w-4" />}><span className="hidden sm:inline">Plan</span></NavBtn>
@@ -197,7 +220,9 @@ function MainApp(){
             >
               <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
               {prefs.show_inbox_badge && inboxBadge>0 && (
-                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">{inboxBadge}</span>
+                <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                  {inboxBadge} New
+                </span>
               )}
             </a>
             <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
@@ -262,6 +287,15 @@ function MainApp(){
           />
         )}
       </div>
+      
+      {/* Footer */}
+      <footer className="mt-8 border-t border-gray-200 py-4 text-center text-xs text-gray-500">
+        <div className="flex items-center justify-center gap-4">
+          <span>Version {APP_VERSION}</span>
+          <span>•</span>
+          <span>© 2025 Plan2Tasks</span>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -645,6 +679,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
+  const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
+  const [pendingNotes,setPendingNotes]=useState("");
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -745,7 +781,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("plan")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -755,22 +791,32 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("assigned")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
             Assigned
             {newBundleCount > 0 && (
-              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
-                {newBundleCount}
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                {newBundleCount} New
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab("notes")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+              activeTab === "notes"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            User Notes
           </button>
           <button
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -802,12 +848,12 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
         <>
-          {/* AI Decision Interface */}
-          <AIPlanningDecision
-            selectedUserEmail={selectedUserEmail}
-            onModeSelect={(mode) => setPlanningMode(mode)}
-            planningMode={planningMode}
-          />
+            {/* AI Decision Interface */}
+            <AIPlanningDecision
+              selectedUserEmail={selectedUserEmail}
+              onModeSelect={(mode) => setPlanningMode(mode)}
+              planningMode={planningMode}
+            />
 
           {/* Plan Setup Section - Only show for AI-Assisted and Manual modes */}
           {planningMode !== "full-ai" && (
@@ -868,12 +914,54 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     setPlan(generatedPlan.plan);
                     setTasks(generatedPlan.tasks);
                     onToast?.("ok", "AI has generated your complete plan!");
+                    // Show save notes prompt after AI plan generation
+                    setPendingNotes("AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.");
+                    setShowSaveNotesPrompt(true);
                   }}
                   onToast={onToast}
                 />
               </div>
             </div>
           )}
+
+      {/* Save Notes Prompt */}
+      {showSaveNotesPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="mb-4">
+              <div className="text-lg font-semibold text-gray-900 mb-2">
+                💡 Save AI Insights to User Notes
+              </div>
+              <div className="text-sm text-gray-600 mb-4">
+                The AI has generated insights about this user that could be useful for future planning sessions.
+              </div>
+              <textarea
+                value={pendingNotes}
+                onChange={(e) => setPendingNotes(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none h-24"
+                placeholder="AI insights about this user..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => saveUserNotes(pendingNotes)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                Save to User Notes
+              </button>
+              <button
+                onClick={() => {
+                  setShowSaveNotesPrompt(false);
+                  setPendingNotes("");
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {planDateOpen && (
         <Modal title="Choose Plan Start Date" onClose={()=>setPlanDateOpen(false)}>
@@ -944,6 +1032,60 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             <div className="text-sm text-gray-600 ml-8">Review your plan and deliver tasks to the selected user's Google Tasks.</div>
           </div>
 
+          {/* Plan Details - Editable */}
+          <div className="ml-8 mb-6 p-4 bg-gray-50 rounded-xl">
+            <div className="text-sm font-medium text-gray-700 mb-3">Plan Details</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Plan Name:</span>
+                  <input
+                    value={plan.title}
+                    onChange={(e) => setPlan({...plan, title: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter plan name"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Start Date:</span>
+                  <button
+                    type="button"
+                    onClick={() => setPlanDateOpen(true)}
+                    className="w-full mt-1 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 justify-start"
+                  >
+                    <Calendar className="h-4 w-4" /> {planDateText}
+                  </button>
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block">
+                  <span className="font-medium text-gray-600">Description:</span>
+                  <textarea
+                    value={plan.description}
+                    onChange={(e) => setPlan({...plan, description: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter plan description"
+                    rows="2"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Timezone:</span>
+                  <select
+                    value={plan.timezone}
+                    onChange={(e) => setPlan({...plan, timezone: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
+                  </select>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <div className="ml-8">
             <ComposerPreview
               plannerEmail={plannerEmail}
@@ -966,7 +1108,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
       {/* Assigned Tab Content */}
       {activeTab === "assigned" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
@@ -1028,9 +1170,44 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       </div>
       )}
 
+      {/* User Notes Tab Content */}
+      {activeTab === "notes" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
+              <div className="text-base sm:text-lg font-semibold">User Notes</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">
+              {selectedUserEmail ? (
+                <>AI context and rules for <strong>{selectedUserEmail}</strong></>
+              ) : (
+                "Select a user to view and edit their notes"
+              )}
+            </div>
+          </div>
+
+          <div className="ml-8">
+            {selectedUserEmail ? (
+              <UserNotesManager
+                userEmail={selectedUserEmail}
+                plannerEmail={plannerEmail}
+                onToast={onToast}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">👤</div>
+                <div className="font-semibold mb-1">No User Selected</div>
+                <div className="text-sm">Choose a user from the dropdown above to view and edit their notes</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* History Tab Content */}
       {activeTab === "history" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
@@ -2725,9 +2902,122 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
   );
 }
 
+/* ───────── User Notes Manager ───────── */
+function UserNotesManager({ userEmail, plannerEmail, onToast }){
+  const [notes, setNotes] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Load user notes on mount
+  useEffect(() => {
+    loadUserNotes();
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    setIsLoading(true);
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok) {
+        setNotes(j.notes || "");
+        setLastUpdated(j.updatedAt);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+      onToast?.("error", "Failed to load user notes");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveUserNotes() {
+    setIsSaving(true);
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          notes: notes.trim()
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        setLastUpdated(new Date().toISOString());
+        onToast?.("ok", "User notes saved successfully");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
+        <div className="text-sm text-gray-600">Loading user notes...</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {lastUpdated && (
+        <div className="text-xs text-gray-500 mb-4">
+          Last updated: {new Date(lastUpdated).toLocaleString()}
+        </div>
+      )}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notes & Context
+          </label>
+          <div className="text-xs text-gray-500 mb-2">
+            These notes are automatically considered by AI in all planning sessions for this user.
+          </div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-32"
+            placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-500">
+            {notes.length} characters
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={loadUserNotes}
+              disabled={isSaving}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Reload
+            </button>
+            <button
+              onClick={saveUserNotes}
+              disabled={isSaving || !notes.trim()}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? "Saving..." : "Save Notes"}
+            </button>
+          </div>
+        </div>
+    </>
+  );
+}
+
 /* ───────── AI Planning Decision ───────── */
 function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
-  const [aiEnabled, setAiEnabled] = useState(true);
 
   if (!selectedUserEmail) {
     return (
@@ -2751,41 +3041,18 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         <div className="text-sm text-gray-600 ml-8">Choose your planning approach for <strong>{selectedUserEmail}</strong></div>
       </div>
 
-      <div className="ml-8 space-y-3">
-        {/* AI Toggle */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="font-medium text-sm">AI Assistance</div>
-            <div className="text-xs text-gray-500">Enable AI suggestions and smart recommendations</div>
-          </div>
-          <button
-            onClick={() => setAiEnabled(!aiEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              aiEnabled ? 'bg-blue-600' : 'bg-gray-300'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                aiEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Planning Mode Options */}
+             <div className="ml-8 space-y-3">
+               {/* Planning Mode Options */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Full AI Option */}
-          <button
-            onClick={() => onModeSelect("full-ai")}
-            disabled={!aiEnabled}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              planningMode === "full-ai"
-                ? "border-blue-500 bg-blue-50"
-                : aiEnabled
-                ? "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                : "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
-            }`}
-          >
+                 <button
+                   onClick={() => onModeSelect("full-ai")}
+                   className={`p-4 rounded-xl border-2 text-left transition-all ${
+                     planningMode === "full-ai"
+                       ? "border-blue-500 bg-blue-50"
+                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                   }`}
+                 >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
               <div className="font-semibold text-sm">Full AI Planning</div>
@@ -2796,17 +3063,14 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
           </button>
 
           {/* AI-Assisted Manual Option */}
-          <button
-            onClick={() => onModeSelect("ai-assisted")}
-            disabled={!aiEnabled}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              planningMode === "ai-assisted"
-                ? "border-blue-500 bg-blue-50"
-                : aiEnabled
-                ? "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                : "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
-            }`}
-          >
+                 <button
+                   onClick={() => onModeSelect("ai-assisted")}
+                   className={`p-4 rounded-xl border-2 text-left transition-all ${
+                     planningMode === "ai-assisted"
+                       ? "border-blue-500 bg-blue-50"
+                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                   }`}
+                 >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤝</div>
               <div className="font-semibold text-sm">AI-Assisted Manual</div>
@@ -2875,6 +3139,34 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
   const [isLoading, setIsLoading] = useState(false);
   const [userNotes, setUserNotes] = useState("");
   const [currentStep, setCurrentStep] = useState("welcome");
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+  // Check if user has scrolled up
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+      setUserHasScrolled(!isNearBottom);
+    }
+  };
+
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setShowScrollButton(false);
+    setUserHasScrolled(false);
+  };
+
+  // Auto-scroll to new messages (like this chat)
+  useEffect(() => {
+    if (!userHasScrolled) {
+      scrollToBottom();
+    }
+  }, [messages, isLoading]);
 
   // Load user notes on mount
   useEffect(() => {
@@ -2895,6 +3187,7 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
       console.error('Load user notes error:', e);
     }
   }
+
 
   // Initialize conversation
   useEffect(() => {
@@ -2957,13 +3250,20 @@ What type of plan would you like to create? For example: "Create a workout plan"
 
       setMessages(prev => [...prev, aiMessage]);
 
+
       // If AI generated a complete plan
-      if (j.plan && j.tasks) {
+      if (j.tasks && Array.isArray(j.tasks)) {
         setCurrentStep("plan-ready");
         onPlanGenerated({
-          plan: j.plan,
+          plan: {
+            title: j.planTitle || "AI Generated Plan",
+            description: j.planDescription || "",
+            startDate: j.startDate || new Date().toISOString().split('T')[0],
+            timezone: j.timezone || "America/Chicago"
+          },
           tasks: j.tasks
         });
+        
       }
 
     } catch (e) {
@@ -3011,7 +3311,11 @@ What type of plan would you like to create? For example: "Create a workout plan"
   return (
     <div className="rounded-xl border border-gray-200 bg-white">
       {/* Chat Messages */}
-      <div className="h-96 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="h-96 overflow-y-auto p-4 space-y-4 relative"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -3039,7 +3343,24 @@ What type of plan would you like to create? For example: "Create a workout plan"
             </div>
           </div>
         )}
+        
+        {/* Scroll target */}
+        <div ref={messagesEndRef} />
+        
+        {/* Floating scroll button */}
+        {showScrollButton && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2 shadow-lg hover:bg-blue-700 transition-colors"
+            title="Scroll to bottom"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+        )}
       </div>
+
 
       {/* Input Area */}
       <div className="border-t p-4">
