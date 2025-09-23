@@ -3232,11 +3232,13 @@ What type of plan would you like to create? For example: "Create a workout plan"
             content: `Here are my insights about this user based on the plan I generated:\n\n${j.aiInsights}\n\nWould you like me to save these insights to the user's notes for future reference?`
           };
           console.log('Adding insights message:', insightsMessage);
-          setMessages(prev => {
-            const newMessages = [...prev, insightsMessage];
-            console.log('Updated messages:', newMessages);
-            return newMessages;
-          });
+          setTimeout(() => {
+            setMessages(prev => {
+              const newMessages = [...prev, insightsMessage];
+              console.log('Updated messages:', newMessages);
+              return newMessages;
+            });
+          }, 100);
         } else {
           // Test message to verify chat system is working
           const testMessage = {
@@ -3244,7 +3246,9 @@ What type of plan would you like to create? For example: "Create a workout plan"
             type: "ai",
             content: "TEST: AI insights were not found in the response. This is a test message to verify the chat system is working."
           };
-          setMessages(prev => [...prev, testMessage]);
+          setTimeout(() => {
+            setMessages(prev => [...prev, testMessage]);
+          }, 100);
         }
         
       }
