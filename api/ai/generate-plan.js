@@ -133,9 +133,7 @@ ${conversationHistory ? conversationHistory.map(msg => `${msg.type}: ${msg.conte
 
 Current message: ${userPrompt}
 
-CRITICAL: When the planner asks for a complete plan or you have enough information to create one, you MUST return a JSON object in this EXACT format. Do not return anything else.
-
-REQUIRED JSON FORMAT (no exceptions):
+When generating a plan, return ONLY a JSON object in this exact format:
 {
   "response": "Your conversational response here",
   "tasks": [
@@ -150,7 +148,7 @@ REQUIRED JSON FORMAT (no exceptions):
   "aiInsights": "Key insights and recommendations for this user based on the plan generated"
 }
 
-If just responding conversationally (not generating a plan), return your response as plain text.`;
+If just responding conversationally, return your response as plain text.`;
 
   const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
