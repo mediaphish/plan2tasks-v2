@@ -148,6 +148,8 @@ When generating a plan, return ONLY a JSON object in this exact format:
   "aiInsights": "Key insights and recommendations for this user based on the plan generated"
 }
 
+IMPORTANT: The "aiInsights" field is REQUIRED and must contain meaningful insights about the user.
+
 If just responding conversationally, return your response as plain text.`;
 
   const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
