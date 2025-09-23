@@ -179,6 +179,7 @@ If just responding conversationally, return your response as plain text.`;
       ok: true,
       response: parsedResponse.response,
       tasks: parsedResponse.tasks || null,
+      aiInsights: parsedResponse.aiInsights || null,
       message: 'AI response generated'
     });
   } catch (e) {
