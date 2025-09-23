@@ -135,7 +135,7 @@ Current message: ${userPrompt}
 
 If the planner is ready for a complete plan, generate one. Otherwise, respond conversationally.
 
-When generating a plan, return BOTH a conversational response AND a JSON array of tasks in this format:
+When generating a plan, return ONLY a JSON object in this exact format:
 {
   "response": "Your conversational response here",
   "tasks": [
