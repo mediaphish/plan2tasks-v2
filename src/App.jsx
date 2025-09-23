@@ -3242,44 +3242,28 @@ What type of plan would you like to create? For example: "Create a workout plan"
         throw new Error(j.error || "AI conversation failed");
       }
 
-      // Check if the response contains JSON with tasks
-      let aiResponse = j.response || "I understand. Let me help you with that.";
-      let tasks = null;
-      
-      // Try to parse JSON from the response if it contains structured data
-      try {
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.tasks && Array.isArray(parsed.tasks)) {
-            tasks = parsed.tasks;
-            aiResponse = parsed.response || aiResponse;
-          }
-        }
-      } catch (e) {
-        // If parsing fails, continue with original response
-      }
-
       const aiMessage = {
         id: Date.now() + 1,
         type: "ai",
-        content: aiResponse
+        content: j.response || "I understand. Let me help you with that."
       };
 
       setMessages(prev => [...prev, aiMessage]);
 
+
       // If AI generated a complete plan
-      if (tasks && Array.isArray(tasks)) {
+      if (j.tasks && Array.isArray(j.tasks)) {
         setCurrentStep("plan-ready");
         onPlanGenerated({
           plan: {
-            title: "AI Generated Plan",
-            description: "",
-            startDate: new Date().toISOString().split('T')[0],
-            timezone: "America/Chicago"
+            title: j.planTitle || "AI Generated Plan",
+            description: j.planDescription || "",
+            startDate: j.startDate || new Date().toISOString().split('T')[0],
+            timezone: j.timezone || "America/Chicago"
           },
-          tasks: tasks
+          tasks: j.tasks
         });
+        
       }
 
     } catch (e) {
