@@ -146,7 +146,8 @@ When generating a plan, return ONLY a JSON object in this exact format:
       "durationMins": 60,
       "notes": "Optional notes"
     }
-  ]
+  ],
+  "aiInsights": "Key insights and recommendations for this user based on the plan generated"
 }
 
 If just responding conversationally, return your response as plain text.`;
