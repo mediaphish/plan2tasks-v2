@@ -3212,10 +3212,10 @@ What type of plan would you like to create? For example: "Create a workout plan"
         setCurrentStep("plan-ready");
         onPlanGenerated({
           plan: {
-            title: j.planTitle || "AI Generated Plan",
-            description: j.planDescription || "",
-            startDate: j.startDate || new Date().toISOString().split('T')[0],
-            timezone: j.timezone || "America/Chicago"
+            title: "AI Generated Plan",
+            description: "",
+            startDate: new Date().toISOString().split('T')[0],
+            timezone: "America/Chicago"
           },
           tasks: j.tasks
         });
