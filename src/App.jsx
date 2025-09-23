@@ -767,6 +767,32 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     }
   }
 
+  async function saveUserNotes(newNotes) {
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: selectedUserEmail,
+          plannerEmail,
+          notes: newNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        onToast?.("ok", "User notes updated with AI insights");
+        setShowSaveNotesPrompt(false);
+        setPendingNotes("");
+      } else {
+        onToast?.("error", "Failed to save user notes");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", "Failed to save user notes");
+    }
+  }
+
   useEffect(()=>{ loadNewBundleCount(); },[selectedUserEmail, plannerEmail]);
   
   // Reload bundle count when switching to Assigned tab
@@ -1218,6 +1244,45 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
           <div className="ml-8">
             <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+          </div>
+        </div>
+      )}
+
+      {/* Save Notes Prompt */}
+      {showSaveNotesPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="mb-4">
+              <div className="text-lg font-semibold text-gray-900 mb-2">
+                💡 Save AI Insights to User Notes
+              </div>
+              <div className="text-sm text-gray-600 mb-4">
+                The AI has generated insights about this user that could be useful for future planning sessions.
+              </div>
+              <textarea
+                value={pendingNotes}
+                onChange={(e) => setPendingNotes(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none h-24"
+                placeholder="AI insights about this user..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => saveUserNotes(pendingNotes)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                Save to User Notes
+              </button>
+              <button
+                onClick={() => {
+                  setShowSaveNotesPrompt(false);
+                  setPendingNotes("");
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Skip
+              </button>
+            </div>
           </div>
         </div>
       )}
