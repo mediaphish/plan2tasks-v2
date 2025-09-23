@@ -157,8 +157,6 @@ function MainApp(){
     try{
       const qs=new URLSearchParams({ plannerEmail, status:"new" });
       const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
-      console.log('Badge API response:', j);
-      console.log('Setting badge to:', j.count);
       setInboxBadge((j.count||0));
     }catch(e){console.error('Badge error:', e);}
   }
@@ -167,6 +165,32 @@ function MainApp(){
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
 
+  async function saveUserNotes(newNotes) {
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: selectedUserEmail,
+          plannerEmail,
+          notes: newNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        onToast?.("ok", "User notes updated with AI insights");
+        setShowSaveNotesPrompt(false);
+        setPendingNotes("");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
@@ -174,7 +198,6 @@ function MainApp(){
         <div className="mb-6 sm:mb-6 flex flex-wrap items-center justify-between gap-4 pt-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-6 sm:h-8" />
-            <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap select-none ml-1 sm:ml-2">{APP_VERSION}</span>
             <nav className="ml-1 sm:ml-4 flex gap-1 sm:gap-2">
               <NavBtn active={view==="users"} onClick={()=>{ setView("users"); updateQueryView("users"); }} icon={<Users className="h-4 w-4" />}><span className="hidden sm:inline">Users</span></NavBtn>
               <NavBtn active={view==="plan"} onClick={()=>{ setView("plan"); updateQueryView("plan"); }} icon={<Calendar className="h-4 w-4" />}><span className="hidden sm:inline">Plan</span></NavBtn>
@@ -197,7 +220,9 @@ function MainApp(){
             >
               <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
               {prefs.show_inbox_badge && inboxBadge>0 && (
-                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">{inboxBadge}</span>
+                <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                  {inboxBadge} New
+                </span>
               )}
             </a>
             <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
@@ -262,6 +287,15 @@ function MainApp(){
           />
         )}
       </div>
+      
+      {/* Footer */}
+      <footer className="mt-8 border-t border-gray-200 py-4 text-center text-xs text-gray-500">
+        <div className="flex items-center justify-center gap-4">
+          <span>Version {APP_VERSION}</span>
+          <span>•</span>
+          <span>© 2025 Plan2Tasks</span>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -645,6 +679,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
+  const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
+  const [pendingNotes,setPendingNotes]=useState("");
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -745,7 +781,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("plan")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -755,22 +791,32 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("assigned")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
             Assigned
             {newBundleCount > 0 && (
-              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 px-1 py-[1px] text-[9px] font-bold text-white min-w-[14px] h-[14px] text-center leading-none flex items-center justify-center">
-                {newBundleCount}
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                {newBundleCount} New
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab("notes")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+              activeTab === "notes"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            User Notes
           </button>
           <button
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -801,9 +847,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
-        <div className="flex gap-6">
-          {/* Main Content */}
-          <div className="flex-1">
+        <>
             {/* AI Decision Interface */}
             <AIPlanningDecision
               selectedUserEmail={selectedUserEmail}
@@ -870,12 +914,54 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     setPlan(generatedPlan.plan);
                     setTasks(generatedPlan.tasks);
                     onToast?.("ok", "AI has generated your complete plan!");
+                    // Show save notes prompt after AI plan generation
+                    setPendingNotes("AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.");
+                    setShowSaveNotesPrompt(true);
                   }}
                   onToast={onToast}
                 />
               </div>
             </div>
           )}
+
+      {/* Save Notes Prompt */}
+      {showSaveNotesPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="mb-4">
+              <div className="text-lg font-semibold text-gray-900 mb-2">
+                💡 Save AI Insights to User Notes
+              </div>
+              <div className="text-sm text-gray-600 mb-4">
+                The AI has generated insights about this user that could be useful for future planning sessions.
+              </div>
+              <textarea
+                value={pendingNotes}
+                onChange={(e) => setPendingNotes(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none h-24"
+                placeholder="AI insights about this user..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => saveUserNotes(pendingNotes)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                Save to User Notes
+              </button>
+              <button
+                onClick={() => {
+                  setShowSaveNotesPrompt(false);
+                  setPendingNotes("");
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {planDateOpen && (
         <Modal title="Choose Plan Start Date" onClose={()=>setPlanDateOpen(false)}>
@@ -1017,525 +1103,28 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </div>
         </div>
       )}
+        </>
+      )}
 
       {/* Assigned Tab Content */}
       {activeTab === "assigned" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
-              <div className="text-base sm:text-lg font-semibold">Assigned Bundles</div>
-            </div>
-            <div className="text-sm text-gray-600 ml-8">Review and work with bundles assigned to this user.</div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
+            <div className="text-base sm:text-lg font-semibold">Assigned Bundles</div>
           </div>
-
-          <div className="ml-8">
-            <AssignedBundlesPanel 
-              plannerEmail={plannerEmail} 
-              userEmail={selectedUserEmail} 
-              onToast={onToast}
-              onReviewBundle={async (bundle) => {
-                try {
-                  // First, fetch the full bundle data including tasks
-                  const qs = new URLSearchParams({ inboxId: bundle.id });
-                  const r = await fetch(`/api/inbox/get?${qs.toString()}`);
-                  const j = await r.json();
-                  
-                  if (!r.ok || j.error) {
-                    onToast?.("error", `Failed to load bundle: ${j.error}`);
-                    return;
-                  }
-                  
-                  const fullBundle = j.bundle;
-                  const bundleTasks = (fullBundle.tasks || []).map(t => ({
-                    id: uid(),
-                    title: t.title,
-                    dayOffset: t.day_offset || 0,
-                    time: t.time || '',
-                    durationMins: t.duration_mins || null,
-                    notes: t.notes || ''
-                  }));
-                  
-                  // Replace current tasks and plan details
-                  setTasks(bundleTasks);
-                  setPlan({
-                    title: fullBundle.title || "Bundle Plan",
-                    startDate: fullBundle.start_date || format(new Date(), "yyyy-MM-dd"),
-                    timezone: fullBundle.timezone || "America/Chicago"
-                  });
-                  
-                  // Switch to plan tab to show the loaded content
-                  setActiveTab("plan");
-                  onToast?.("ok", "Bundle loaded successfully");
-                } catch (e) {
-                  console.error('Error loading bundle:', e);
-                  onToast?.("error", "Failed to load bundle");
-                }
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Templates & History Tab Content */}
-      {activeTab === "templates" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
-              <div className="text-base sm:text-lg font-semibold">Plan History</div>
-            </div>
-            <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
-          </div>
-
-          <div className="ml-8">
-            <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ───────── Task editor ───────── */
-function TaskEditor({ planStartDate, onAdd }){
-  const [title,setTitle]=useState("");
-  const [notes,setNotes]=useState("");
-  const [taskDate,setTaskDate]=useState(planStartDate);
-  const [taskDateOpen,setTaskDateOpen]=useState(false);
-  const [time,setTime]=useState("");
-  const [dur,setDur]=useState(60);
-  const [interval,setInterval]=useState(1);
-  const [repeat,setRepeat]=useState("daily");
-  const [until,setUntil]=useState("");
-  const [untilDate,setUntilDate]=useState("");
-
-  useEffect(()=>{ if (!taskDate) setTaskDate(planStartDate); },[planStartDate]);
-
-  function generate(){
-    const name=title.trim(); if (!name) return;
-    const planStart=parseYMDLocal(planStartDate)||new Date();
-    const baseObj={ title:name, time, durationMins:dur, notes };
-
-    const added=[];
-    function push(d){ const off=daysBetweenLocal(planStart, d); added.push({ ...baseObj, dayOffset: off }); }
-
-    const step=Math.max(1, Number(interval)||1);
-    if (repeat==="daily"){
-      if (until==="date" && untilDate){
-        const end=parseYMDLocal(untilDate);
-        if (end){
-          for (let d=new Date(taskDate); d<=end; d=addDaysLocal(d, step)) push(d);
-        }
-      } else if (until==="count"){
-        const count=Math.max(1, Number(interval)||1);
-        for (let i=0, d=new Date(taskDate); i<count; i++, d=addDaysLocal(d, step)) push(d);
-      } else {
-        push(new Date(taskDate));
-      }
-    } else if (repeat==="weekly"){
-      const weekday=new Date(taskDate).getDay();
-      if (until==="date" && untilDate){
-        const end=parseYMDLocal(untilDate);
-        if (end){
-          for (let d=new Date(taskDate); d<=end; d=addDaysLocal(d, 7*step)){
-            if (d.getDay()===weekday) push(d);
-          }
-        }
-      } else if (until==="count"){
-        const count=Math.max(1, Number(interval)||1);
-        for (let i=0, d=new Date(taskDate); i<count; i++, d=addDaysLocal(d, 7*step)){
-          if (d.getDay()===weekday) push(d);
-        }
-      } else {
-        push(new Date(taskDate));
-      }
-    } else if (repeat==="monthly"){
-      const day=new Date(taskDate).getDate();
-      if (until==="date" && untilDate){
-        const end=parseYMDLocal(untilDate);
-        if (end){
-          for (let d=new Date(taskDate); d<=end; d=addMonthsLocal(d, step)){
-            if (d.getDate()===day) push(d);
-          }
-        }
-      } else if (until==="count"){
-        const count=Math.max(1, Number(interval)||1);
-        for (let i=0, d=new Date(taskDate); i<count; i++, d=addMonthsLocal(d, step)){
-          if (d.getDate()===day) push(d);
-        }
-      } else {
-        push(new Date(taskDate));
-      }
-    } else {
-      push(new Date(taskDate));
-    }
-
-    if (added.length>0){
-      onAdd(added);
-      setTitle(""); setNotes(""); setTime(""); setDur(60);
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Task name</div>
-          <input value={title} onChange={(e)=>setTitle(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Morning workout" />
-        </label>
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Start date</div>
-          <button type="button" onClick={()=>setTaskDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap w-full justify-start">
-            <Calendar className="h-4 w-4" /> {fmtYMDLocal(parseYMDLocal(taskDate)||new Date())}
-          </button>
-        </label>
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Time (optional)</div>
-          <TimeSelect value={time} onChange={setTime} />
-        </label>
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Duration (minutes)</div>
-          <input type="number" value={dur} onChange={(e)=>setDur(Number(e.target.value))} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" min="15" step="15" />
-        </label>
-        <label className="block md:col-span-2">
-          <div className="mb-1 text-sm font-medium">Notes (optional)</div>
-          <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Additional details..." rows="2" />
-        </label>
-      </div>
-
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-        <div className="mb-3">
-          <div className="text-sm font-medium mb-2">Repeat pattern</div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <label className="flex items-center gap-2">
-              <input type="radio" name="repeat" value="daily" checked={repeat==="daily"} onChange={(e)=>setRepeat(e.target.value)} className="rounded" />
-              <span className="text-sm">Daily</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="repeat" value="weekly" checked={repeat==="weekly"} onChange={(e)=>setRepeat(e.target.value)} className="rounded" />
-              <span className="text-sm">Weekly</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="repeat" value="monthly" checked={repeat==="monthly"} onChange={(e)=>setRepeat(e.target.value)} className="rounded" />
-              <span className="text-sm">Monthly</span>
-            </label>
-          </div>
+          <div className="text-sm text-gray-600 ml-8">Review and work with bundles assigned to this user.</div>
         </div>
 
-        <div className="mb-3">
-          <div className="text-sm font-medium mb-2">Repeat every</div>
-          <div className="flex items-center gap-2">
-            <input type="number" value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-sm" min="1" />
-            <span className="text-sm text-gray-600">
-              {repeat==="daily" ? "day(s)" : repeat==="weekly" ? "week(s)" : "month(s)"}
-            </span>
-          </div>
-        </div>
-
-        <div className="mb-3">
-          <div className="text-sm font-medium mb-2">Repeat until</div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <label className="flex items-center gap-2">
-              <input type="radio" name="until" value="count" checked={until==="count"} onChange={(e)=>setUntil(e.target.value)} className="rounded" />
-              <span className="text-sm">Count</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="until" value="date" checked={until==="date"} onChange={(e)=>setUntil(e.target.value)} className="rounded" />
-              <span className="text-sm">Date</span>
-            </label>
-          </div>
-        </div>
-
-        {until==="count" && (
-          <div className="mb-3">
-            <div className="text-sm font-medium mb-2">Number of occurrences</div>
-            <input type="number" value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-sm" min="1" />
-          </div>
-        )}
-
-        {until==="date" && (
-          <div className="mb-3">
-            <div className="text-sm font-medium mb-2">End date</div>
-            <UntilDatePicker value={untilDate} setValue={setUntilDate} planStartDate={planStartDate} />
-          </div>
-        )}
-
-        <button onClick={generate} className="w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-          Add Task{repeat!=="none" ? "s" : ""}
-        </button>
-      </div>
-
-      {taskDateOpen && (
-        <Modal title="Choose Task Start Date" onClose={()=>setTaskDateOpen(false)}>
-          <CalendarGridFree
-            initialDate={taskDate}
-            selectedDate={taskDate}
-            onPick={(ymd)=>{ setTaskDate(ymd); setTaskDateOpen(false); }}
-          />
-        </Modal>
-      )}
-
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Info className="h-3.5 w-3.5" /> Times are optional; recurrence supported above.
-      </div>
-    </div>
-  );
-}
-
-/* ───────── Task editor ───────── */
-function TaskEditor({ planStartDate, onAdd }){
-  const [title,setTitle]=useState("");
-  const [notes,setNotes]=useState("");
-  const [taskDate,setTaskDate]=useState(planStartDate);
-  const [taskDateOpen,setTaskDateOpen]=useState(false);
-  const [time,setTime]=useState("");
-  const [dur,setDur]=useState(60);
-
-  const [repeat,setRepeat]=useState("none");    // none | daily | weekly | monthly | custom
-  const [interval,setInterval]=useState(1);     // every N units (1 = every day/week/month)
-  const [endMode,setEndMode]=useState("count"); // "horizon" | "until" | "count"
-  const [count,setCount]=useState(4);
-  const [untilDate,setUntilDate]=useState("");
-  const [untilOpen,setUntilOpen]=useState(false);
-  const [horizonMonths,setHorizonMonths]=useState(6);
-  const [weeklyDays,setWeeklyDays]=useState([false,true,false,true,false,false,false]);
-  const [monthlyMode,setMonthlyMode]=useState("dom"); // dom | dow
-
-  useEffect(()=>{ if (!taskDate) setTaskDate(planStartDate); },[planStartDate]);
-
-  function generate(){
-    const name=title.trim(); if (!name) return;
-    const planStart=parseYMDLocal(planStartDate)||new Date();
-    const base=parseYMDLocal(taskDate)||planStart;
-    const baseObj={ title:name, time: time || undefined, durationMins: Number(dur)||undefined, notes: notes || undefined };
-
-    const added=[];
-    function push(d){ const off=daysBetweenLocal(planStart, d); added.push({ ...baseObj, dayOffset: off }); }
-
-    const step=Math.max(1, Number(interval)||1);
-
-    if (repeat==="none"){ push(base); }
-
-    if (repeat==="daily"){
-      if (endMode==="count"){
-        const n=Math.max(1, Number(count)||1);
-        for (let i=0;i<n;i++){ push(addDaysLocal(base, i*step)); }
-      } else if (endMode==="until"){
-        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
-        let i=0; while (i<2000){ const d=addDaysLocal(base, i*step); if (d>until) break; push(d); i++; }
-      } else {
-        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
-        let i=0; for(;;){ const d=addDaysLocal(base, i*step); if (d>end) break; push(d); if(++i>2000) break; }
-      }
-    }
-
-    if (repeat==="weekly"){
-      const checked=weeklyDays.map((v,i)=>v?i:null).filter(v=>v!==null);
-      if (checked.length===0) { alert("Pick at least one weekday."); return; }
-      if (endMode==="count"){
-        const n=Math.max(1, Number(count)||1);
-        for (let i=0;i<n;i++){
-          const d=addDaysLocal(base, i*step*7);
-          if (checked.includes(d.getDay())) push(d);
-        }
-      } else if (endMode==="until"){
-        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
-        let i=0; while (i<2000){ const d=addDaysLocal(base, i*step*7); if (d>until) break; if (checked.includes(d.getDay())) push(d); i++; }
-      } else {
-        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
-        let i=0; for(;;){ const d=addDaysLocal(base, i*step*7); if (d>end) break; if (checked.includes(d.getDay())) push(d); if(++i>2000) break; }
-      }
-    }
-
-    if (repeat==="monthly"){
-      if (monthlyMode==="dom"){
-        const day=base.getDate();
-        if (endMode==="count"){
-          const n=Math.max(1, Number(count)||1);
-          for (let i=0;i<n;i++){ push(addMonthsLocal(base, i*step)); }
-        } else if (endMode==="until"){
-          const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
-          let i=0; while (i<2000){ const d=addMonthsLocal(base, i*step); if (d>until) break; push(d); i++; }
-        } else {
-          const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
-          let i=0; for(;;){ const d=addMonthsLocal(base, i*step); if (d>end) break; push(d); if(++i>2000) break; }
-        }
-      } else {
-        const weekday=base.getDay();
-        if (endMode==="count"){
-          const n=Math.max(1, Number(count)||1);
-          for (let i=0;i<n;i++){ push(addMonthsLocal(base, i*step)); }
-        } else if (endMode==="until"){
-          const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
-          let i=0; while (i<2000){ const d=addMonthsLocal(base, i*step); if (d>until) break; push(d); i++; }
-        } else {
-          const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
-          let i=0; for(;;){ const d=addMonthsLocal(base, i*step); if (d>end) break; push(d); if(++i>2000) break; }
-        }
-      }
-    }
-
-    if (added.length>0){
-      onAdd(added);
-      setTitle(""); setNotes(""); setTime(""); setDur(60);
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Task name</div>
-          <input value={title} onChange={(e)=>setTitle(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Morning workout" />
-        </label>
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Start date</div>
-          <button type="button" onClick={()=>setTaskDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap w-full justify-start">
-            <Calendar className="h-4 w-4" /> {fmtYMDLocal(parseYMDLocal(taskDate)||new Date())}
-          </button>
-        </label>
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Time (optional)</div>
-          <TimeSelect value={time} onChange={setTime} />
-        </label>
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Duration (minutes)</div>
-          <input type="number" value={dur} onChange={(e)=>setDur(Number(e.target.value))} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" min="15" step="15" />
-        </label>
-        <label className="block md:col-span-2">
-          <div className="mb-1 text-sm font-medium">Notes (optional)</div>
-          <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Additional details..." rows="2" />
-        </label>
-      </div>
-
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-        <div className="mb-3">
-          <div className="text-sm font-medium mb-2">Repeat pattern</div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
-            <label className="flex items-center gap-2">
-              <input type="radio" name="repeat" value="none" checked={repeat==="none"} onChange={(e)=>setRepeat(e.target.value)} className="rounded" />
-              <span className="text-sm">None</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="repeat" value="daily" checked={repeat==="daily"} onChange={(e)=>setRepeat(e.target.value)} className="rounded" />
-              <span className="text-sm">Daily</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="repeat" value="weekly" checked={repeat==="weekly"} onChange={(e)=>setRepeat(e.target.value)} className="rounded" />
-              <span className="text-sm">Weekly</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="repeat" value="monthly" checked={repeat==="monthly"} onChange={(e)=>setRepeat(e.target.value)} className="rounded" />
-              <span className="text-sm">Monthly</span>
-            </label>
-          </div>
-        </div>
-
-        {repeat!=="none" && (
-          <>
-            <div className="mb-3">
-              <div className="text-sm font-medium mb-2">Repeat every</div>
-              <div className="flex items-center gap-2">
-                <input type="number" value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-sm" min="1" />
-                <span className="text-sm text-gray-600">
-                  {repeat==="daily" ? "day(s)" : repeat==="weekly" ? "week(s)" : "month(s)"}
-                </span>
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <div className="text-sm font-medium mb-2">Repeat until</div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="endMode" value="count" checked={endMode==="count"} onChange={(e)=>setEndMode(e.target.value)} className="rounded" />
-                  <span className="text-sm">Count</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="endMode" value="until" checked={endMode==="until"} onChange={(e)=>setEndMode(e.target.value)} className="rounded" />
-                  <span className="text-sm">Date</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="endMode" value="horizon" checked={endMode==="horizon"} onChange={(e)=>setEndMode(e.target.value)} className="rounded" />
-                  <span className="text-sm">Horizon</span>
-                </label>
-              </div>
-            </div>
-
-            {endMode==="count" && (
-              <div className="mb-3">
-                <div className="text-sm font-medium mb-2">Number of occurrences</div>
-                <input type="number" value={count} onChange={(e)=>setCount(e.target.value)} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-sm" min="1" />
-              </div>
-            )}
-
-            {endMode==="until" && (
-              <div className="mb-3">
-                <div className="text-sm font-medium mb-2">End date</div>
-                <UntilDatePicker value={untilDate} setValue={setUntilDate} planStartDate={planStartDate} />
-              </div>
-            )}
-
-            {endMode==="horizon" && (
-              <div className="mb-3">
-                <div className="text-sm font-medium mb-2">Horizon (months)</div>
-                <input type="number" value={horizonMonths} onChange={(e)=>setHorizonMonths(e.target.value)} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-sm" min="1" max="24" />
-              </div>
-            )}
-
-            {repeat==="weekly" && (
-              <div className="mb-3">
-                <div className="text-sm font-medium mb-2">Days of week</div>
-                <div className="grid grid-cols-7 gap-1">
-                  {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((day,i)=>(
-                    <label key={day} className="flex items-center gap-1">
-                      <input type="checkbox" checked={weeklyDays[i]} onChange={(e)=>setWeeklyDays(prev=>{ const next=[...prev]; next[i]=e.target.checked; return next; })} className="rounded" />
-                      <span className="text-xs">{day}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {repeat==="monthly" && (
-              <div className="mb-3">
-                <div className="text-sm font-medium mb-2">Monthly mode</div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="monthlyMode" value="dom" checked={monthlyMode==="dom"} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded" />
-                    <span className="text-sm">Day of month</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="monthlyMode" value="dow" checked={monthlyMode==="dow"} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded" />
-                    <span className="text-sm">Day of week</span>
-                  </label>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        <button onClick={generate} className="w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-          Add Task{repeat!=="none" ? "s" : ""}
-        </button>
-      </div>
-
-      {taskDateOpen && (
-        <Modal title="Choose Task Start Date" onClose={()=>setTaskDateOpen(false)}>
-          <CalendarGridFree
-            initialDate={taskDate}
-            selectedDate={taskDate}
-            onPick={(ymd)=>{ setTaskDate(ymd); setTaskDateOpen(false); }}
-          />
-        </Modal>
-      )}
-
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Info className="h-3.5 w-3.5" /> Times are optional; recurrence supported above.
-      </div>
-    </div>
-  );
-}
+        <div className="ml-8">
+          <AssignedBundlesPanel 
+            plannerEmail={plannerEmail} 
+            userEmail={selectedUserEmail} 
+            onToast={onToast}
+            onReviewBundle={async (bundle) => {
+              try {
+                // First, fetch the full bundle data including tasks
                 const qs = new URLSearchParams({ inboxId: bundle.id });
                 const r = await fetch(`/api/inbox/get?${qs.toString()}`);
                 const j = await r.json();
@@ -1581,9 +1170,44 @@ function TaskEditor({ planStartDate, onAdd }){
       </div>
       )}
 
+      {/* User Notes Tab Content */}
+      {activeTab === "notes" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
+              <div className="text-base sm:text-lg font-semibold">User Notes</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">
+              {selectedUserEmail ? (
+                <>AI context and rules for <strong>{selectedUserEmail}</strong></>
+              ) : (
+                "Select a user to view and edit their notes"
+              )}
+            </div>
+          </div>
+
+          <div className="ml-8">
+            {selectedUserEmail ? (
+              <UserNotesManager
+                userEmail={selectedUserEmail}
+                plannerEmail={plannerEmail}
+                onToast={onToast}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">👤</div>
+                <div className="font-semibold mb-1">No User Selected</div>
+                <div className="text-sm">Choose a user from the dropdown above to view and edit their notes</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* History Tab Content */}
       {activeTab === "history" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
@@ -3278,6 +2902,119 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
   );
 }
 
+/* ───────── User Notes Manager ───────── */
+function UserNotesManager({ userEmail, plannerEmail, onToast }){
+  const [notes, setNotes] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Load user notes on mount
+  useEffect(() => {
+    loadUserNotes();
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    setIsLoading(true);
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok) {
+        setNotes(j.notes || "");
+        setLastUpdated(j.updatedAt);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+      onToast?.("error", "Failed to load user notes");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveUserNotes() {
+    setIsSaving(true);
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          notes: notes.trim()
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        setLastUpdated(new Date().toISOString());
+        onToast?.("ok", "User notes saved successfully");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
+        <div className="text-sm text-gray-600">Loading user notes...</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {lastUpdated && (
+        <div className="text-xs text-gray-500 mb-4">
+          Last updated: {new Date(lastUpdated).toLocaleString()}
+        </div>
+      )}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notes & Context
+          </label>
+          <div className="text-xs text-gray-500 mb-2">
+            These notes are automatically considered by AI in all planning sessions for this user.
+          </div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-32"
+            placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-500">
+            {notes.length} characters
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={loadUserNotes}
+              disabled={isSaving}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Reload
+            </button>
+            <button
+              onClick={saveUserNotes}
+              disabled={isSaving || !notes.trim()}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? "Saving..." : "Save Notes"}
+            </button>
+          </div>
+        </div>
+    </>
+  );
+}
 
 /* ───────── AI Planning Decision ───────── */
 function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
@@ -3451,6 +3188,7 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
     }
   }
 
+
   // Initialize conversation
   useEffect(() => {
     if (currentStep === "welcome" && userEmail) {
@@ -3504,46 +3242,28 @@ What type of plan would you like to create? For example: "Create a workout plan"
         throw new Error(j.error || "AI conversation failed");
       }
 
-      // Check if the AI response contains JSON with tasks
-      let aiResponse = j.response || "I understand. Let me help you with that.";
-      let tasks = j.tasks;
-      
-      // If tasks are not in the API response, try to parse them from the response text
-      if (!tasks && aiResponse.includes('"tasks"')) {
-        try {
-          const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.tasks && Array.isArray(parsed.tasks)) {
-              tasks = parsed.tasks;
-              aiResponse = parsed.response || aiResponse.split('{')[0].trim();
-            }
-          }
-        } catch (e) {
-          // If parsing fails, continue with original response
-        }
-      }
-
       const aiMessage = {
         id: Date.now() + 1,
         type: "ai",
-        content: aiResponse
+        content: j.response || "I understand. Let me help you with that."
       };
 
       setMessages(prev => [...prev, aiMessage]);
 
+
       // If AI generated a complete plan
-      if (tasks && Array.isArray(tasks)) {
+      if (j.tasks && Array.isArray(j.tasks)) {
         setCurrentStep("plan-ready");
         onPlanGenerated({
           plan: {
-            title: "AI Generated Plan",
-            description: "",
-            startDate: new Date().toISOString().split('T')[0],
-            timezone: "America/Chicago"
+            title: j.planTitle || "AI Generated Plan",
+            description: j.planDescription || "",
+            startDate: j.startDate || new Date().toISOString().split('T')[0],
+            timezone: j.timezone || "America/Chicago"
           },
-          tasks: tasks
+          tasks: j.tasks
         });
+        
       }
 
     } catch (e) {
@@ -3640,6 +3360,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
           </button>
         )}
       </div>
+
 
       {/* Input Area */}
       <div className="border-t p-4">
