@@ -3230,6 +3230,16 @@ What type of plan would you like to create? For example: "Create a workout plan"
           aiInsights: j.aiInsights || null
         });
         
+        // Continue conversation with AI insights
+        if (j.aiInsights) {
+          const insightsMessage = {
+            id: Date.now() + 2,
+            type: "ai",
+            content: `Here are my insights about this user based on the plan I generated:\n\n${j.aiInsights}\n\nWould you like me to save these insights to the user's notes for future reference?`
+          };
+          setMessages(prev => [...prev, insightsMessage]);
+        }
+        
       }
 
     } catch (e) {
