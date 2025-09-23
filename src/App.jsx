@@ -165,6 +165,32 @@ function MainApp(){
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
 
+  async function saveUserNotes(newNotes) {
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: selectedUserEmail,
+          plannerEmail,
+          notes: newNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        toast("ok", "User notes updated with AI insights");
+        setShowSaveNotesPrompt(false);
+        setPendingNotes("");
+      } else {
+        toast("error", "Failed to save user notes");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      toast("error", "Failed to save user notes");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
@@ -261,6 +287,45 @@ function MainApp(){
           />
         )}
       </div>
+
+      {/* Save Notes Prompt */}
+      {showSaveNotesPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="mb-4">
+              <div className="text-lg font-semibold text-gray-900 mb-2">
+                💡 Save AI Insights to User Notes
+              </div>
+              <div className="text-sm text-gray-600 mb-4">
+                The AI has generated insights about this user that could be useful for future planning sessions.
+              </div>
+              <textarea
+                value={pendingNotes}
+                onChange={(e) => setPendingNotes(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none h-24"
+                placeholder="AI insights about this user..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => saveUserNotes(pendingNotes)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                Save to User Notes
+              </button>
+              <button
+                onClick={() => {
+                  setShowSaveNotesPrompt(false);
+                  setPendingNotes("");
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Footer */}
       <footer className="mt-8 border-t border-gray-200 py-4 text-center text-xs text-gray-500">
@@ -653,6 +718,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
+  const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
+  const [pendingNotes,setPendingNotes]=useState("");
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -886,6 +953,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     setPlan(generatedPlan.plan);
                     setTasks(generatedPlan.tasks);
                     onToast?.("ok", "AI has generated your complete plan!");
+                    // Show save notes prompt after AI plan generation
+                    setShowSaveNotesPrompt(true);
+                    setPendingNotes("AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.");
                   }}
                   onToast={onToast}
                 />
@@ -3071,8 +3141,6 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
   const [currentStep, setCurrentStep] = useState("welcome");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userHasScrolled, setUserHasScrolled] = useState(false);
-  const [showSaveNotesPrompt, setShowSaveNotesPrompt] = useState(false);
-  const [pendingNotes, setPendingNotes] = useState("");
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
@@ -3120,30 +3188,6 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
     }
   }
 
-  async function saveUserNotes(newNotes) {
-    try {
-      const resp = await fetch("/api/user-notes/set", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userEmail,
-          plannerEmail,
-          notes: newNotes
-        })
-      });
-
-      const j = await resp.json();
-      if (j.ok) {
-        setUserNotes(newNotes);
-        onToast?.("ok", "User notes updated with AI insights");
-      } else {
-        throw new Error(j.error || "Save failed");
-      }
-    } catch (e) {
-      console.error('Save user notes error:', e);
-      onToast?.("error", `Failed to save user notes: ${e.message}`);
-    }
-  }
 
   // Initialize conversation
   useEffect(() => {
@@ -3220,9 +3264,6 @@ What type of plan would you like to create? For example: "Create a workout plan"
           tasks: j.tasks
         });
         
-        // Always prompt to save notes after plan generation
-        setPendingNotes("AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.");
-        setShowSaveNotesPrompt(true);
       }
 
     } catch (e) {
@@ -3320,47 +3361,6 @@ What type of plan would you like to create? For example: "Create a workout plan"
         )}
       </div>
 
-      {/* Save Notes Prompt */}
-      {showSaveNotesPrompt && (
-        <div className="border-t bg-blue-50 p-4">
-          <div className="mb-3">
-            <div className="text-sm font-medium text-blue-800 mb-2">
-              💡 AI Insights for User Notes
-            </div>
-            <div className="text-xs text-blue-600 mb-3">
-              The AI has generated insights about this user that could be useful for future planning sessions.
-            </div>
-            <textarea
-              value={pendingNotes}
-              onChange={(e) => setPendingNotes(e.target.value)}
-              className="w-full rounded-lg border border-blue-200 px-3 py-2 text-sm resize-none h-24"
-              placeholder="AI insights about this user..."
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const updatedNotes = userNotes ? `${userNotes}\n\n--- AI Insights (${new Date().toLocaleDateString()}) ---\n${pendingNotes}` : pendingNotes;
-                saveUserNotes(updatedNotes);
-                setShowSaveNotesPrompt(false);
-                setPendingNotes("");
-              }}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-            >
-              Save to User Notes
-            </button>
-            <button
-              onClick={() => {
-                setShowSaveNotesPrompt(false);
-                setPendingNotes("");
-              }}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Skip
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Input Area */}
       <div className="border-t p-4">
