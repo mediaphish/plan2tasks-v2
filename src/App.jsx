@@ -136,8 +136,6 @@ function MainApp(){
   const [view,setView]=useState(validViews.has(urlView) ? urlView : "users");
   const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
-  const [inboxOpen,setInboxOpen]=useState(false); // legacy; not used anymore
-  const [inboxBadge,setInboxBadge]=useState(0);
   const [inviteOpen,setInviteOpen]=useState(false);
   const [toasts,setToasts]=useState([]);
   const [profileOpen,setProfileOpen]=useState(false);
@@ -178,14 +176,6 @@ function MainApp(){
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  async function loadBadge(){
-    try{
-      const qs=new URLSearchParams({ plannerEmail, status:"new" });
-      const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
-      setInboxBadge((j.count||0));
-    }catch(e){console.error('Badge error:', e);}
-  }
-  useEffect(()=>{ if (prefs.show_inbox_badge) loadBadge(); },[plannerEmail,prefs.show_inbox_badge]);
 
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
@@ -264,18 +254,6 @@ function MainApp(){
               Invite User
             </button>
 
-            {/* Inbox */}
-            <button
-              onClick={()=>{ setView("inbox"); updateQueryView("inbox"); }}
-              className="relative rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
-            >
-              <InboxIcon className="h-4 w-4" />
-              {prefs.show_inbox_badge && inboxBadge > 0 && (
-                <span className="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                  {inboxBadge}
-                </span>
-              )}
-            </button>
 
             {/* Profile Avatar - Top Right Corner */}
             <div className="relative" ref={profileRef}>
