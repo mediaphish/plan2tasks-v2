@@ -681,7 +681,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
-  const [aiInsights,setAiInsights]=useState("");
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -915,9 +914,14 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     setPlan(generatedPlan.plan);
                     setTasks(generatedPlan.tasks);
                     onToast?.("ok", "AI has generated your complete plan!");
+                    // Show save notes prompt after AI plan generation
+                    const insightsText = generatedPlan.aiInsights ? 
+                      `AI Insights: ${generatedPlan.aiInsights}\n\nAdditional notes:` : 
+                      "AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.";
+                    setPendingNotes(insightsText);
+                    setShowSaveNotesPrompt(true);
                   }}
                   onToast={onToast}
-                  setAiInsights={setAiInsights}
                 />
               </div>
             </div>
@@ -983,24 +987,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       )}
 
       {/* Deliver Section */}
-      {/* AI Insights Panel */}
-      {aiInsights && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 sm:p-6 shadow-sm mt-6">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">💡</div>
-              <div className="text-base sm:text-lg font-semibold">AI Insights</div>
-            </div>
-            <div className="text-sm text-gray-600 ml-8">AI-generated insights about this user based on the plan.</div>
-          </div>
-          <div className="ml-8">
-            <div className="bg-white p-4 rounded-lg border border-blue-200">
-              <div className="text-sm text-gray-800 whitespace-pre-wrap">{aiInsights}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {tasks.length>0 && (
         <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
@@ -3112,7 +3098,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 }
 
 /* ───────── Conversational AI ───────── */
-function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast, setAiInsights }){
+function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast }){
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -3229,17 +3215,6 @@ What type of plan would you like to create? For example: "Create a workout plan"
 
       setMessages(prev => [...prev, aiMessage]);
 
-      // Add insights to the AI response if available
-      if (j.aiInsights && j.aiInsights.trim()) {
-        setAiInsights(j.aiInsights);
-        const insightsMessage = {
-          id: Date.now() + 2,
-          type: "ai",
-          content: `INSIGHTS: ${j.aiInsights}`
-        };
-        setMessages(prev => [...prev, insightsMessage]);
-      }
-
 
       // If AI generated a complete plan
       if (j.tasks && Array.isArray(j.tasks)) {
@@ -3255,6 +3230,20 @@ What type of plan would you like to create? For example: "Create a workout plan"
           aiInsights: j.aiInsights || null
         });
         
+        // Continue conversation with AI insights
+        if (j.aiInsights) {
+          const insightsMessage = {
+            id: Date.now() + 2,
+            type: "ai",
+            content: `Here are my insights about this user based on the plan I generated:\n\n${j.aiInsights}\n\nWould you like me to save these insights to the user's notes for future reference?`
+          };
+          console.log('Adding insights message:', insightsMessage);
+          setMessages(prev => {
+            const newMessages = [...prev, insightsMessage];
+            console.log('Updated messages:', newMessages);
+            return newMessages;
+          });
+        }
         
       }
 
