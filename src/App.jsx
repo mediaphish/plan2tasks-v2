@@ -3235,7 +3235,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
       setMessages(prev => [...prev, aiMessage]);
 
       // Add insights to the AI response if available
-      if (j.aiInsights) {
+      if (j.aiInsights && j.aiInsights.trim()) {
         setAiInsights(j.aiInsights);
         const insightsMessage = {
           id: Date.now() + 2,
