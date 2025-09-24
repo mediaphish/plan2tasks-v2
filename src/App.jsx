@@ -194,8 +194,8 @@ function MainApp(){
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             plannerEmail,
-            fileBase64: base64,
-            fileType: file.type
+            imageData: base64,
+            fileName: file.name
           })
         });
         const result = await response.json();
@@ -284,16 +284,6 @@ function MainApp(){
                 }`}
               >
                 Plan
-              </button>
-              <button 
-                onClick={()=>{ setView("settings"); updateQueryView("settings"); }}
-                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
-                  view === "settings" 
-                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                }`}
-              >
-                Settings
               </button>
             </nav>
           </div>
