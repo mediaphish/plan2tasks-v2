@@ -222,33 +222,33 @@ function MainApp(){
           {/* Left: Logo & Navigation */}
           <div className="flex items-center gap-8">
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8" />
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-1 bg-gray-50/50 rounded-lg p-1 border border-gray-200/60 backdrop-blur-sm">
               <button 
                 onClick={()=>{ setView("users"); updateQueryView("users"); }}
-                className={`relative text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
                   view === "users" 
-                    ? "text-blue-700 bg-blue-50 border border-blue-200" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
                 Users
               </button>
               <button 
                 onClick={()=>{ setView("plan"); updateQueryView("plan"); }}
-                className={`relative text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
                   view === "plan" 
-                    ? "text-blue-700 bg-blue-50 border border-blue-200" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
                 Plan
               </button>
               <button 
                 onClick={()=>{ setView("settings"); updateQueryView("settings"); }}
-                className={`relative text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
                   view === "settings" 
-                    ? "text-blue-700 bg-blue-50 border border-blue-200" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
                 Settings
