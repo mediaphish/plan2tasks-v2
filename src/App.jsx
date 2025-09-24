@@ -3231,19 +3231,17 @@ What type of plan would you like to create? For example: "Create a workout plan"
         });
         
         // Continue conversation with AI insights
-        if (j.aiInsights) {
-          const insightsMessage = {
-            id: Date.now() + 1000,
-            type: "ai",
-            content: `INSIGHTS: ${j.aiInsights}`
-          };
-          console.log('Adding insights message:', insightsMessage);
-          setMessages(prev => {
-            const newMessages = [...prev, insightsMessage];
-            console.log('Updated messages:', newMessages);
-            return newMessages;
-          });
-        }
+        const insightsMessage = {
+          id: Date.now() + 1000,
+          type: "ai",
+          content: j.aiInsights ? `INSIGHTS: ${j.aiInsights}` : "TEST: No insights found"
+        };
+        console.log('Adding insights message:', insightsMessage);
+        setMessages(prev => {
+          const newMessages = [...prev, insightsMessage];
+          console.log('Updated messages:', newMessages);
+          return newMessages;
+        });
         
       }
 
