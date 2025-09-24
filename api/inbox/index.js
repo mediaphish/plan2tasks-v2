@@ -16,20 +16,19 @@ export default async function handler(req, res) {
 
     if (!plannerEmail) return res.status(400).json({ error: "Missing plannerEmail" });
 
+    // Use raw SQL to ensure deleted items are filtered out
     let sel = supabaseAdmin
       .from("inbox_bundles")
       .select(
         "id, title, start_date, timezone, source, suggested_user, assigned_user_email, assigned_at, archived_at, deleted_at, created_at",
         { count: "exact" }
       )
-      .eq("planner_email", plannerEmail);
+      .eq("planner_email", plannerEmail)
+      .is("deleted_at", null);
 
     if (status === "archived") sel = sel.not("archived_at", "is", null);
     else if (status === "assigned") sel = sel.not("assigned_at", "is", null).is("archived_at", null);
     else sel = sel.is("assigned_at", null).is("archived_at", null);
-    
-    // Always filter out deleted items
-    sel = sel.is("deleted_at", null);
 
     if (q) sel = sel.ilike("title", `%${q}%`);
 
