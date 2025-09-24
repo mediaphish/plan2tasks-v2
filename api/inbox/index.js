@@ -35,8 +35,8 @@ export default async function handler(req, res) {
     const { data, error, count } = await sel;
     if (error) throw error;
 
-    // Filter out deleted items in JavaScript since Supabase query isn't working
-    const activeBundles = (data || []).filter(b => !b.deleted_at);
+    // Filter out deleted items - keep only items where deleted_at is null
+    const activeBundles = (data || []).filter(b => b.deleted_at === null);
 
     const ids = activeBundles.map(b => b.id);
     let counts = {};
