@@ -23,7 +23,7 @@ export default async function handler(req, res) {
         { count: "exact" }
       )
       .eq("planner_email", plannerEmail)
-      .is("deleted_at", null);
+      .filter("deleted_at", "is", null);
 
     if (status === "archived") sel = sel.not("archived_at", "is", null);
     else if (status === "assigned") sel = sel.not("assigned_at", "is", null).is("archived_at", null);
