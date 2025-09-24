@@ -2061,7 +2061,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
       const r=await fetch('/api/inbox/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail, inboxId })
+        body: JSON.stringify({ plannerEmail, bundleIds: [inboxId] })
       });
       const j=await r.json();
       if (r.ok && !j.error) {
