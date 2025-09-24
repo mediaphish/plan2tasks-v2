@@ -3215,6 +3215,16 @@ What type of plan would you like to create? For example: "Create a workout plan"
 
       setMessages(prev => [...prev, aiMessage]);
 
+      // Add insights to the AI response if available
+      if (j.aiInsights) {
+        const insightsMessage = {
+          id: Date.now() + 2,
+          type: "ai",
+          content: `INSIGHTS: ${j.aiInsights}`
+        };
+        setMessages(prev => [...prev, insightsMessage]);
+      }
+
 
       // If AI generated a complete plan
       if (j.tasks && Array.isArray(j.tasks)) {
@@ -3230,18 +3240,6 @@ What type of plan would you like to create? For example: "Create a workout plan"
           aiInsights: j.aiInsights || null
         });
         
-        // Continue conversation with AI insights
-        const insightsMessage = {
-          id: Date.now() + 1000,
-          type: "ai",
-          content: j.aiInsights ? `INSIGHTS: ${j.aiInsights}` : "TEST: No insights found"
-        };
-        console.log('Adding insights message:', insightsMessage);
-        setMessages(prev => {
-          const newMessages = [...prev, insightsMessage];
-          console.log('Updated messages:', newMessages);
-          return newMessages;
-        });
         
       }
 
