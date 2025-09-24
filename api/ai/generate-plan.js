@@ -133,6 +133,8 @@ ${conversationHistory ? conversationHistory.map(msg => `${msg.type}: ${msg.conte
 
 Current message: ${userPrompt}
 
+If the planner is ready for a complete plan, generate one. Otherwise, respond conversationally.
+
 When generating a plan, return ONLY a JSON object in this exact format:
 {
   "response": "Your conversational response here",
@@ -147,8 +149,6 @@ When generating a plan, return ONLY a JSON object in this exact format:
   ],
   "aiInsights": "Key insights and recommendations for this user based on the plan generated"
 }
-
-IMPORTANT: The "aiInsights" field is REQUIRED and must contain meaningful insights about the user.
 
 If just responding conversationally, return your response as plain text.`;
 
@@ -176,17 +176,14 @@ If just responding conversationally, return your response as plain text.`;
   try {
     // Try to parse as JSON first (if AI returned structured response)
     const parsedResponse = JSON.parse(aiContent);
-    console.log('AI Response parsed:', JSON.stringify(parsedResponse, null, 2));
     return send(res, 200, {
       ok: true,
       response: parsedResponse.response,
       tasks: parsedResponse.tasks || null,
-      aiInsights: parsedResponse.aiInsights || null,
       message: 'AI response generated'
     });
   } catch (e) {
     // If not JSON, return as conversational response
-    console.log('AI Response not JSON:', aiContent);
     return send(res, 200, {
       ok: true,
       response: aiContent,
