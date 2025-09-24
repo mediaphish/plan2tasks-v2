@@ -681,6 +681,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
+  const [aiInsights,setAiInsights]=useState("");
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -987,6 +988,24 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       )}
 
       {/* Deliver Section */}
+      {/* AI Insights Panel */}
+      {aiInsights && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 sm:p-6 shadow-sm mt-6">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">💡</div>
+              <div className="text-base sm:text-lg font-semibold">AI Insights</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">AI-generated insights about this user based on the plan.</div>
+          </div>
+          <div className="ml-8">
+            <div className="bg-white p-4 rounded-lg border border-blue-200">
+              <div className="text-sm text-gray-800 whitespace-pre-wrap">{aiInsights}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {tasks.length>0 && (
         <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
@@ -3217,6 +3236,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
 
       // Add insights to the AI response if available
       if (j.aiInsights) {
+        setAiInsights(j.aiInsights);
         const insightsMessage = {
           id: Date.now() + 2,
           type: "ai",
