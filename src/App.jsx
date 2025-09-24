@@ -2142,10 +2142,11 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
                       Review
                     </button>
                       <button 
-                        onClick={()=>archiveBundle(b.id)}
+                        onClick={()=>deleteBundle(b.id)}
                         className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
+                        title="Delete bundle"
                       >
-                        Archive
+                        🗑️
                       </button>
                     </div>
                   </td>
