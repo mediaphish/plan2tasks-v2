@@ -220,90 +220,120 @@ function MainApp(){
     <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mb-6 sm:mb-6 flex flex-wrap items-center justify-between gap-4 pt-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-6 sm:h-8" />
-            <nav className="ml-1 sm:ml-4 flex gap-1 sm:gap-2">
-              <NavBtn active={view==="users"} onClick={()=>{ setView("users"); updateQueryView("users"); }} icon={<Users className="h-4 w-4" />}><span className="hidden sm:inline">Users</span></NavBtn>
-              <NavBtn active={view==="plan"} onClick={()=>{ setView("plan"); updateQueryView("plan"); }} icon={<Calendar className="h-4 w-4" />}><span className="hidden sm:inline">Plan</span></NavBtn>
-              <NavBtn active={view==="settings"} onClick={()=>{ setView("settings"); updateQueryView("settings"); }} icon={<SettingsIcon className="h-4 w-4" />}><span className="hidden sm:inline">Settings</span></NavBtn>
+        {/* Professional Header - Clean & Minimal */}
+        <div className="mb-8 flex items-center justify-between pt-6">
+          {/* Left: Logo & Navigation */}
+          <div className="flex items-center gap-8">
+            <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8" />
+            <nav className="hidden md:flex items-center gap-6">
+              <button 
+                onClick={()=>{ setView("users"); updateQueryView("users"); }}
+                className={`text-sm font-medium transition-colors ${
+                  view === "users" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Users
+              </button>
+              <button 
+                onClick={()=>{ setView("plan"); updateQueryView("plan"); }}
+                className={`text-sm font-medium transition-colors ${
+                  view === "plan" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Plan
+              </button>
+              <button 
+                onClick={()=>{ setView("settings"); updateQueryView("settings"); }}
+                className={`text-sm font-medium transition-colors ${
+                  view === "settings" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Settings
+              </button>
             </nav>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* Right: Actions & Profile */}
+          <div className="flex items-center gap-3">
+            {/* Primary Action */}
             <button 
               onClick={()=>setInviteOpen(true)} 
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 whitespace-nowrap"
+              className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
             >
-              <Mail className="h-4 w-4" /> <span className="hidden sm:inline">Invite User</span>
+              <Mail className="h-4 w-4" />
+              Invite User
             </button>
-            
-            {/* Planner Profile Dropdown */}
+
+            {/* Inbox */}
+            <button
+              onClick={()=>{ setView("inbox"); updateQueryView("inbox"); }}
+              className="relative rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
+            >
+              <InboxIcon className="h-4 w-4" />
+              {prefs.show_inbox_badge && inboxBadge > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                  {inboxBadge}
+                </span>
+              )}
+            </button>
+
+            {/* Profile Avatar - Top Right Corner */}
             <div className="relative" ref={profileRef}>
               <button 
                 onClick={()=>setProfileOpen(!profileOpen)}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50"
+                className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
               >
                 {plannerProfile?.profile_photo_url ? (
                   <img 
                     src={plannerProfile.profile_photo_url} 
                     alt="Profile" 
-                    className="h-6 w-6 rounded-full object-cover"
+                    className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center">
-                    <User className="h-4 w-4 text-gray-600" />
+                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="h-5 w-5 text-gray-500" />
                   </div>
                 )}
-                <span className="hidden sm:inline text-gray-700">
-                  {plannerProfile?.planner_name || "Profile"}
-                </span>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
               </button>
               
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
-                  <div className="py-1">
-                    <button 
-                      onClick={()=>{setProfileOpen(false); /* TODO: Open profile modal */}}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      View Profile
-                    </button>
-                    <button 
-                      onClick={()=>{setProfileOpen(false); /* TODO: Open edit modal */}}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Edit Profile
-                    </button>
-                    <hr className="my-1" />
-                    <button 
-                      onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Settings
-                    </button>
+                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
+                  <div className="p-2">
+                    {/* Profile Info */}
+                    <div className="px-3 py-2 border-b border-gray-100">
+                      <div className="text-sm font-medium text-gray-900">
+                        {plannerProfile?.planner_name || "Planner"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {plannerProfile?.company_name || plannerEmail}
+                      </div>
+                    </div>
+                    
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      <button 
+                        onClick={()=>{setProfileOpen(false); /* TODO: Open profile modal */}}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      >
+                        View Profile
+                      </button>
+                      <button 
+                        onClick={()=>{setProfileOpen(false); /* TODO: Open edit modal */}}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      >
+                        Edit Profile
+                      </button>
+                      <button 
+                        onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      >
+                        Settings
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-            
-            {/* NOW: routes to internal Inbox view (no modal, no external page) */}
-            <a
-              href="/index.html?view=inbox"
-              id="navInbox"
-              onClick={(e)=>{ e.preventDefault(); setView("inbox"); updateQueryView("inbox"); }}
-              className="relative rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm hover:bg-gray-50 whitespace-nowrap"
-            >
-              <InboxIcon className="inline h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Inbox</span>
-              {prefs.show_inbox_badge && inboxBadge>0 && (
-                <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                  {inboxBadge} New
-                </span>
-              )}
-            </a>
-            <span className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-xs sm:text-sm whitespace-nowrap">
-              <span className="hidden sm:inline">Signed in:&nbsp;</span><b className="truncate inline-block max-w-[160px] align-bottom">{plannerEmail}</b>
-            </span>
           </div>
         </div>
 
