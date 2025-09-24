@@ -225,24 +225,30 @@ function MainApp(){
             <nav className="hidden md:flex items-center gap-6">
               <button 
                 onClick={()=>{ setView("users"); updateQueryView("users"); }}
-                className={`text-sm font-medium transition-colors ${
-                  view === "users" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                className={`relative text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                  view === "users" 
+                    ? "text-blue-700 bg-blue-50 border border-blue-200" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
                 Users
               </button>
               <button 
                 onClick={()=>{ setView("plan"); updateQueryView("plan"); }}
-                className={`text-sm font-medium transition-colors ${
-                  view === "plan" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                className={`relative text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                  view === "plan" 
+                    ? "text-blue-700 bg-blue-50 border border-blue-200" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
                 Plan
               </button>
               <button 
                 onClick={()=>{ setView("settings"); updateQueryView("settings"); }}
-                className={`text-sm font-medium transition-colors ${
-                  view === "settings" ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+                className={`relative text-sm font-medium transition-colors px-3 py-2 rounded-md ${
+                  view === "settings" 
+                    ? "text-blue-700 bg-blue-50 border border-blue-200" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
                 Settings
