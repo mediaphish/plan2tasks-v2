@@ -176,6 +176,13 @@ function MainApp(){
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  async function loadBadge(){
+    try{
+      const qs=new URLSearchParams({ plannerEmail, status:"new" });
+      const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
+      // Badge functionality removed from header but function kept for InboxViewIntegrated
+    }catch(e){console.error('Badge error:', e);}
+  }
 
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
@@ -354,8 +361,8 @@ function MainApp(){
           />
         )}
 
-        {/* Legacy modal kept inert; no UI path sets inboxOpen=true */}
-        {inboxOpen && (
+        {/* Legacy modal removed - inbox functionality eliminated */}
+        {false && (
           <InboxDrawer
             plannerEmail={plannerEmail}
             onClose={()=>setInboxOpen(false)}
