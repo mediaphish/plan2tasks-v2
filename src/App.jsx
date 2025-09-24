@@ -473,7 +473,6 @@ function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
 
           <button onClick={()=>loadInbox("new")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load NEW</button>
           <button onClick={()=>loadInbox("assigned")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load ASSIGNED</button>
-          <button onClick={()=>loadInbox("archived")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load ARCHIVED</button>
           <button onClick={()=>loadInbox("new", { fallbackToAssigned:true })} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Refresh</button>
         </div>
       </div>
@@ -2066,7 +2065,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
       const j=await r.json();
       if (r.ok && !j.error) {
         onToast?.("ok", "Bundle deleted");
-        setTimeout(() => load(), 100); // Reload the list after a short delay
+        load(); // Reload the list
       } else {
         throw new Error(j.error || "Delete failed");
       }
@@ -2142,13 +2141,13 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
                     >
                       ✏️
                     </button>
-                      <button 
-                        onClick={()=>deleteBundle(b.id)}
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
-                        title="Delete bundle"
-                      >
-                        🗑️
-                      </button>
+       <button 
+         onClick={()=>deleteBundle(b.id)}
+         className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
+         title="Delete bundle"
+       >
+         🗑️
+       </button>
                     </div>
                   </td>
                 </tr>
