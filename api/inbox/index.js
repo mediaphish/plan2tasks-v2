@@ -27,9 +27,6 @@ export default async function handler(req, res) {
     if (status === "archived") sel = sel.not("archived_at", "is", null);
     else if (status === "assigned") sel = sel.not("assigned_at", "is", null).is("archived_at", null);
     else sel = sel.is("assigned_at", null).is("archived_at", null);
-    
-    // Filter out deleted items after status filtering - use is() method correctly
-    sel = sel.is("deleted_at", null);
 
     if (q) sel = sel.ilike("title", `%${q}%`);
 
@@ -38,7 +35,10 @@ export default async function handler(req, res) {
     const { data, error, count } = await sel;
     if (error) throw error;
 
-    const ids = (data || []).map(b => b.id);
+    // Filter out deleted items in JavaScript since Supabase query isn't working
+    const activeBundles = (data || []).filter(b => !b.deleted_at);
+
+    const ids = activeBundles.map(b => b.id);
     let counts = {};
     if (ids.length) {
       const { data: rows, error: cErr } = await supabaseAdmin
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       if (!cErr && rows) rows.forEach(r => { counts[r.bundle_id] = (counts[r.bundle_id] || 0) + 1; });
     }
 
-    const bundles = (data || []).map(b => ({
+    const bundles = activeBundles.map(b => ({
       id: b.id,
       title: b.title,
       start_date: b.start_date,
