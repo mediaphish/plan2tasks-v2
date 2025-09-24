@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     }
     const { error } = await supabaseAdmin
       .from("inbox_bundles")
-      .update({ deleted_at: new Date().toISOString() })
+      .delete()
       .in("id", bundleIds)
       .eq("planner_email", plannerEmail.toLowerCase());
     if (error) throw error;
