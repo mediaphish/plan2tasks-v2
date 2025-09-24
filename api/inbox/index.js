@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     let sel = supabaseAdmin
       .from("inbox_bundles")
       .select(
-        "id, title, start_date, timezone, source, suggested_user, assigned_user_email, assigned_at, archived_at, deleted_at, created_at",
+        "id, title, start_date, timezone, source, suggested_user, assigned_user_email, assigned_at, archived_at, created_at",
         { count: "exact" }
       )
       .eq("planner_email", plannerEmail);
@@ -35,8 +35,8 @@ export default async function handler(req, res) {
     const { data, error, count } = await sel;
     if (error) throw error;
 
-    // Filter out deleted items - keep only items where deleted_at is null
-    const activeBundles = (data || []).filter(b => b.deleted_at === null);
+    // No need to filter - hard delete removes items completely
+    const activeBundles = data || [];
 
     const ids = activeBundles.map(b => b.id);
     let counts = {};
