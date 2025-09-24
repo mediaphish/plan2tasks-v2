@@ -2138,8 +2138,9 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
                     <button 
                       onClick={()=>onReviewBundle?.(b)}
                       className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                      title="Edit bundle"
                     >
-                      Review
+                      ✏️
                     </button>
                       <button 
                         onClick={()=>deleteBundle(b.id)}
