@@ -184,6 +184,48 @@ function MainApp(){
     }catch(e){console.error('Badge error:', e);}
   }
 
+  async function uploadProfilePhoto(file) {
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target.result;
+        const response = await fetch('/api/planner/upload-photo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plannerEmail,
+            fileBase64: base64,
+            fileType: file.type
+          })
+        });
+        const result = await response.json();
+        if (response.ok && result.photoUrl) {
+          // Update profile with new photo URL
+          const profileResponse = await fetch('/api/planner/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plannerEmail,
+              ...plannerProfile,
+              profile_photo_url: result.photoUrl
+            })
+          });
+          const profileResult = await profileResponse.json();
+          if (profileResponse.ok) {
+            setPlannerProfile(profileResult.profile);
+            toast("ok", "Profile photo updated");
+          }
+        } else {
+          throw new Error(result.error || 'Upload failed');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (e) {
+      console.error('Photo upload error:', e);
+      toast("error", "Failed to upload photo");
+    }
+  }
+
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
 
@@ -268,24 +310,36 @@ function MainApp(){
             </button>
 
 
-            {/* Profile Avatar - Top Right Corner */}
-            <div className="relative" ref={profileRef}>
-              <button 
-                onClick={()=>setProfileOpen(!profileOpen)}
-                className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
-              >
-                {plannerProfile?.profile_photo_url ? (
-                  <img 
-                    src={plannerProfile.profile_photo_url} 
-                    alt="Profile" 
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-5 w-5 text-gray-500" />
-                  </div>
-                )}
-              </button>
+           {/* Profile Avatar - Top Right Corner */}
+           <div className="relative" ref={profileRef}>
+             <button 
+               onClick={()=>setProfileOpen(!profileOpen)}
+               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
+             >
+               {plannerProfile?.profile_photo_url ? (
+                 <img 
+                   src={plannerProfile.profile_photo_url} 
+                   alt="Profile" 
+                   className="h-8 w-8 rounded-full object-cover"
+                 />
+               ) : (
+                 <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                   <User className="h-5 w-5 text-gray-500" />
+                 </div>
+               )}
+             </button>
+             
+             {/* Hidden file input for photo upload */}
+             <input
+               type="file"
+               accept="image/*"
+               onChange={(e) => {
+                 const file = e.target.files[0];
+                 if (file) uploadProfilePhoto(file);
+               }}
+               className="hidden"
+               id="profile-photo-upload"
+             />
               
               {profileOpen && (
                 <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
@@ -300,27 +354,34 @@ function MainApp(){
                       </div>
                     </div>
                     
-                    {/* Menu Items */}
-                    <div className="py-1">
-                      <button 
-                        onClick={()=>{setProfileOpen(false); /* TODO: Open profile modal */}}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
-                      >
-                        View Profile
-                      </button>
-                      <button 
-                        onClick={()=>{setProfileOpen(false); /* TODO: Open edit modal */}}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
-                      >
-                        Edit Profile
-                      </button>
-                      <button 
-                        onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
-                      >
-                        Settings
-                      </button>
-                    </div>
+                   {/* Menu Items */}
+                   <div className="py-1">
+                     <label 
+                       htmlFor="profile-photo-upload"
+                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md cursor-pointer block"
+                       onClick={()=>setProfileOpen(false)}
+                     >
+                       Change Photo
+                     </label>
+                     <button 
+                       onClick={()=>{setProfileOpen(false); /* TODO: Open profile modal */}}
+                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                     >
+                       View Profile
+                     </button>
+                     <button 
+                       onClick={()=>{setProfileOpen(false); /* TODO: Open edit modal */}}
+                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                     >
+                       Edit Profile
+                     </button>
+                     <button 
+                       onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
+                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                     >
+                       Settings
+                     </button>
+                   </div>
                   </div>
                 </div>
               )}
