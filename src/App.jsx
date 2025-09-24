@@ -2066,7 +2066,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
       const j=await r.json();
       if (r.ok && !j.error) {
         onToast?.("ok", "Bundle deleted");
-        load(); // Reload the list
+        setTimeout(() => load(), 100); // Reload the list after a short delay
       } else {
         throw new Error(j.error || "Delete failed");
       }
