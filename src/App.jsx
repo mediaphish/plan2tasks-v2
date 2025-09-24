@@ -2056,23 +2056,23 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
     setLoading(false);
   }
 
-  async function archiveBundle(inboxId){
+  async function deleteBundle(inboxId){
     try{
-      const r=await fetch('/api/inbox/archive', {
+      const r=await fetch('/api/inbox/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail, bundleIds: [inboxId] })
+        body: JSON.stringify({ plannerEmail, inboxId })
       });
       const j=await r.json();
       if (r.ok && !j.error) {
-        onToast?.("ok", "Bundle archived");
+        onToast?.("ok", "Bundle deleted");
         load(); // Reload the list
       } else {
-        throw new Error(j.error || "Archive failed");
+        throw new Error(j.error || "Delete failed");
       }
     }catch(e){
-      console.error('Archive failed:', e);
-      onToast?.("error", "Failed to archive bundle");
+      console.error('Delete failed:', e);
+      onToast?.("error", "Failed to delete bundle");
     }
   }
 
