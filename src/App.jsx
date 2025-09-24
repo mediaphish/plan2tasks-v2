@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -140,6 +140,9 @@ function MainApp(){
   const [inboxBadge,setInboxBadge]=useState(0);
   const [inviteOpen,setInviteOpen]=useState(false);
   const [toasts,setToasts]=useState([]);
+  const [profileOpen,setProfileOpen]=useState(false);
+  const [plannerProfile,setPlannerProfile]=useState(null);
+  const profileRef = useRef(null);
 
   // Load prefs, but do NOT override URL-driven view
   useEffect(()=>{ (async ()=>{
@@ -152,6 +155,28 @@ function MainApp(){
       }
     }catch(e){/* noop */}
   })(); },[plannerEmail]);
+
+  // Load planner profile
+  useEffect(()=>{ (async ()=>{
+    try{
+      const r=await fetch(`/api/planner/profile?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      if (r.ok){ 
+        const j=await r.json(); 
+        setPlannerProfile(j.profile); 
+      }
+    }catch(e){ console.error("Profile load failed:", e); }
+  })(); }, [plannerEmail]);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   async function loadBadge(){
     try{
@@ -211,6 +236,57 @@ function MainApp(){
             >
               <Mail className="h-4 w-4" /> <span className="hidden sm:inline">Invite User</span>
             </button>
+            
+            {/* Planner Profile Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button 
+                onClick={()=>setProfileOpen(!profileOpen)}
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50"
+              >
+                {plannerProfile?.profile_photo_url ? (
+                  <img 
+                    src={plannerProfile.profile_photo_url} 
+                    alt="Profile" 
+                    className="h-6 w-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center">
+                    <User className="h-4 w-4 text-gray-600" />
+                  </div>
+                )}
+                <span className="hidden sm:inline text-gray-700">
+                  {plannerProfile?.planner_name || "Profile"}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              </button>
+              
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
+                  <div className="py-1">
+                    <button 
+                      onClick={()=>{setProfileOpen(false); /* TODO: Open profile modal */}}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      View Profile
+                    </button>
+                    <button 
+                      onClick={()=>{setProfileOpen(false); /* TODO: Open edit modal */}}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Edit Profile
+                    </button>
+                    <hr className="my-1" />
+                    <button 
+                      onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Settings
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
             {/* NOW: routes to internal Inbox view (no modal, no external page) */}
             <a
               href="/index.html?view=inbox"
