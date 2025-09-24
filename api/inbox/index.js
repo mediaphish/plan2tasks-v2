@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     if (error) throw error;
 
     // Filter out deleted items in JavaScript since Supabase query isn't working
-    const activeBundles = (data || []).filter(b => !b.deleted_at);
+    const activeBundles = (data || []).filter(b => !b.deleted_at || b.deleted_at === null);
 
     const ids = activeBundles.map(b => b.id);
     let counts = {};
