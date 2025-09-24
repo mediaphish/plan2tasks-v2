@@ -915,14 +915,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     setPlan(generatedPlan.plan);
                     setTasks(generatedPlan.tasks);
                     onToast?.("ok", "AI has generated your complete plan!");
-                    // Show save notes prompt after AI plan generation
-                    const insightsText = generatedPlan.aiInsights ? 
-                      `AI Insights: ${generatedPlan.aiInsights}\n\nAdditional notes:` : 
-                      "AI generated a plan for this user. Add any insights about this user's preferences, goals, or constraints that should be remembered for future planning sessions.";
-                    setPendingNotes(insightsText);
-                    setShowSaveNotesPrompt(true);
                   }}
                   onToast={onToast}
+                  setAiInsights={setAiInsights}
                 />
               </div>
             </div>
@@ -3117,7 +3112,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 }
 
 /* ───────── Conversational AI ───────── */
-function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast }){
+function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast, setAiInsights }){
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
