@@ -4083,31 +4083,14 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     try {
       // Create preview
       const previewUrl = URL.createObjectURL(file);
-      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 10 }));
-
-      console.log('Starting file read for:', file.name, 'Size:', file.size);
+      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
 
       // Convert to base64 directly
       const reader = new FileReader();
-      
-      reader.onloadstart = () => {
-        console.log('FileReader started');
-        setUploadState(prev => ({ ...prev, progress: 20 }));
-      };
-      
-      reader.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percentComplete = Math.round((e.loaded / e.total) * 30) + 20; // 20-50%
-          console.log('FileReader progress:', percentComplete + '%');
-          setUploadState(prev => ({ ...prev, progress: percentComplete }));
-        }
-      };
-      
       reader.onload = async (e) => {
         try {
-          console.log('FileReader completed, base64 length:', e.target.result.length);
           const base64 = e.target.result;
-          setUploadState(prev => ({ ...prev, progress: 50 }));
+          setUploadState(prev => ({ ...prev, progress: 40 }));
 
           console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
 
@@ -4121,13 +4104,13 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
             })
           });
 
-          setUploadState(prev => ({ ...prev, progress: 70 }));
+          setUploadState(prev => ({ ...prev, progress: 60 }));
 
           const result = await response.json();
           console.log('Upload response:', result);
 
           if (response.ok && result.photoUrl) {
-            setUploadState(prev => ({ ...prev, progress: 85 }));
+            setUploadState(prev => ({ ...prev, progress: 80 }));
             
             // Update profile with new photo URL
             const profileResponse = await fetch('/api/planner/profile', {
@@ -4158,12 +4141,6 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
           setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
           onToast("error", `Failed to upload photo: ${e.message}`);
         }
-      };
-      
-      reader.onerror = (e) => {
-        console.error('FileReader error:', e);
-        setUploadState({ isUploading: false, progress: 0, preview: null, error: 'Failed to read file' });
-        onToast("error", "Failed to read image file");
       };
       
       reader.readAsDataURL(file);
