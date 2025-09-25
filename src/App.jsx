@@ -140,6 +140,8 @@ function MainApp(){
   const [toasts,setToasts]=useState([]);
   const [profileOpen,setProfileOpen]=useState(false);
   const [plannerProfile,setPlannerProfile]=useState(null);
+  const [profileModalOpen,setProfileModalOpen]=useState(false);
+  const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
   // Load prefs, but do NOT override URL-driven view
@@ -223,6 +225,30 @@ function MainApp(){
     } catch (e) {
       console.error('Photo upload error:', e);
       toast("error", "Failed to upload photo");
+    }
+  }
+
+  async function saveProfile(profileData) {
+    try {
+      const response = await fetch('/api/planner/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plannerEmail,
+          ...profileData
+        })
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setPlannerProfile(result.profile);
+        setProfileEditMode(false);
+        toast("ok", "Profile updated successfully");
+      } else {
+        throw new Error(result.error || 'Save failed');
+      }
+    } catch (e) {
+      console.error('Profile save error:', e);
+      toast("error", "Failed to save profile");
     }
   }
 
@@ -354,13 +380,13 @@ function MainApp(){
                        Change Photo
                      </label>
                      <button 
-                       onClick={()=>{setProfileOpen(false); /* TODO: Open profile modal */}}
+                       onClick={()=>{setProfileOpen(false); setProfileModalOpen(true); setProfileEditMode(false);}}
                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                      >
                        View Profile
                      </button>
                      <button 
-                       onClick={()=>{setProfileOpen(false); /* TODO: Open edit modal */}}
+                       onClick={()=>{setProfileOpen(false); setProfileModalOpen(true); setProfileEditMode(true);}}
                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                      >
                        Edit Profile
@@ -431,6 +457,18 @@ function MainApp(){
           <SendInviteModal
             plannerEmail={plannerEmail}
             onClose={()=>setInviteOpen(false)}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+
+        {/* Profile Modal */}
+        {profileModalOpen && (
+          <ProfileModal
+            plannerEmail={plannerEmail}
+            profile={plannerProfile}
+            editMode={profileEditMode}
+            onClose={()=>{setProfileModalOpen(false); setProfileEditMode(false);}}
+            onSave={saveProfile}
             onToast={(t,m)=>toast(t,m)}
           />
         )}
@@ -3916,6 +3954,288 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
   }
 
   return null;
+}
+
+/* ───────── Profile Modal ───────── */
+function ProfileModal({ plannerEmail, profile, editMode, onClose, onSave, onToast }) {
+  const [formData, setFormData] = useState({
+    planner_name: profile?.planner_name || '',
+    company_name: profile?.company_name || '',
+    business_description: profile?.business_description || '',
+    phone: profile?.phone || '',
+    website_url: profile?.website_url || '',
+    linkedin_url: profile?.linkedin_url || '',
+    instagram_url: profile?.instagram_url || '',
+    facebook_url: profile?.facebook_url || '',
+    twitter_url: profile?.twitter_url || ''
+  });
+
+  const handleSave = () => {
+    onSave(formData);
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {editMode ? 'Edit Profile' : 'View Profile'}
+            </h2>
+            <button 
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Profile Photo */}
+          <div className="flex items-center gap-4 mb-6">
+            {profile?.profile_photo_url ? (
+              <img 
+                src={profile.profile_photo_url} 
+                alt="Profile" 
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                <User className="h-8 w-8 text-gray-500" />
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {profile?.planner_name || 'No name set'}
+              </p>
+              <p className="text-sm text-gray-500">
+                {profile?.company_name || plannerEmail}
+              </p>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Planner Name
+                </label>
+                {editMode ? (
+                  <input
+                    type="text"
+                    value={formData.planner_name}
+                    onChange={(e) => handleInputChange('planner_name', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Your name"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">{profile?.planner_name || 'Not set'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Company Name
+                </label>
+                {editMode ? (
+                  <input
+                    type="text"
+                    value={formData.company_name}
+                    onChange={(e) => handleInputChange('company_name', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Your company"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">{profile?.company_name || 'Not set'}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Business Description
+              </label>
+              {editMode ? (
+                <textarea
+                  value={formData.business_description}
+                  onChange={(e) => handleInputChange('business_description', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Describe your business..."
+                />
+              ) : (
+                <p className="text-sm text-gray-900">{profile?.business_description || 'Not set'}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                {editMode ? (
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Your phone number"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">{profile?.phone || 'Not set'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Website
+                </label>
+                {editMode ? (
+                  <input
+                    type="url"
+                    value={formData.website_url}
+                    onChange={(e) => handleInputChange('website_url', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://yourwebsite.com"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">
+                    {profile?.website_url ? (
+                      <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {profile.website_url}
+                      </a>
+                    ) : 'Not set'}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Social Media */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LinkedIn
+                </label>
+                {editMode ? (
+                  <input
+                    type="url"
+                    value={formData.linkedin_url}
+                    onChange={(e) => handleInputChange('linkedin_url', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://linkedin.com/in/username"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">
+                    {profile?.linkedin_url ? (
+                      <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {profile.linkedin_url}
+                      </a>
+                    ) : 'Not set'}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Instagram
+                </label>
+                {editMode ? (
+                  <input
+                    type="url"
+                    value={formData.instagram_url}
+                    onChange={(e) => handleInputChange('instagram_url', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://instagram.com/username"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">
+                    {profile?.instagram_url ? (
+                      <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {profile.instagram_url}
+                      </a>
+                    ) : 'Not set'}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Facebook
+                </label>
+                {editMode ? (
+                  <input
+                    type="url"
+                    value={formData.facebook_url}
+                    onChange={(e) => handleInputChange('facebook_url', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://facebook.com/username"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">
+                    {profile?.facebook_url ? (
+                      <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {profile.facebook_url}
+                      </a>
+                    ) : 'Not set'}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Twitter
+                </label>
+                {editMode ? (
+                  <input
+                    type="url"
+                    value={formData.twitter_url}
+                    onChange={(e) => handleInputChange('twitter_url', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://twitter.com/username"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900">
+                    {profile?.twitter_url ? (
+                      <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {profile.twitter_url}
+                      </a>
+                    ) : 'Not set'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+            <button 
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            {editMode && (
+              <button 
+                onClick={handleSave}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ───────── Timezones ───────── */
