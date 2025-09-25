@@ -4070,6 +4070,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   };
 
   const handlePhotoUpload = async (file) => {
+    console.log('handlePhotoUpload called with file:', file.name, file.size, file.type);
+    
     // Validate file
     const validation = validateImageFile(file);
     if (!validation.valid) {
@@ -4083,14 +4085,18 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     try {
       // Create preview
       const previewUrl = URL.createObjectURL(file);
-      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
+      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 10 }));
+      console.log('Preview created, progress: 10%');
 
       // Convert to base64 directly
       const reader = new FileReader();
+      
       reader.onload = async (e) => {
+        console.log('FileReader onload triggered');
         try {
           const base64 = e.target.result;
-          setUploadState(prev => ({ ...prev, progress: 40 }));
+          console.log('Base64 conversion complete, length:', base64.length);
+          setUploadState(prev => ({ ...prev, progress: 30 }));
 
           console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
 
@@ -4143,7 +4149,16 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
         }
       };
       
+      reader.onerror = (e) => {
+        console.error('FileReader error:', e);
+        setUploadState({ isUploading: false, progress: 0, preview: null, error: 'FileReader failed' });
+        onToast("error", "Failed to read file");
+      };
+      
+      console.log('Starting FileReader.readAsDataURL');
       reader.readAsDataURL(file);
+      console.log('FileReader.readAsDataURL called');
+      
     } catch (e) {
       console.error('Photo processing error:', e);
       setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
