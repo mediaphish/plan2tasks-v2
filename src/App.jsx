@@ -4093,11 +4093,15 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
       console.log('Preview created, progress: 20%');
 
-      // Try using fetch to read the file as arrayBuffer, then convert to base64
-      const arrayBuffer = await file.arrayBuffer();
+      // Try using fetch with the file URL
+      const fileUrl = URL.createObjectURL(file);
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       const base64 = btoa(String.fromCharCode.apply(null, uint8Array));
       const dataUrl = `data:${file.type};base64,${base64}`;
+      URL.revokeObjectURL(fileUrl);
 
       console.log('Base64 conversion complete, length:', dataUrl.length);
       setUploadState(prev => ({ ...prev, progress: 40 }));
