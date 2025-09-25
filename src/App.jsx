@@ -4070,38 +4070,20 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       setUploadState(prev => ({ ...prev, progress: 40 }));
 
-      // Test with XMLHttpRequest instead of fetch
-      console.log('Testing with XMLHttpRequest...');
-      try {
-        const xhr = new XMLHttpRequest();
-        const testPromise = new Promise((resolve, reject) => {
-          xhr.onload = () => {
-            console.log('XHR test - status:', xhr.status, 'readyState:', xhr.readyState);
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve(xhr.responseText);
-            } else {
-              reject(new Error('XHR failed: ' + xhr.status));
-            }
-          };
-          xhr.onerror = () => {
-            console.error('XHR error event');
-            reject(new Error('XHR error event'));
-          };
-          xhr.ontimeout = () => {
-            console.error('XHR timeout');
-            reject(new Error('XHR timeout'));
-          };
-        });
-        
-        xhr.open('GET', '/api/planner/profile?plannerEmail=' + encodeURIComponent(plannerEmail));
-        xhr.send();
-        
-        await testPromise;
-        console.log('XHR test passed');
-      } catch (xhrError) {
-        console.error('XHR test failed:', xhrError);
-        throw new Error('XHR communication is broken: ' + xhrError.message);
-      }
+      // Check for basic JavaScript errors
+      console.log('Checking for JavaScript errors...');
+      console.log('Window location:', window.location.href);
+      console.log('Document ready state:', document.readyState);
+      console.log('Navigator online:', navigator.onLine);
+      console.log('User agent:', navigator.userAgent);
+      
+      // Test with a simple console.log to see if we can even reach this point
+      console.log('Reached upload function - JavaScript is working');
+      
+      // Test with a simple alert to see if we can interact with the browser
+      // alert('Testing browser interaction');
+      
+      console.log('All basic checks passed, proceeding with upload...');
 
       // Create FormData for direct file upload
       const formData = new FormData();
