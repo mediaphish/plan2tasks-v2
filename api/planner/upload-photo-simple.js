@@ -1,49 +1,32 @@
-// Simple upload endpoint for testing
-export const config = { runtime: 'edge' };
+// Simple upload endpoint for testing - Node.js runtime
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '4mb',
+    },
+  },
+};
 
-function corsHeaders(req) {
-  const origin = req.headers.get('origin') || '*';
-  return {
-    'access-control-allow-origin': origin,
-    'vary': 'Origin',
-    'access-control-allow-methods': 'GET,POST,OPTIONS',
-    'access-control-allow-headers': 'content-type, authorization, x-requested-with, accept',
-    'access-control-allow-credentials': 'true',
-    'access-control-max-age': '600'
-  };
-}
-
-function jsonHeaders(req) {
-  return { 'content-type': 'application/json', ...corsHeaders(req) };
-}
-
-export default async function handler(req) {
-  const method = req.method || 'GET';
-
-  if (method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(req) });
-  }
-
-  if (method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405, headers: jsonHeaders(req)
-    });
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     console.log("Simple upload test received");
+    console.log("Request headers:", req.headers);
+    console.log("Request method:", req.method);
+    console.log("Request url:", req.url);
     
     // Just return success without processing
-    return new Response(JSON.stringify({ 
+    res.json({ 
       success: true, 
       message: "Upload endpoint is working",
       photoUrl: "https://example.com/test.jpg"
-    }), { status: 200, headers: jsonHeaders(req) });
+    });
 
   } catch (e) {
     console.error("Simple upload error:", e);
-    return new Response(JSON.stringify({ error: e.message || "Server error" }), {
-      status: 500, headers: jsonHeaders(req)
-    });
+    res.status(500).json({ error: e.message || "Server error" });
   }
 }
