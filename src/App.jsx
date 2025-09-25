@@ -4093,19 +4093,27 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
       console.log('Preview created, progress: 20%');
 
-      // Try alternative approach - use FormData instead of base64
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('plannerEmail', plannerEmail);
-      
-      setUploadState(prev => ({ ...prev, progress: 40 }));
-      console.log('FormData created, progress: 40%');
+      // Convert to base64 using a simple approach
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
 
-      console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
+      console.log('Base64 conversion complete, length:', base64.length);
+      setUploadState(prev => ({ ...prev, progress: 40 }));
+
+      console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
 
       const response = await fetch('/api/planner/upload-photo', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plannerEmail,
+          imageData: base64,
+          fileName: file.name
+        })
       });
 
       setUploadState(prev => ({ ...prev, progress: 60 }));
