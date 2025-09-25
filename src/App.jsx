@@ -4093,25 +4093,15 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
       console.log('Preview created, progress: 20%');
 
-      // Use a simple FileReader with timeout
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        const timeout = setTimeout(() => {
-          reject(new Error('File read timeout'));
-        }, 10000); // 10 second timeout
-        
-        reader.onload = (e) => {
-          clearTimeout(timeout);
-          resolve(e.target.result);
-        };
-        reader.onerror = (e) => {
-          clearTimeout(timeout);
-          reject(new Error('File read failed'));
-        };
+      // SIMPLE FileReader - no timeout, no complex logic
+      const reader = new FileReader();
+      const base64 = await new Promise((resolve, reject) => {
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error('File read failed'));
         reader.readAsDataURL(file);
       });
 
-      console.log('Base64 conversion complete, length:', dataUrl.length);
+      console.log('Base64 conversion complete, length:', base64.length);
       setUploadState(prev => ({ ...prev, progress: 40 }));
 
       console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
@@ -4121,7 +4111,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plannerEmail,
-          imageData: dataUrl,
+          imageData: base64,
           fileName: file.name
         })
       });
