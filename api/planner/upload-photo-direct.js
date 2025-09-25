@@ -1,41 +1,21 @@
 // api/planner/upload-photo-direct.js
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
-export const config = { runtime: 'edge' };
+export const config = {
+  api: {
+    bodyParser: false, // Disable body parsing for FormData
+  },
+};
 
-function corsHeaders(req) {
-  const origin = req.headers.get('origin') || '*';
-  return {
-    'access-control-allow-origin': origin,
-    'vary': 'Origin',
-    'access-control-allow-methods': 'GET,POST,OPTIONS',
-    'access-control-allow-headers': 'content-type, authorization, x-requested-with, accept',
-    'access-control-allow-credentials': 'true',
-    'access-control-max-age': '600'
-  };
-}
-
-function jsonHeaders(req) {
-  return { 'content-type': 'application/json', ...corsHeaders(req) };
-}
-
-export default async function handler(req) {
-  const method = req.method || 'GET';
-
-  if (method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(req) });
-  }
-
-  if (method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405, headers: jsonHeaders(req)
-    });
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     console.log("Direct photo upload request received");
     
-    // Parse FormData using Edge Runtime
+    // Parse FormData using Node.js runtime
     const formData = await req.formData();
     const plannerEmail = formData.get('plannerEmail');
     const file = formData.get('file');
@@ -49,22 +29,16 @@ export default async function handler(req) {
     });
 
     if (!plannerEmail) {
-      return new Response(JSON.stringify({ error: "Missing plannerEmail" }), {
-        status: 400, headers: jsonHeaders(req)
-      });
+      return res.status(400).json({ error: "Missing plannerEmail" });
     }
 
     if (!file) {
-      return new Response(JSON.stringify({ error: "No file found in request" }), {
-        status: 400, headers: jsonHeaders(req)
-      });
+      return res.status(400).json({ error: "No file found in request" });
     }
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      return new Response(JSON.stringify({ error: "File must be an image" }), {
-        status: 400, headers: jsonHeaders(req)
-      });
+      return res.status(400).json({ error: "File must be an image" });
     }
 
     // Extract file extension and generate unique filename
@@ -109,9 +83,7 @@ export default async function handler(req) {
 
     if (error) {
       console.error("Supabase Storage error:", error);
-      return new Response(JSON.stringify({ error: `Storage upload failed: ${error.message}` }), {
-        status: 500, headers: jsonHeaders(req)
-      });
+      return res.status(500).json({ error: `Storage upload failed: ${error.message}` });
     }
 
     console.log("File uploaded successfully:", data);
@@ -123,16 +95,14 @@ export default async function handler(req) {
 
     console.log("Upload successful:", publicUrlData.publicUrl);
 
-    return new Response(JSON.stringify({ 
+    res.json({ 
       success: true, 
       photoUrl: publicUrlData.publicUrl,
       fileName: uniqueFileName
-    }), { status: 200, headers: jsonHeaders(req) });
+    });
 
   } catch (e) {
     console.error("Direct photo upload error:", e);
-    return new Response(JSON.stringify({ error: e.message || "Server error" }), {
-      status: 500, headers: jsonHeaders(req)
-    });
+    res.status(500).json({ error: e.message || "Server error" });
   }
 }
