@@ -4077,11 +4077,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      // Test with simple endpoint first
-      const response = await fetch('/api/test-upload', {
-        method: 'POST',
-        body: formData
-      });
+      // Test with simple endpoint first - try GET first
+      const response = await fetch('/api/test-upload');
 
       setUploadState(prev => ({ ...prev, progress: 60 }));
 
