@@ -4072,11 +4072,16 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   const handlePhotoUpload = async (file) => {
     console.log('handlePhotoUpload called with file:', file.name, file.size, file.type);
     
-    // Validate file
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      setUploadState(prev => ({ ...prev, error: validation.error }));
-      onToast("error", validation.error);
+    // Basic file validation
+    if (!file || !file.type.startsWith('image/')) {
+      setUploadState(prev => ({ ...prev, error: 'Please select a valid image file' }));
+      onToast("error", "Please select a valid image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadState(prev => ({ ...prev, error: 'Image must be smaller than 5MB' }));
+      onToast("error", "Image must be smaller than 5MB");
       return;
     }
 
@@ -4085,84 +4090,75 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     try {
       // Create preview
       const previewUrl = URL.createObjectURL(file);
-      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 10 }));
-      console.log('Preview created, progress: 10%');
+      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
+      console.log('Preview created, progress: 20%');
 
-      // Convert to base64 directly
-      const reader = new FileReader();
-      
-      reader.onload = async (e) => {
-        console.log('FileReader onload triggered');
-        try {
-          const base64 = e.target.result;
-          console.log('Base64 conversion complete, length:', base64.length);
-          setUploadState(prev => ({ ...prev, progress: 30 }));
+      // Use Promise-based FileReader
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          console.log('FileReader onload triggered');
+          resolve(e.target.result);
+        };
+        reader.onerror = (e) => {
+          console.error('FileReader error:', e);
+          reject(new Error('Failed to read file'));
+        };
+        console.log('Starting FileReader.readAsDataURL');
+        reader.readAsDataURL(file);
+      });
 
-          console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
+      console.log('Base64 conversion complete, length:', base64.length);
+      setUploadState(prev => ({ ...prev, progress: 40 }));
 
-          const response = await fetch('/api/planner/upload-photo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              plannerEmail,
-              imageData: base64,
-              fileName: file.name
-            })
-          });
+      console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
 
-          setUploadState(prev => ({ ...prev, progress: 60 }));
+      const response = await fetch('/api/planner/upload-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plannerEmail,
+          imageData: base64,
+          fileName: file.name
+        })
+      });
 
-          const result = await response.json();
-          console.log('Upload response:', result);
+      setUploadState(prev => ({ ...prev, progress: 60 }));
 
-          if (response.ok && result.photoUrl) {
-            setUploadState(prev => ({ ...prev, progress: 80 }));
-            
-            // Update profile with new photo URL
-            const profileResponse = await fetch('/api/planner/profile', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                plannerEmail,
-                ...profile,
-                profile_photo_url: result.photoUrl
-              })
-            });
+      const result = await response.json();
+      console.log('Upload response:', result);
 
-            if (profileResponse.ok) {
-              setUploadState(prev => ({ ...prev, progress: 100 }));
-              onToast("ok", "Profile photo updated successfully");
-              setTimeout(() => {
-                window.location.reload();
-              }, 1000);
-            } else {
-              throw new Error('Failed to update profile');
-            }
-          } else {
-            console.error('Upload failed:', result);
-            throw new Error(result.error || 'Upload failed');
-          }
-        } catch (e) {
-          console.error('Photo upload error:', e);
-          setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
-          onToast("error", `Failed to upload photo: ${e.message}`);
+      if (response.ok && result.photoUrl) {
+        setUploadState(prev => ({ ...prev, progress: 80 }));
+        
+        // Update profile with new photo URL
+        const profileResponse = await fetch('/api/planner/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plannerEmail,
+            ...profile,
+            profile_photo_url: result.photoUrl
+          })
+        });
+
+        if (profileResponse.ok) {
+          setUploadState(prev => ({ ...prev, progress: 100 }));
+          onToast("ok", "Profile photo updated successfully");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          throw new Error('Failed to update profile');
         }
-      };
-      
-      reader.onerror = (e) => {
-        console.error('FileReader error:', e);
-        setUploadState({ isUploading: false, progress: 0, preview: null, error: 'FileReader failed' });
-        onToast("error", "Failed to read file");
-      };
-      
-      console.log('Starting FileReader.readAsDataURL');
-      reader.readAsDataURL(file);
-      console.log('FileReader.readAsDataURL called');
-      
+      } else {
+        console.error('Upload failed:', result);
+        throw new Error(result.error || 'Upload failed');
+      }
     } catch (e) {
-      console.error('Photo processing error:', e);
+      console.error('Photo upload error:', e);
       setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
-      onToast("error", `Failed to process image: ${e.message}`);
+      onToast("error", `Failed to upload photo: ${e.message}`);
     }
   };
 
