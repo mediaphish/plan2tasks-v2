@@ -4077,22 +4077,26 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      // Step 1: Test minimal endpoint
-      console.log('Step 1: Testing /api/test...');
+      // Step 1: Test basic fetch without FormData
+      console.log('Step 1: Testing basic fetch...');
       try {
         const testResponse = await fetch('/api/test');
         console.log('Test response status:', testResponse.status);
+        console.log('Test response ok:', testResponse.ok);
+        console.log('Test response type:', testResponse.type);
         
         if (testResponse.ok) {
           const testResult = await testResponse.json();
           console.log('Test success:', testResult);
         } else {
           console.error('Test failed:', testResponse.status, testResponse.statusText);
-          throw new Error(`Minimal API test failed: ${testResponse.status}`);
+          throw new Error(`Basic fetch failed: ${testResponse.status}`);
         }
       } catch (testError) {
         console.error('Test error:', testError);
-        throw new Error('Minimal API routing is broken');
+        console.error('Error name:', testError.name);
+        console.error('Error message:', testError.message);
+        throw new Error('Basic fetch is broken: ' + testError.message);
       }
       
       // Step 2: Test simple upload endpoint
