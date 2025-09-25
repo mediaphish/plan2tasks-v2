@@ -128,7 +128,7 @@ function MainApp(){
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
   const urlUser = usp.get("user") || "";
-  const validViews = new Set(["users","plan","settings","inbox"]);
+  const validViews = new Set(["users","plan","settings","profile"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
   const plannerEmail = (urlPE || storedPE || "bartpaden@gmail.com");
@@ -140,7 +140,6 @@ function MainApp(){
   const [toasts,setToasts]=useState([]);
   const [profileOpen,setProfileOpen]=useState(false);
   const [plannerProfile,setPlannerProfile]=useState(null);
-  const [profileModalOpen,setProfileModalOpen]=useState(false);
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
@@ -380,13 +379,13 @@ function MainApp(){
                        Change Photo
                      </label>
                      <button 
-                       onClick={()=>{setProfileOpen(false); setProfileModalOpen(true); setProfileEditMode(false);}}
+                       onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(false);}}
                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                      >
                        View Profile
                      </button>
                      <button 
-                       onClick={()=>{setProfileOpen(false); setProfileModalOpen(true); setProfileEditMode(true);}}
+                       onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(true);}}
                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                      >
                        Edit Profile
@@ -461,13 +460,13 @@ function MainApp(){
           />
         )}
 
-        {/* Profile Modal */}
-        {profileModalOpen && (
-          <ProfileModal
+        {/* Profile View */}
+        {view==="profile" && (
+          <ProfileView
             plannerEmail={plannerEmail}
             profile={plannerProfile}
             editMode={profileEditMode}
-            onClose={()=>{setProfileModalOpen(false); setProfileEditMode(false);}}
+            onEditModeChange={setProfileEditMode}
             onSave={saveProfile}
             onToast={(t,m)=>toast(t,m)}
           />
@@ -3956,8 +3955,8 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
   return null;
 }
 
-/* ───────── Profile Modal ───────── */
-function ProfileModal({ plannerEmail, profile, editMode, onClose, onSave, onToast }) {
+/* ───────── Profile View ───────── */
+function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave, onToast }) {
   const [formData, setFormData] = useState({
     planner_name: profile?.planner_name || '',
     company_name: profile?.company_name || '',
@@ -3979,23 +3978,43 @@ function ProfileModal({ plannerEmail, profile, editMode, onClose, onSave, onToas
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {editMode ? 'Edit Profile' : 'View Profile'}
-            </h2>
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {editMode ? 'Edit Profile' : 'Profile'}
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Manage your planner profile and business information
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {!editMode ? (
             <button 
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              onClick={() => onEditModeChange(true)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              Edit Profile
             </button>
-          </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => onEditModeChange(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
           {/* Profile Photo */}
           <div className="flex items-center gap-4 mb-6">
@@ -4215,25 +4234,6 @@ function ProfileModal({ plannerEmail, profile, editMode, onClose, onSave, onToas
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
-            <button 
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            {editMode && (
-              <button 
-                onClick={handleSave}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-              >
-                Save Changes
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
