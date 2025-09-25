@@ -4083,14 +4083,14 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     try {
       // Create preview
       const previewUrl = URL.createObjectURL(file);
-      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
+      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 10 }));
 
-      // Convert to base64 directly (no compression)
+      // Convert to base64 directly
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
           const base64 = e.target.result;
-          setUploadState(prev => ({ ...prev, progress: 40 }));
+          setUploadState(prev => ({ ...prev, progress: 30 }));
 
           console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
 
@@ -4104,13 +4104,13 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
             })
           });
 
-          setUploadState(prev => ({ ...prev, progress: 70 }));
+          setUploadState(prev => ({ ...prev, progress: 60 }));
 
           const result = await response.json();
           console.log('Upload response:', result);
 
           if (response.ok && result.photoUrl) {
-            setUploadState(prev => ({ ...prev, progress: 90 }));
+            setUploadState(prev => ({ ...prev, progress: 80 }));
             
             // Update profile with new photo URL
             const profileResponse = await fetch('/api/planner/profile', {
