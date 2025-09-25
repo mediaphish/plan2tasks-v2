@@ -4243,7 +4243,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
               </div>
             </div>
           </div>
-
+        </div>
+      </div>
     </div>
   );
 }
