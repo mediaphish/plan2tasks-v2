@@ -4071,6 +4071,22 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
   const handlePhotoUpload = async (file) => {
     console.log('handlePhotoUpload called with file:', file.name, file.size, file.type);
+    console.log('File object details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      isFile: file instanceof File,
+      constructor: file.constructor.name
+    });
+    
+    // Browser compatibility check
+    console.log('Browser info:', {
+      userAgent: navigator.userAgent,
+      hasFileReader: typeof FileReader !== 'undefined',
+      hasFile: typeof File !== 'undefined',
+      hasBlob: typeof Blob !== 'undefined'
+    });
     
     // Basic file validation
     if (!file || !file.type.startsWith('image/')) {
@@ -4079,11 +4095,31 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       return;
     }
 
+    // Test if file is actually readable
+    try {
+      console.log('Testing file readability...');
+      const testReader = new FileReader();
+      testReader.onload = () => console.log('File is readable');
+      testReader.onerror = (e) => console.error('File is not readable:', e);
+      testReader.readAsDataURL(file.slice(0, 1)); // Try to read just 1 byte
+    } catch (e) {
+      console.error('File readability test failed:', e);
+    }
+
     if (file.size > 5 * 1024 * 1024) {
       setUploadState(prev => ({ ...prev, error: 'Image must be smaller than 5MB' }));
       onToast("error", "Image must be smaller than 5MB");
       return;
     }
+
+    // Check for very small files that might be corrupted
+    if (file.size < 100) {
+      setUploadState(prev => ({ ...prev, error: 'File appears to be corrupted or empty' }));
+      onToast("error", "File appears to be corrupted or empty");
+      return;
+    }
+
+    console.log('File size check passed:', file.size, 'bytes');
 
     setUploadState({ isUploading: true, progress: 0, preview: null, error: null });
 
@@ -4093,13 +4129,89 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
       console.log('Preview created, progress: 20%');
 
-      // SIMPLE FileReader - no timeout, no complex logic
-      const reader = new FileReader();
-      const base64 = await new Promise((resolve, reject) => {
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (e) => reject(new Error('File read failed'));
-        reader.readAsDataURL(file);
+      // Verify file is still valid before reading
+      console.log('File validation before read:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
       });
+
+      // Add small delay to ensure file is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Try multiple approaches to read the file
+      let base64;
+      
+      try {
+        // Approach 1: Standard FileReader with timeout
+        console.log('Trying standard FileReader...');
+        const reader = new FileReader();
+        base64 = await new Promise((resolve, reject) => {
+          let timeoutId;
+          
+          reader.onload = (e) => {
+            console.log('FileReader onload triggered');
+            clearTimeout(timeoutId);
+            resolve(e.target.result);
+          };
+          reader.onerror = (e) => {
+            console.error('FileReader onerror triggered:', e);
+            console.error('Error details:', e.target.error);
+            clearTimeout(timeoutId);
+            reject(new Error(`File read failed: ${e.target.error?.message || 'Unknown error'}`));
+          };
+          reader.onabort = (e) => {
+            console.log('FileReader onabort triggered');
+            clearTimeout(timeoutId);
+            reject(new Error('File read aborted'));
+          };
+          
+          // Set timeout to prevent hanging
+          timeoutId = setTimeout(() => {
+            console.error('FileReader timeout after 10 seconds');
+            reader.abort();
+            reject(new Error('File read timeout'));
+          }, 10000);
+          
+          console.log('Starting FileReader.readAsDataURL...');
+          reader.readAsDataURL(file);
+        });
+      } catch (error) {
+        console.error('FileReader failed, trying alternative approach:', error);
+        
+        // Approach 2: Try with a fresh FileReader instance
+        try {
+          console.log('Trying fresh FileReader instance...');
+          const freshReader = new FileReader();
+          base64 = await new Promise((resolve, reject) => {
+            let timeoutId;
+            
+            freshReader.onload = (e) => {
+              clearTimeout(timeoutId);
+              resolve(e.target.result);
+            };
+            freshReader.onerror = (e) => {
+              clearTimeout(timeoutId);
+              reject(new Error('Fresh FileReader failed'));
+            };
+            freshReader.onabort = (e) => {
+              clearTimeout(timeoutId);
+              reject(new Error('Fresh FileReader aborted'));
+            };
+            
+            timeoutId = setTimeout(() => {
+              freshReader.abort();
+              reject(new Error('Fresh FileReader timeout'));
+            }, 10000);
+            
+            freshReader.readAsDataURL(file);
+          });
+        } catch (freshError) {
+          console.error('Fresh FileReader also failed:', freshError);
+          throw new Error(`All FileReader approaches failed. Original error: ${error.message}`);
+        }
+      }
 
       console.log('Base64 conversion complete, length:', base64.length);
       setUploadState(prev => ({ ...prev, progress: 40 }));
@@ -4237,6 +4349,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                     e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
                     const files = e.dataTransfer.files;
                     if (files.length > 0) {
+                      console.log('File dropped:', files[0].name);
                       handlePhotoUpload(files[0]);
                     }
                   }}
@@ -4261,8 +4374,12 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp"
                     onChange={(e) => {
+                      console.log('File input onChange triggered');
                       const file = e.target.files[0];
-                      if (file) handlePhotoUpload(file);
+                      if (file) {
+                        console.log('File selected via input:', file.name);
+                        handlePhotoUpload(file);
+                      }
                     }}
                     className="hidden"
                   />
