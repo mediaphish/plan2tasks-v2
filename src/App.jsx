@@ -229,6 +229,8 @@ function MainApp(){
 
   async function saveProfile(profileData) {
     try {
+      console.log('Saving profile:', { plannerEmail, profileData });
+      
       const response = await fetch('/api/planner/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -237,17 +239,20 @@ function MainApp(){
           ...profileData
         })
       });
+      
       const result = await response.json();
+      console.log('Save response:', { status: response.status, result });
+      
       if (response.ok) {
         setPlannerProfile(result.profile);
         setProfileEditMode(false);
-        toast("ok", "Profile updated successfully");
+        onToast("ok", "Profile updated successfully");
       } else {
-        throw new Error(result.error || 'Save failed');
+        throw new Error(result.error || `Save failed with status ${response.status}`);
       }
     } catch (e) {
       console.error('Profile save error:', e);
-      toast("error", "Failed to save profile");
+      onToast("error", `Failed to save profile: ${e.message}`);
     }
   }
 
@@ -3933,16 +3938,33 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
 /* ───────── Profile View ───────── */
 function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave, onToast }) {
   const [formData, setFormData] = useState({
-    planner_name: profile?.planner_name || '',
-    company_name: profile?.company_name || '',
-    business_description: profile?.business_description || '',
-    phone: profile?.phone || '',
-    website_url: profile?.website_url || '',
-    linkedin_username: profile?.linkedin_url?.split('/').pop() || '',
-    instagram_username: profile?.instagram_url?.split('/').pop() || '',
-    facebook_username: profile?.facebook_url?.split('/').pop() || '',
-    twitter_username: profile?.twitter_url?.split('/').pop() || ''
+    planner_name: '',
+    company_name: '',
+    business_description: '',
+    phone: '',
+    website_url: '',
+    linkedin_username: '',
+    instagram_username: '',
+    facebook_username: '',
+    twitter_username: ''
   });
+
+  // Initialize form data when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        planner_name: profile.planner_name || '',
+        company_name: profile.company_name || '',
+        business_description: profile.business_description || '',
+        phone: profile.phone || '',
+        website_url: profile.website_url || '',
+        linkedin_username: profile.linkedin_url?.split('/').pop() || '',
+        instagram_username: profile.instagram_url?.split('/').pop() || '',
+        facebook_username: profile.facebook_url?.split('/').pop() || '',
+        twitter_username: profile.twitter_url?.split('/').pop() || ''
+      });
+    }
+  }, [profile]);
 
   const [uploadState, setUploadState] = useState({
     isUploading: false,
@@ -3954,17 +3976,18 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   const handleSave = async () => {
     // Convert usernames to full URLs
     const profileData = {
-      ...formData,
+      planner_name: formData.planner_name,
+      company_name: formData.company_name,
+      business_description: formData.business_description,
+      phone: formData.phone,
+      website_url: formData.website_url,
       linkedin_url: formData.linkedin_username ? `https://linkedin.com/in/${formData.linkedin_username}` : '',
       instagram_url: formData.instagram_username ? `https://instagram.com/${formData.instagram_username}` : '',
       facebook_url: formData.facebook_username ? `https://facebook.com/${formData.facebook_username}` : '',
       twitter_url: formData.twitter_username ? `https://twitter.com/${formData.twitter_username}` : ''
     };
-    delete profileData.linkedin_username;
-    delete profileData.instagram_username;
-    delete profileData.facebook_username;
-    delete profileData.twitter_username;
     
+    console.log('Saving profile data:', profileData);
     await onSave(profileData);
   };
 
@@ -4003,18 +4026,35 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   };
 
   const compressImage = (file, maxWidth = 400, quality = 0.8) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
       
       img.onload = () => {
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
-        
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(resolve, file.type, quality);
+        try {
+          const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              // Fallback to original file if compression fails
+              resolve(file);
+            }
+          }, file.type, quality);
+        } catch (e) {
+          console.warn('Image compression failed, using original:', e);
+          resolve(file);
+        }
+      };
+      
+      img.onerror = () => {
+        console.warn('Image load failed, using original file');
+        resolve(file);
       };
       
       img.src = URL.createObjectURL(file);
@@ -4310,7 +4350,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   value={formData.phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="(417) 388-0680"
+                  placeholder="(555) 123-4567"
                 />
               </div>
 
