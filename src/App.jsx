@@ -4077,10 +4077,20 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      // Try the real upload directly
-      console.log('Attempting direct upload to /api/planner/upload-photo-direct');
+      // Test with a known working endpoint first
+      console.log('Testing with /api/ping first...');
       
-      const response = await fetch('/api/planner/upload-photo-direct', {
+      const testResponse = await fetch('/api/ping?plannerEmail=' + encodeURIComponent(plannerEmail));
+      const testResult = await testResponse.json();
+      console.log('Ping test result:', testResult);
+      
+      if (!testResponse.ok) {
+        throw new Error('API routing test failed');
+      }
+      
+      console.log('API routing works, trying upload...');
+      
+      const response = await fetch('/api/planner/upload-photo-simple', {
         method: 'POST',
         body: formData
       });
