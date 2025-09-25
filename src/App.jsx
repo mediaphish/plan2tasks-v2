@@ -4085,18 +4085,26 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       
       console.log('All basic checks passed, proceeding with upload...');
 
-      // Try JSON instead of FormData
-      console.log('Testing with JSON instead of FormData...');
-      const response = await fetch('/api/test', {
+      // Convert file to base64 for JSON upload
+      console.log('Converting file to base64 for upload...');
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+      
+      console.log('Uploading with base64 data...');
+      const response = await fetch('/api/planner/upload-photo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           plannerEmail: plannerEmail,
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type
+          imageData: base64Data,
+          fileName: file.name
         })
       });
       
