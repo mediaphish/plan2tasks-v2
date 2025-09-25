@@ -4083,34 +4083,50 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       setUploadState(prev => ({ ...prev, progress: 60 }));
 
       const result = await response.json();
-      console.log('Upload response:', result);
+      console.log('Test endpoint response:', result);
 
-      if (response.ok && result.photoUrl) {
-        setUploadState(prev => ({ ...prev, progress: 80 }));
+      if (response.ok && result.success) {
+        // Test endpoint worked, now try the real upload
+        console.log('Test endpoint successful, trying real upload...');
         
-        // Update profile with new photo URL
-        const profileResponse = await fetch('/api/planner/profile', {
+        const uploadResponse = await fetch('/api/planner/upload-photo-direct', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plannerEmail,
-            ...profile,
-            profile_photo_url: result.photoUrl
-          })
+          body: formData
         });
 
-        if (profileResponse.ok) {
-          setUploadState(prev => ({ ...prev, progress: 100 }));
-          onToast("ok", "Profile photo updated successfully");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+        const uploadResult = await uploadResponse.json();
+        console.log('Real upload response:', uploadResult);
+
+        if (uploadResponse.ok && uploadResult.photoUrl) {
+          setUploadState(prev => ({ ...prev, progress: 80 }));
+          
+          // Update profile with new photo URL
+          const profileResponse = await fetch('/api/planner/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plannerEmail,
+              ...profile,
+              profile_photo_url: uploadResult.photoUrl
+            })
+          });
+
+          if (profileResponse.ok) {
+            setUploadState(prev => ({ ...prev, progress: 100 }));
+            onToast("ok", "Profile photo updated successfully");
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            throw new Error('Failed to update profile');
+          }
         } else {
-          throw new Error('Failed to update profile');
+          console.error('Real upload failed:', uploadResult);
+          throw new Error(uploadResult.error || 'Real upload failed');
         }
       } else {
-        console.error('Upload failed:', result);
-        throw new Error(result.error || 'Upload failed');
+        console.error('Test endpoint failed:', result);
+        throw new Error('Test endpoint failed');
       }
     } catch (e) {
       console.error('Photo upload error:', e);
