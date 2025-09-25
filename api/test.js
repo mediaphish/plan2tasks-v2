@@ -6,6 +6,7 @@ export default async function handler(req, res) {
     res.json({ 
       success: true, 
       message: "Test endpoint working",
+      photoUrl: "https://example.com/test.jpg",
       timestamp: new Date().toISOString()
     });
   } catch (e) {
