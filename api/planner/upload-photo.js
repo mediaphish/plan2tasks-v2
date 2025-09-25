@@ -39,21 +39,27 @@ export default async function handler(req, res) {
     console.log("Uploading to Supabase Storage:", uniqueFileName);
     
     // Check if bucket exists, create if not
-    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
-    const bucketExists = buckets.some(bucket => bucket.name === 'planner-photos');
-    
-    if (!bucketExists) {
-      console.log("Creating planner-photos bucket...");
-      const { error: createError } = await supabaseAdmin.storage.createBucket('planner-photos', {
-        public: true,
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-        fileSizeLimit: 5242880 // 5MB
-      });
+    try {
+      const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+      const bucketExists = buckets.some(bucket => bucket.name === 'planner-photos');
       
-      if (createError) {
-        console.error("Failed to create bucket:", createError);
-        throw new Error("Failed to create storage bucket");
+      if (!bucketExists) {
+        console.log("Creating planner-photos bucket...");
+        const { error: createError } = await supabaseAdmin.storage.createBucket('planner-photos', {
+          public: true,
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+          fileSizeLimit: 5242880 // 5MB
+        });
+        
+        if (createError) {
+          console.error("Failed to create bucket:", createError);
+          // Don't throw error, try to upload anyway
+          console.log("Continuing with upload despite bucket creation error...");
+        }
       }
+    } catch (bucketError) {
+      console.error("Bucket check failed:", bucketError);
+      // Continue with upload attempt
     }
     
     // Upload to Supabase Storage
@@ -66,8 +72,11 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error("Supabase Storage error:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       throw new Error(`Storage upload failed: ${error.message}`);
     }
+
+    console.log("File uploaded successfully:", data);
 
     // Get public URL
     const { data: publicUrlData } = supabaseAdmin.storage
