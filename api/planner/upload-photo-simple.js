@@ -1,10 +1,10 @@
 // Simple upload endpoint for testing - Node.js runtime
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
     console.log("Simple upload test received");
     console.log("Request headers:", req.headers);
     console.log("Request method:", req.method);
