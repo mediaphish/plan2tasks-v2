@@ -185,47 +185,7 @@ function MainApp(){
     }catch(e){console.error('Badge error:', e);}
   }
 
-  async function uploadProfilePhoto(file) {
-    try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target.result;
-        const response = await fetch('/api/planner/upload-photo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plannerEmail,
-            imageData: base64,
-            fileName: file.name
-          })
-        });
-        const result = await response.json();
-        if (response.ok && result.photoUrl) {
-          // Update profile with new photo URL
-          const profileResponse = await fetch('/api/planner/profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              plannerEmail,
-              ...plannerProfile,
-              profile_photo_url: result.photoUrl
-            })
-          });
-          const profileResult = await profileResponse.json();
-          if (profileResponse.ok) {
-            setPlannerProfile(profileResult.profile);
-            toast("ok", "Profile photo updated");
-          }
-        } else {
-          throw new Error(result.error || 'Upload failed');
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (e) {
-      console.error('Photo upload error:', e);
-      toast("error", "Failed to upload photo");
-    }
-  }
+  // Removed old uploadProfilePhoto function - using new direct upload approach
 
   async function saveProfile(profileData) {
     try {
@@ -3979,7 +3939,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     progress: 0,
     preview: null,
     error: null,
-    base64Data: null
+    file: null
   });
 
   const handleSave = async () => {
@@ -4034,50 +3994,18 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     return { valid: true };
   };
 
-  // Helper function to read file as base64 with proper error handling
-  const readFileAsBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      try {
-        // Validate file first
-        if (!file || !file.type.startsWith('image/')) {
-          reject(new Error('Invalid file type'));
-          return;
-        }
-        
-        if (file.size > 5 * 1024 * 1024) {
-          reject(new Error('File too large'));
-          return;
-        }
-        
-        if (file.size < 100) {
-          reject(new Error('File too small'));
-          return;
-        }
-        
-        // Create FileReader with proper error handling
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-          resolve(e.target.result);
-        };
-        
-        reader.onerror = function(e) {
-          console.error('FileReader error:', e);
-          reject(new Error('File read failed'));
-        };
-        
-        reader.onabort = function() {
-          reject(new Error('File read aborted'));
-        };
-        
-        // Read the file
-        reader.readAsDataURL(file);
-        
-      } catch (error) {
-        console.error('File processing error:', error);
-        reject(new Error('File processing failed: ' + error.message));
-      }
-    });
+  // Simple file validation - no FileReader needed
+  const validateFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      throw new Error('Invalid file type');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('File too large');
+    }
+    if (file.size < 100) {
+      throw new Error('File too small');
+    }
+    return true;
   };
 
   const compressImage = (file, maxWidth = 400, quality = 0.8) => {
@@ -4116,42 +4044,42 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     });
   };
 
-  const handlePhotoUpload = async (base64Data) => {
-    console.log('handlePhotoUpload called with base64 data, length:', base64Data?.length);
+  const handlePhotoUploadDirect = async (file) => {
+    console.log('handlePhotoUploadDirect called with file:', file.name, file.size, file.type);
     
     // Basic validation
-    if (!base64Data || typeof base64Data !== 'string') {
-      setUploadState(prev => ({ ...prev, error: 'No image data available' }));
-      onToast("error", "No image data available");
+    if (!file || !file.type.startsWith('image/')) {
+      setUploadState(prev => ({ ...prev, error: 'Invalid file type' }));
+      onToast("error", "Please select a valid image file");
       return;
     }
 
-    if (!base64Data.startsWith('data:image/')) {
-      setUploadState(prev => ({ ...prev, error: 'Invalid image data format' }));
-      onToast("error", "Invalid image data format");
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadState(prev => ({ ...prev, error: 'File too large' }));
+      onToast("error", "Image must be smaller than 5MB");
       return;
     }
 
-    console.log('Base64 data validation passed');
+    console.log('File validation passed');
 
-    setUploadState({ isUploading: true, progress: 0, preview: null, error: null, base64Data });
+    setUploadState({ isUploading: true, progress: 0, preview: null, error: null, file });
 
     try {
       setUploadState(prev => ({ ...prev, progress: 20 }));
-      console.log('Starting upload, progress: 20%');
+      console.log('Starting direct upload, progress: 20%');
 
       setUploadState(prev => ({ ...prev, progress: 40 }));
 
-      console.log('Uploading photo:', { plannerEmail, dataLength: base64Data.length });
+      // Create FormData for direct file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('plannerEmail', plannerEmail);
 
-      const response = await fetch('/api/planner/upload-photo', {
+      console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
+
+      const response = await fetch('/api/planner/upload-photo-direct', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plannerEmail,
-          imageData: base64Data,
-          fileName: 'uploaded-photo.jpg'
-        })
+        body: formData
       });
 
       setUploadState(prev => ({ ...prev, progress: 60 }));
@@ -4188,7 +4116,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       }
     } catch (e) {
       console.error('Photo upload error:', e);
-      setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message, base64Data: null });
+      setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message, file: null });
       onToast("error", `Failed to upload photo: ${e.message}`);
     }
   };
@@ -4277,17 +4205,17 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                     if (files.length > 0) {
                       console.log('File dropped:', files[0].name);
                       try {
-                        // Read file as base64 immediately during user interaction
-                        const base64Data = await readFileAsBase64(files[0]);
+                        // Simple file validation and direct upload
+                        validateFile(files[0]);
                         setUploadState(prev => ({ 
                           ...prev, 
-                          preview: base64Data,
-                          base64Data: base64Data
+                          preview: URL.createObjectURL(files[0]),
+                          file: files[0]
                         }));
-                        handlePhotoUpload(base64Data);
+                        handlePhotoUploadDirect(files[0]);
                       } catch (error) {
-                        console.error('File read failed:', error);
-                        setUploadState(prev => ({ ...prev, error: error.message || 'Failed to read file' }));
+                        console.error('File validation failed:', error);
+                        setUploadState(prev => ({ ...prev, error: error.message || 'Invalid file' }));
                       }
                     }
                   }}
@@ -4317,17 +4245,17 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                       if (file) {
                         console.log('File selected via input:', file.name);
                         try {
-                          // Read file as base64 immediately during user interaction
-                          const base64Data = await readFileAsBase64(file);
+                          // Simple file validation and direct upload
+                          validateFile(file);
                           setUploadState(prev => ({ 
                             ...prev, 
-                            preview: base64Data,
-                            base64Data: base64Data
+                            preview: URL.createObjectURL(file),
+                            file: file
                           }));
-                          handlePhotoUpload(base64Data);
+                          handlePhotoUploadDirect(file);
                         } catch (error) {
-                          console.error('File read failed:', error);
-                          setUploadState(prev => ({ ...prev, error: error.message || 'Failed to read file' }));
+                          console.error('File validation failed:', error);
+                          setUploadState(prev => ({ ...prev, error: error.message || 'Invalid file' }));
                         }
                       }
                     }}
