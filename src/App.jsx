@@ -4094,7 +4094,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       // Try direct upload
       console.log('Attempting direct upload...');
-      const response = await fetch('/api/planner/upload-photo-simple', {
+      const response = await fetch('/api/test', {
         method: 'POST',
         body: formData
       });
