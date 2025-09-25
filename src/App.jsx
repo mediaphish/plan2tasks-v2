@@ -4075,11 +4075,10 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     try {
       // Create preview
       const previewUrl = URL.createObjectURL(file);
-      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
+      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 30 }));
 
-      // Compress image
-      const compressedFile = await compressImage(file);
-      setUploadState(prev => ({ ...prev, progress: 40 }));
+      // Skip compression for now - just use original file
+      setUploadState(prev => ({ ...prev, progress: 50 }));
 
       // Convert to base64
       const reader = new FileReader();
@@ -4144,7 +4143,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
       {/* Standard Panel Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -4162,7 +4161,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
               </button>
               <button 
                 onClick={handleSave}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save Changes
               </button>
@@ -4292,34 +4291,26 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Planner Name
                 </label>
-                {editMode ? (
-                  <input
-                    type="text"
-                    value={formData.planner_name}
-                    onChange={(e) => handleInputChange('planner_name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Your name"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-900">{profile?.planner_name || 'Not set'}</p>
-                )}
+                <input
+                  type="text"
+                  value={formData.planner_name}
+                  onChange={(e) => handleInputChange('planner_name', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Your name"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Company Name
                 </label>
-                {editMode ? (
-                  <input
-                    type="text"
-                    value={formData.company_name}
-                    onChange={(e) => handleInputChange('company_name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Your company"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-900">{profile?.company_name || 'Not set'}</p>
-                )}
+                <input
+                  type="text"
+                  value={formData.company_name}
+                  onChange={(e) => handleInputChange('company_name', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Your company"
+                />
               </div>
             </div>
 
@@ -4327,17 +4318,13 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Business Description
               </label>
-              {editMode ? (
-                <textarea
-                  value={formData.business_description}
-                  onChange={(e) => handleInputChange('business_description', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                  placeholder="Describe your business..."
-                />
-              ) : (
-                <p className="text-sm text-gray-900">{profile?.business_description || 'Not set'}</p>
-              )}
+              <textarea
+                value={formData.business_description}
+                onChange={(e) => handleInputChange('business_description', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                placeholder="Describe your business..."
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4358,23 +4345,13 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Website
                 </label>
-                {editMode ? (
-                  <input
-                    type="url"
-                    value={formData.website_url}
-                    onChange={(e) => handleInputChange('website_url', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://yourwebsite.com"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-900">
-                    {profile?.website_url ? (
-                      <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                        {profile.website_url}
-                      </a>
-                    ) : 'Not set'}
-                  </p>
-                )}
+                <input
+                  type="url"
+                  value={formData.website_url}
+                  onChange={(e) => handleInputChange('website_url', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://yourwebsite.com"
+                />
               </div>
             </div>
 
