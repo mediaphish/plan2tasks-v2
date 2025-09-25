@@ -1,26 +1,12 @@
 // api/planner/upload-photo.js
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import { v4 as uuidv4 } from 'uuid';
-import multer from 'multer';
-
-// Configure multer for memory storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  }
-});
 
 export const config = {
   api: {
-    bodyParser: false, // Disable body parsing for multer
+    bodyParser: {
+      sizeLimit: '4mb',
+    },
   },
 };
 
@@ -29,33 +15,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Use multer middleware to parse form data
-  upload.single('file')(req, res, async (err) => {
-    if (err) {
-      console.error('Multer error:', err);
-      return res.status(400).json({ error: err.message });
-    }
-
-    try {
-    const plannerEmail = req.body.plannerEmail;
-    const file = req.file;
+  try {
+    const { plannerEmail, imageData, fileName } = req.body;
     
-    console.log("Photo upload request:", { plannerEmail, fileName: file?.name, hasFile: !!file });
+    console.log("Photo upload request:", { plannerEmail, fileName, hasImageData: !!imageData });
     
     if (!plannerEmail) {
       return res.status(400).json({ error: "Missing plannerEmail" });
     }
 
-    if (!file) {
-      return res.status(400).json({ error: "Missing file" });
+    if (!imageData || !fileName) {
+      return res.status(400).json({ error: "Missing imageData or fileName" });
     }
 
     // Extract file extension and generate unique filename
-    const fileExtension = file.originalname.split('.').pop() || 'jpg';
+    const fileExtension = fileName.split('.').pop() || 'jpg';
     const uniqueFileName = `${plannerEmail.replace(/[^a-zA-Z0-9]/g, '_')}/${uuidv4()}.${fileExtension}`;
     
-    // Use file buffer directly
-    const buffer = file.buffer;
+    // Convert base64 to buffer
+    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
     
     console.log("Uploading to Supabase Storage:", uniqueFileName);
     
@@ -106,15 +85,14 @@ export default async function handler(req, res) {
 
     console.log("Upload successful:", publicUrlData.publicUrl);
 
-      res.json({ 
-        success: true, 
-        photoUrl: publicUrlData.publicUrl,
-        fileName: uniqueFileName
-      });
+    res.json({ 
+      success: true, 
+      photoUrl: publicUrlData.publicUrl,
+      fileName: uniqueFileName
+    });
 
-    } catch (e) {
-      console.error("Photo upload error:", e);
-      res.status(500).json({ error: e.message || "Server error" });
-    }
-  });
+  } catch (e) {
+    console.error("Photo upload error:", e);
+    res.status(500).json({ error: e.message || "Server error" });
+  }
 }
