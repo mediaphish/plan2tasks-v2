@@ -4110,7 +4110,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
           console.log('Upload response:', result);
 
           if (response.ok && result.photoUrl) {
-            setUploadState(prev => ({ ...prev, progress: 100 }));
+            setUploadState(prev => ({ ...prev, progress: 90 }));
             
             // Update profile with new photo URL
             const profileResponse = await fetch('/api/planner/profile', {
@@ -4124,6 +4124,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
             });
 
             if (profileResponse.ok) {
+              setUploadState(prev => ({ ...prev, progress: 100 }));
               onToast("ok", "Profile photo updated successfully");
               setTimeout(() => {
                 window.location.reload();
@@ -4132,6 +4133,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
               throw new Error('Failed to update profile');
             }
           } else {
+            console.error('Upload failed:', result);
             throw new Error(result.error || 'Upload failed');
           }
         } catch (e) {
