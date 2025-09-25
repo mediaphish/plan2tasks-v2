@@ -4077,29 +4077,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      // Step 1: Test with known working endpoint
-      console.log('Step 1: Testing with working profile endpoint...');
-      try {
-        const profileResponse = await fetch('/api/planner/profile?plannerEmail=' + encodeURIComponent(plannerEmail));
-        console.log('Profile response status:', profileResponse.status);
-        console.log('Profile response ok:', profileResponse.ok);
-        
-        if (profileResponse.ok) {
-          const profileResult = await profileResponse.json();
-          console.log('Profile test success:', profileResult);
-        } else {
-          console.error('Profile test failed:', profileResponse.status, profileResponse.statusText);
-          throw new Error(`Profile endpoint failed: ${profileResponse.status}`);
-        }
-      } catch (profileError) {
-        console.error('Profile test error:', profileError);
-        console.error('Error name:', profileError.name);
-        console.error('Error message:', profileError.message);
-        throw new Error('Profile endpoint is broken: ' + profileError.message);
-      }
-      
-      // Step 2: Test simple upload endpoint
-      console.log('Step 2: Testing simple upload endpoint...');
+      // Try direct upload without any testing
+      console.log('Attempting direct upload...');
       const response = await fetch('/api/planner/upload-photo-simple', {
         method: 'POST',
         body: formData
