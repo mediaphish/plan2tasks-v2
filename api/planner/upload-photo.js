@@ -16,25 +16,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { plannerEmail, imageData, fileName } = req.body;
+    const plannerEmail = req.body.plannerEmail;
+    const file = req.body.file;
     
-    console.log("Photo upload request:", { plannerEmail, fileName, hasImageData: !!imageData });
+    console.log("Photo upload request:", { plannerEmail, fileName: file?.name, hasFile: !!file });
     
     if (!plannerEmail) {
       return res.status(400).json({ error: "Missing plannerEmail" });
     }
 
-    if (!imageData || !fileName) {
-      return res.status(400).json({ error: "Missing imageData or fileName" });
+    if (!file) {
+      return res.status(400).json({ error: "Missing file" });
     }
 
     // Extract file extension and generate unique filename
-    const fileExtension = fileName.split('.').pop() || 'jpg';
+    const fileExtension = file.name.split('.').pop() || 'jpg';
     const uniqueFileName = `${plannerEmail.replace(/[^a-zA-Z0-9]/g, '_')}/${uuidv4()}.${fileExtension}`;
-    
-    // Convert base64 to buffer
-    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
-    const buffer = Buffer.from(base64Data, 'base64');
     
     console.log("Uploading to Supabase Storage:", uniqueFileName);
     
@@ -65,8 +62,8 @@ export default async function handler(req, res) {
     // Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage
       .from('planner-photos')
-      .upload(uniqueFileName, buffer, {
-        contentType: `image/${fileExtension}`,
+      .upload(uniqueFileName, file, {
+        contentType: file.type,
         upsert: true
       });
 
