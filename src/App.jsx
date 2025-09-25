@@ -247,6 +247,11 @@ function MainApp(){
         setPlannerProfile(result.profile);
         setProfileEditMode(false);
         onToast("ok", "Profile updated successfully");
+        // Navigate back to users view after successful save
+        setTimeout(() => {
+          setView("users");
+          updateQueryView("users");
+        }, 1000);
       } else {
         throw new Error(result.error || `Save failed with status ${response.status}`);
       }
@@ -4078,17 +4083,14 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     try {
       // Create preview
       const previewUrl = URL.createObjectURL(file);
-      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 30 }));
+      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
 
-      // Skip compression for now - just use original file
-      setUploadState(prev => ({ ...prev, progress: 50 }));
-
-      // Convert to base64
+      // Convert to base64 directly (no compression)
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
           const base64 = e.target.result;
-          setUploadState(prev => ({ ...prev, progress: 60 }));
+          setUploadState(prev => ({ ...prev, progress: 40 }));
 
           console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
 
@@ -4101,6 +4103,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
               fileName: file.name
             })
           });
+
+          setUploadState(prev => ({ ...prev, progress: 70 }));
 
           const result = await response.json();
           console.log('Upload response:', result);
