@@ -3951,8 +3951,9 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
   // Initialize form data when profile loads
   useEffect(() => {
+    console.log('ProfileView: Profile data received:', profile);
     if (profile) {
-      setFormData({
+      const newFormData = {
         planner_name: profile.planner_name || '',
         company_name: profile.company_name || '',
         business_description: profile.business_description || '',
@@ -3962,7 +3963,9 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
         instagram_username: profile.instagram_url?.split('/').pop() || '',
         facebook_username: profile.facebook_url?.split('/').pop() || '',
         twitter_username: profile.twitter_url?.split('/').pop() || ''
-      });
+      };
+      console.log('ProfileView: Setting form data:', newFormData);
+      setFormData(newFormData);
     }
   }, [profile]);
 
@@ -4134,7 +4137,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
         }
       };
       
-      reader.readAsDataURL(compressedFile);
+      reader.readAsDataURL(file);
     } catch (e) {
       console.error('Photo processing error:', e);
       setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
