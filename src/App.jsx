@@ -4070,18 +4070,37 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       setUploadState(prev => ({ ...prev, progress: 40 }));
 
-      // Test basic fetch first - no FormData
-      console.log('Testing basic fetch without FormData...');
+      // Test with XMLHttpRequest instead of fetch
+      console.log('Testing with XMLHttpRequest...');
       try {
-        const testResponse = await fetch('/api/planner/profile?plannerEmail=' + encodeURIComponent(plannerEmail));
-        console.log('Basic fetch test - status:', testResponse.status, 'ok:', testResponse.ok);
-        if (!testResponse.ok) {
-          throw new Error('Basic fetch failed: ' + testResponse.status);
-        }
-        console.log('Basic fetch test passed');
-      } catch (basicError) {
-        console.error('Basic fetch test failed:', basicError);
-        throw new Error('Basic API communication is broken: ' + basicError.message);
+        const xhr = new XMLHttpRequest();
+        const testPromise = new Promise((resolve, reject) => {
+          xhr.onload = () => {
+            console.log('XHR test - status:', xhr.status, 'readyState:', xhr.readyState);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(xhr.responseText);
+            } else {
+              reject(new Error('XHR failed: ' + xhr.status));
+            }
+          };
+          xhr.onerror = () => {
+            console.error('XHR error event');
+            reject(new Error('XHR error event'));
+          };
+          xhr.ontimeout = () => {
+            console.error('XHR timeout');
+            reject(new Error('XHR timeout'));
+          };
+        });
+        
+        xhr.open('GET', '/api/planner/profile?plannerEmail=' + encodeURIComponent(plannerEmail));
+        xhr.send();
+        
+        await testPromise;
+        console.log('XHR test passed');
+      } catch (xhrError) {
+        console.error('XHR test failed:', xhrError);
+        throw new Error('XHR communication is broken: ' + xhrError.message);
       }
 
       // Create FormData for direct file upload
