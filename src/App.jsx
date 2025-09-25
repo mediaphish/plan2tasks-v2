@@ -4070,6 +4070,20 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       setUploadState(prev => ({ ...prev, progress: 40 }));
 
+      // Test basic fetch first - no FormData
+      console.log('Testing basic fetch without FormData...');
+      try {
+        const testResponse = await fetch('/api/planner/profile?plannerEmail=' + encodeURIComponent(plannerEmail));
+        console.log('Basic fetch test - status:', testResponse.status, 'ok:', testResponse.ok);
+        if (!testResponse.ok) {
+          throw new Error('Basic fetch failed: ' + testResponse.status);
+        }
+        console.log('Basic fetch test passed');
+      } catch (basicError) {
+        console.error('Basic fetch test failed:', basicError);
+        throw new Error('Basic API communication is broken: ' + basicError.message);
+      }
+
       // Create FormData for direct file upload
       const formData = new FormData();
       formData.append('file', file);
@@ -4077,7 +4091,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      // Try direct upload without any testing
+      // Try direct upload
       console.log('Attempting direct upload...');
       const response = await fetch('/api/planner/upload-photo-simple', {
         method: 'POST',
