@@ -4077,7 +4077,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      const response = await fetch('/api/planner/upload-photo-direct', {
+      // Test with simple endpoint first
+      const response = await fetch('/api/test-upload', {
         method: 'POST',
         body: formData
       });
