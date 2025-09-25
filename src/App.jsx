@@ -4095,8 +4095,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       // Try using fetch with the file URL
       const fileUrl = URL.createObjectURL(file);
-      const response = await fetch(fileUrl);
-      const blob = await response.blob();
+      const fileResponse = await fetch(fileUrl);
+      const blob = await fileResponse.blob();
       const arrayBuffer = await blob.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       const base64 = btoa(String.fromCharCode.apply(null, uint8Array));
