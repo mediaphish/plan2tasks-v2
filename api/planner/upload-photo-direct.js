@@ -1,6 +1,5 @@
 // api/planner/upload-photo-direct.js
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
-import { v4 as uuidv4 } from 'uuid';
 
 export const config = { runtime: 'edge' };
 
@@ -70,7 +69,7 @@ export default async function handler(req) {
 
     // Extract file extension and generate unique filename
     const fileExtension = file.name.split('.').pop() || 'jpg';
-    const uniqueFileName = `${plannerEmail.replace(/[^a-zA-Z0-9]/g, '_')}/${uuidv4()}.${fileExtension}`;
+    const uniqueFileName = `${plannerEmail.replace(/[^a-zA-Z0-9]/g, '_')}/${crypto.randomUUID()}.${fileExtension}`;
     
     console.log("Uploading to Supabase Storage:", uniqueFileName);
     
