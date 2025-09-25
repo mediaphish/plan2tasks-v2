@@ -4093,15 +4093,13 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
       console.log('Preview created, progress: 20%');
 
-      // Convert to base64 using a simple approach
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(file);
-      });
+      // Try using fetch to read the file as arrayBuffer, then convert to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64 = btoa(String.fromCharCode.apply(null, uint8Array));
+      const dataUrl = `data:${file.type};base64,${base64}`;
 
-      console.log('Base64 conversion complete, length:', base64.length);
+      console.log('Base64 conversion complete, length:', dataUrl.length);
       setUploadState(prev => ({ ...prev, progress: 40 }));
 
       console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
@@ -4111,7 +4109,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plannerEmail,
-          imageData: base64,
+          imageData: dataUrl,
           fileName: file.name
         })
       });
