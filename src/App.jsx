@@ -3944,6 +3944,13 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     twitter_username: profile?.twitter_url?.split('/').pop() || ''
   });
 
+  const [uploadState, setUploadState] = useState({
+    isUploading: false,
+    progress: 0,
+    preview: null,
+    error: null
+  });
+
   const handleSave = async () => {
     // Convert usernames to full URLs
     const profileData = {
@@ -3980,33 +3987,119 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     handleInputChange('phone', formatted);
   };
 
+  const validateImageFile = (file) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    if (!allowedTypes.includes(file.type)) {
+      return { valid: false, error: 'Please select a JPEG, PNG, or WebP image.' };
+    }
+    
+    if (file.size > maxSize) {
+      return { valid: false, error: 'Image must be smaller than 5MB.' };
+    }
+    
+    return { valid: true };
+  };
+
+  const compressImage = (file, maxWidth = 400, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(resolve, file.type, quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handlePhotoUpload = async (file) => {
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setUploadState(prev => ({ ...prev, error: validation.error }));
+      onToast("error", validation.error);
+      return;
+    }
+
+    setUploadState({ isUploading: true, progress: 0, preview: null, error: null });
+
     try {
+      // Create preview
+      const previewUrl = URL.createObjectURL(file);
+      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
+
+      // Compress image
+      const compressedFile = await compressImage(file);
+      setUploadState(prev => ({ ...prev, progress: 40 }));
+
+      // Convert to base64
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const base64 = e.target.result;
-        const response = await fetch('/api/planner/upload-photo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plannerEmail,
-            imageData: base64,
-            fileName: file.name
-          })
-        });
-        const result = await response.json();
-        if (response.ok && result.photoUrl) {
-          onToast("ok", "Profile photo updated");
-          // Refresh profile data
-          window.location.reload();
-        } else {
-          throw new Error(result.error || 'Upload failed');
+        try {
+          const base64 = e.target.result;
+          setUploadState(prev => ({ ...prev, progress: 60 }));
+
+          console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
+
+          const response = await fetch('/api/planner/upload-photo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plannerEmail,
+              imageData: base64,
+              fileName: file.name
+            })
+          });
+
+          const result = await response.json();
+          console.log('Upload response:', result);
+
+          if (response.ok && result.photoUrl) {
+            setUploadState(prev => ({ ...prev, progress: 100 }));
+            
+            // Update profile with new photo URL
+            const profileResponse = await fetch('/api/planner/profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                plannerEmail,
+                ...profile,
+                profile_photo_url: result.photoUrl
+              })
+            });
+
+            if (profileResponse.ok) {
+              onToast("ok", "Profile photo updated successfully");
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            } else {
+              throw new Error('Failed to update profile');
+            }
+          } else {
+            throw new Error(result.error || 'Upload failed');
+          }
+        } catch (e) {
+          console.error('Photo upload error:', e);
+          setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
+          onToast("error", `Failed to upload photo: ${e.message}`);
         }
       };
-      reader.readAsDataURL(file);
+      
+      reader.readAsDataURL(compressedFile);
     } catch (e) {
-      console.error('Photo upload error:', e);
-      onToast("error", "Failed to upload photo");
+      console.error('Photo processing error:', e);
+      setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
+      onToast("error", `Failed to process image: ${e.message}`);
     }
   };
 
@@ -4040,36 +4133,115 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
         {/* Profile Content */}
         <div className="px-6 py-6">
           {/* Profile Photo Section */}
-          <div className="flex items-center gap-6 mb-8 p-4 bg-gray-50 rounded-lg">
-            {profile?.profile_photo_url ? (
-              <img 
-                src={profile.profile_photo_url} 
-                alt="Profile" 
-                className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
-              />
-            ) : (
-              <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-200">
-                <User className="h-10 w-10 text-gray-500" />
+          <div className="mb-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Profile Photo</h3>
+            
+            <div className="flex items-start gap-6">
+              {/* Photo Display */}
+              <div className="relative">
+                {uploadState.preview ? (
+                  <img 
+                    src={uploadState.preview} 
+                    alt="Preview" 
+                    className="h-24 w-24 rounded-full object-cover border-2 border-blue-200"
+                  />
+                ) : profile?.profile_photo_url ? (
+                  <img 
+                    src={profile.profile_photo_url} 
+                    alt="Profile" 
+                    className="h-24 w-24 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
+                    <User className="h-12 w-12 text-gray-400" />
+                  </div>
+                )}
+                
+                {/* Upload Progress Overlay */}
+                {uploadState.isUploading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <div className="text-white text-xs text-center">
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-1"></div>
+                      {uploadState.progress}%
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            <div className="flex-1">
-              <h3 className="text-lg font-medium text-gray-900">Profile Photo</h3>
-              <p className="text-sm text-gray-600 mb-3">Upload a professional photo for your profile</p>
-              <label className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 cursor-pointer">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Change Photo
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) handlePhotoUpload(file);
+
+              {/* Upload Area */}
+              <div className="flex-1">
+                <div 
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
+                  onClick={() => document.getElementById('photo-upload').click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
                   }}
-                  className="hidden"
-                />
-              </label>
+                  onDragLeave={(e) => {
+                    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                      handlePhotoUpload(files[0]);
+                    }
+                  }}
+                >
+                  <div className="text-center">
+                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    
+                    {uploadState.error ? (
+                      <div className="text-red-600 text-sm mb-2">{uploadState.error}</div>
+                    ) : null}
+                    
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium text-blue-600 hover:text-blue-500">Click to upload</span> or drag and drop
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">PNG, JPG, WebP up to 5MB</div>
+                  </div>
+                  
+                  <input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) handlePhotoUpload(file);
+                    }}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Progress Bar */}
+                {uploadState.isUploading && (
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span>Uploading...</span>
+                      <span>{uploadState.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadState.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {uploadState.progress === 100 && !uploadState.error && (
+                  <div className="mt-4 text-sm text-green-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Photo uploaded successfully!
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
