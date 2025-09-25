@@ -2,85 +2,75 @@
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import { v4 as uuidv4 } from 'uuid';
 
-export const config = {
-  api: {
-    bodyParser: false, // Disable body parsing for manual multipart handling
-  },
-};
+export const config = { runtime: 'edge' };
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+function corsHeaders(req) {
+  const origin = req.headers.get('origin') || '*';
+  return {
+    'access-control-allow-origin': origin,
+    'vary': 'Origin',
+    'access-control-allow-methods': 'GET,POST,OPTIONS',
+    'access-control-allow-headers': 'content-type, authorization, x-requested-with, accept',
+    'access-control-allow-credentials': 'true',
+    'access-control-max-age': '600'
+  };
+}
+
+function jsonHeaders(req) {
+  return { 'content-type': 'application/json', ...corsHeaders(req) };
+}
+
+export default async function handler(req) {
+  const method = req.method || 'GET';
+
+  if (method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders(req) });
+  }
+
+  if (method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405, headers: jsonHeaders(req)
+    });
   }
 
   try {
     console.log("Direct photo upload request received");
     
-    // Read the raw request body
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
+    // Parse FormData using Edge Runtime
+    const formData = await req.formData();
+    const plannerEmail = formData.get('plannerEmail');
+    const file = formData.get('file');
     
-    await new Promise((resolve, reject) => {
-      req.on('end', resolve);
-      req.on('error', reject);
+    console.log("FormData parsed:", { 
+      plannerEmail, 
+      hasFile: !!file,
+      fileName: file?.name,
+      fileType: file?.type,
+      fileSize: file?.size
     });
 
-    const body = Buffer.concat(chunks);
-    const contentType = req.headers['content-type'] || '';
-    
-    console.log("Request details:", { 
-      contentType, 
-      bodyLength: body.length,
-      hasMultipart: contentType.includes('multipart/form-data')
-    });
-
-    if (!contentType.includes('multipart/form-data')) {
-      return res.status(400).json({ error: "Content-Type must be multipart/form-data" });
-    }
-
-    // Parse multipart data
-    const boundary = contentType.split('boundary=')[1];
-    if (!boundary) {
-      return res.status(400).json({ error: "Invalid multipart data - no boundary" });
-    }
-
-    const bodyString = body.toString('binary');
-    console.log("Body string length:", bodyString.length);
-    
-    // Extract plannerEmail from form data
-    const plannerEmailMatch = bodyString.match(/name="plannerEmail"\r?\n\r?\n([^\r\n]+)/);
-    const plannerEmail = plannerEmailMatch ? plannerEmailMatch[1] : null;
-    
-    console.log("Extracted plannerEmail:", plannerEmail);
-    
     if (!plannerEmail) {
-      return res.status(400).json({ error: "Missing plannerEmail in form data" });
+      return new Response(JSON.stringify({ error: "Missing plannerEmail" }), {
+        status: 400, headers: jsonHeaders(req)
+      });
     }
 
-    // Extract file data from form data
-    const fileMatch = bodyString.match(/name="file"; filename="([^"]+)"\r?\nContent-Type: ([^\r\n]+)\r?\n\r?\n([\s\S]+?)(?=\r?\n--|$)/);
-    if (!fileMatch) {
-      console.log("No file found in request body");
-      return res.status(400).json({ error: "No file found in request" });
+    if (!file) {
+      return new Response(JSON.stringify({ error: "No file found in request" }), {
+        status: 400, headers: jsonHeaders(req)
+      });
     }
-
-    const fileName = fileMatch[1];
-    const fileType = fileMatch[2];
-    const fileData = fileMatch[3];
-
-    console.log("File details:", { fileName, fileType, dataLength: fileData.length });
 
     // Validate file type
-    if (!fileType.startsWith('image/')) {
-      return res.status(400).json({ error: "File must be an image" });
+    if (!file.type.startsWith('image/')) {
+      return new Response(JSON.stringify({ error: "File must be an image" }), {
+        status: 400, headers: jsonHeaders(req)
+      });
     }
 
     // Extract file extension and generate unique filename
-    const fileExtension = fileName.split('.').pop() || 'jpg';
+    const fileExtension = file.name.split('.').pop() || 'jpg';
     const uniqueFileName = `${plannerEmail.replace(/[^a-zA-Z0-9]/g, '_')}/${uuidv4()}.${fileExtension}`;
-    
-    // Convert binary data to buffer
-    const buffer = Buffer.from(fileData, 'binary');
     
     console.log("Uploading to Supabase Storage:", uniqueFileName);
     
@@ -106,17 +96,23 @@ export default async function handler(req, res) {
       console.error("Bucket check failed:", bucketError);
     }
     
+    // Convert file to buffer for Supabase
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
     // Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage
       .from('planner-photos')
       .upload(uniqueFileName, buffer, {
-        contentType: fileType,
+        contentType: file.type,
         upsert: true
       });
 
     if (error) {
       console.error("Supabase Storage error:", error);
-      return res.status(500).json({ error: `Storage upload failed: ${error.message}` });
+      return new Response(JSON.stringify({ error: `Storage upload failed: ${error.message}` }), {
+        status: 500, headers: jsonHeaders(req)
+      });
     }
 
     console.log("File uploaded successfully:", data);
@@ -128,14 +124,16 @@ export default async function handler(req, res) {
 
     console.log("Upload successful:", publicUrlData.publicUrl);
 
-    res.json({ 
+    return new Response(JSON.stringify({ 
       success: true, 
       photoUrl: publicUrlData.publicUrl,
       fileName: uniqueFileName
-    });
+    }), { status: 200, headers: jsonHeaders(req) });
 
   } catch (e) {
     console.error("Direct photo upload error:", e);
-    res.status(500).json({ error: e.message || "Server error" });
+    return new Response(JSON.stringify({ error: e.message || "Server error" }), {
+      status: 500, headers: jsonHeaders(req)
+    });
   }
 }
