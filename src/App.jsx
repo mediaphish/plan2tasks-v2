@@ -4085,18 +4085,19 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       
       console.log('All basic checks passed, proceeding with upload...');
 
-      // Create FormData for direct file upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('plannerEmail', plannerEmail);
-
-      console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
-
-      // Try direct upload
-      console.log('Attempting direct upload...');
+      // Try JSON instead of FormData
+      console.log('Testing with JSON instead of FormData...');
       const response = await fetch('/api/test', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plannerEmail: plannerEmail,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type
+        })
       });
       
       console.log('Upload response status:', response.status);
