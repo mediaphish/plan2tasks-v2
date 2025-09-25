@@ -4,9 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '4mb',
-    },
+    bodyParser: false, // Disable body parsing for manual multipart handling
   },
 };
 
@@ -16,19 +14,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Handle FormData parsing manually
-    const contentType = req.headers['content-type'] || '';
-    if (!contentType.includes('multipart/form-data')) {
-      return res.status(400).json({ error: "Content-Type must be multipart/form-data" });
-    }
-
-    // Parse FormData manually (simplified approach)
-    const boundary = contentType.split('boundary=')[1];
-    if (!boundary) {
-      return res.status(400).json({ error: "Invalid multipart data" });
-    }
-
-    // For now, let's use a simpler approach - read the raw body and extract data
+    console.log("Direct photo upload request received");
+    
+    // Read the raw request body
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));
     
@@ -38,19 +26,41 @@ export default async function handler(req, res) {
     });
 
     const body = Buffer.concat(chunks);
+    const contentType = req.headers['content-type'] || '';
+    
+    console.log("Request details:", { 
+      contentType, 
+      bodyLength: body.length,
+      hasMultipart: contentType.includes('multipart/form-data')
+    });
+
+    if (!contentType.includes('multipart/form-data')) {
+      return res.status(400).json({ error: "Content-Type must be multipart/form-data" });
+    }
+
+    // Parse multipart data
+    const boundary = contentType.split('boundary=')[1];
+    if (!boundary) {
+      return res.status(400).json({ error: "Invalid multipart data - no boundary" });
+    }
+
     const bodyString = body.toString('binary');
+    console.log("Body string length:", bodyString.length);
     
     // Extract plannerEmail from form data
     const plannerEmailMatch = bodyString.match(/name="plannerEmail"\r?\n\r?\n([^\r\n]+)/);
     const plannerEmail = plannerEmailMatch ? plannerEmailMatch[1] : null;
     
+    console.log("Extracted plannerEmail:", plannerEmail);
+    
     if (!plannerEmail) {
-      return res.status(400).json({ error: "Missing plannerEmail" });
+      return res.status(400).json({ error: "Missing plannerEmail in form data" });
     }
 
     // Extract file data from form data
     const fileMatch = bodyString.match(/name="file"; filename="([^"]+)"\r?\nContent-Type: ([^\r\n]+)\r?\n\r?\n([\s\S]+?)(?=\r?\n--|$)/);
     if (!fileMatch) {
+      console.log("No file found in request body");
       return res.status(400).json({ error: "No file found in request" });
     }
 
@@ -58,7 +68,7 @@ export default async function handler(req, res) {
     const fileType = fileMatch[2];
     const fileData = fileMatch[3];
 
-    console.log("Direct photo upload request:", { plannerEmail, fileName, fileType, dataLength: fileData.length });
+    console.log("File details:", { fileName, fileType, dataLength: fileData.length });
 
     // Validate file type
     if (!fileType.startsWith('image/')) {
