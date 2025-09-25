@@ -4077,23 +4077,32 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      // Test with a known working endpoint first
-      console.log('Testing with /api/ping first...');
-      
-      const testResponse = await fetch('/api/ping?plannerEmail=' + encodeURIComponent(plannerEmail));
-      const testResult = await testResponse.json();
-      console.log('Ping test result:', testResult);
-      
-      if (!testResponse.ok) {
-        throw new Error('API routing test failed');
+      // Step 1: Test minimal endpoint
+      console.log('Step 1: Testing /api/test...');
+      try {
+        const testResponse = await fetch('/api/test');
+        console.log('Test response status:', testResponse.status);
+        
+        if (testResponse.ok) {
+          const testResult = await testResponse.json();
+          console.log('Test success:', testResult);
+        } else {
+          console.error('Test failed:', testResponse.status, testResponse.statusText);
+          throw new Error(`Minimal API test failed: ${testResponse.status}`);
+        }
+      } catch (testError) {
+        console.error('Test error:', testError);
+        throw new Error('Minimal API routing is broken');
       }
       
-      console.log('API routing works, trying upload...');
-      
+      // Step 2: Test simple upload endpoint
+      console.log('Step 2: Testing simple upload endpoint...');
       const response = await fetch('/api/planner/upload-photo-simple', {
         method: 'POST',
         body: formData
       });
+      
+      console.log('Upload response status:', response.status);
 
       setUploadState(prev => ({ ...prev, progress: 60 }));
 
