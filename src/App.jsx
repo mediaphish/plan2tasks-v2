@@ -3978,7 +3978,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     isUploading: false,
     progress: 0,
     preview: null,
-    error: null
+    error: null,
+    base64Data: null
   });
 
   const handleSave = async () => {
@@ -4033,6 +4034,16 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     return { valid: true };
   };
 
+  // Helper function to read file as base64 immediately during user interaction
+  const readFileAsBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const compressImage = (file, maxWidth = 400, quality = 0.8) => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
@@ -4069,162 +4080,42 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     });
   };
 
-  const handlePhotoUpload = async (file) => {
-    console.log('handlePhotoUpload called with file:', file.name, file.size, file.type);
-    console.log('File object details:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-      isFile: file instanceof File,
-      constructor: file.constructor.name
-    });
+  const handlePhotoUpload = async (base64Data) => {
+    console.log('handlePhotoUpload called with base64 data, length:', base64Data?.length);
     
-    // Browser compatibility check
-    console.log('Browser info:', {
-      userAgent: navigator.userAgent,
-      hasFileReader: typeof FileReader !== 'undefined',
-      hasFile: typeof File !== 'undefined',
-      hasBlob: typeof Blob !== 'undefined'
-    });
-    
-    // Basic file validation
-    if (!file || !file.type.startsWith('image/')) {
-      setUploadState(prev => ({ ...prev, error: 'Please select a valid image file' }));
-      onToast("error", "Please select a valid image file");
+    // Basic validation
+    if (!base64Data || typeof base64Data !== 'string') {
+      setUploadState(prev => ({ ...prev, error: 'No image data available' }));
+      onToast("error", "No image data available");
       return;
     }
 
-    // Test if file is actually readable
-    try {
-      console.log('Testing file readability...');
-      const testReader = new FileReader();
-      testReader.onload = () => console.log('File is readable');
-      testReader.onerror = (e) => console.error('File is not readable:', e);
-      testReader.readAsDataURL(file.slice(0, 1)); // Try to read just 1 byte
-    } catch (e) {
-      console.error('File readability test failed:', e);
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadState(prev => ({ ...prev, error: 'Image must be smaller than 5MB' }));
-      onToast("error", "Image must be smaller than 5MB");
+    if (!base64Data.startsWith('data:image/')) {
+      setUploadState(prev => ({ ...prev, error: 'Invalid image data format' }));
+      onToast("error", "Invalid image data format");
       return;
     }
 
-    // Check for very small files that might be corrupted
-    if (file.size < 100) {
-      setUploadState(prev => ({ ...prev, error: 'File appears to be corrupted or empty' }));
-      onToast("error", "File appears to be corrupted or empty");
-      return;
-    }
+    console.log('Base64 data validation passed');
 
-    console.log('File size check passed:', file.size, 'bytes');
-
-    setUploadState({ isUploading: true, progress: 0, preview: null, error: null });
+    setUploadState({ isUploading: true, progress: 0, preview: null, error: null, base64Data });
 
     try {
-      // Create preview
-      const previewUrl = URL.createObjectURL(file);
-      setUploadState(prev => ({ ...prev, preview: previewUrl, progress: 20 }));
-      console.log('Preview created, progress: 20%');
+      // Create preview from base64 data
+      setUploadState(prev => ({ ...prev, preview: base64Data, progress: 20 }));
+      console.log('Preview created from base64 data, progress: 20%');
 
-      // Verify file is still valid before reading
-      console.log('File validation before read:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified
-      });
-
-      // Add small delay to ensure file is ready
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Try multiple approaches to read the file
-      let base64;
-      
-      try {
-        // Approach 1: Standard FileReader with timeout
-        console.log('Trying standard FileReader...');
-        const reader = new FileReader();
-        base64 = await new Promise((resolve, reject) => {
-          let timeoutId;
-          
-          reader.onload = (e) => {
-            console.log('FileReader onload triggered');
-            clearTimeout(timeoutId);
-            resolve(e.target.result);
-          };
-          reader.onerror = (e) => {
-            console.error('FileReader onerror triggered:', e);
-            console.error('Error details:', e.target.error);
-            clearTimeout(timeoutId);
-            reject(new Error(`File read failed: ${e.target.error?.message || 'Unknown error'}`));
-          };
-          reader.onabort = (e) => {
-            console.log('FileReader onabort triggered');
-            clearTimeout(timeoutId);
-            reject(new Error('File read aborted'));
-          };
-          
-          // Set timeout to prevent hanging
-          timeoutId = setTimeout(() => {
-            console.error('FileReader timeout after 10 seconds');
-            reader.abort();
-            reject(new Error('File read timeout'));
-          }, 10000);
-          
-          console.log('Starting FileReader.readAsDataURL...');
-          reader.readAsDataURL(file);
-        });
-      } catch (error) {
-        console.error('FileReader failed, trying alternative approach:', error);
-        
-        // Approach 2: Try with a fresh FileReader instance
-        try {
-          console.log('Trying fresh FileReader instance...');
-          const freshReader = new FileReader();
-          base64 = await new Promise((resolve, reject) => {
-            let timeoutId;
-            
-            freshReader.onload = (e) => {
-              clearTimeout(timeoutId);
-              resolve(e.target.result);
-            };
-            freshReader.onerror = (e) => {
-              clearTimeout(timeoutId);
-              reject(new Error('Fresh FileReader failed'));
-            };
-            freshReader.onabort = (e) => {
-              clearTimeout(timeoutId);
-              reject(new Error('Fresh FileReader aborted'));
-            };
-            
-            timeoutId = setTimeout(() => {
-              freshReader.abort();
-              reject(new Error('Fresh FileReader timeout'));
-            }, 10000);
-            
-            freshReader.readAsDataURL(file);
-          });
-        } catch (freshError) {
-          console.error('Fresh FileReader also failed:', freshError);
-          throw new Error(`All FileReader approaches failed. Original error: ${error.message}`);
-        }
-      }
-
-      console.log('Base64 conversion complete, length:', base64.length);
       setUploadState(prev => ({ ...prev, progress: 40 }));
 
-      console.log('Uploading photo:', { plannerEmail, fileName: file.name, size: file.size });
+      console.log('Uploading photo:', { plannerEmail, dataLength: base64Data.length });
 
       const response = await fetch('/api/planner/upload-photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plannerEmail,
-          imageData: base64,
-          fileName: file.name
+          imageData: base64Data,
+          fileName: 'uploaded-photo.jpg'
         })
       });
 
@@ -4262,7 +4153,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       }
     } catch (e) {
       console.error('Photo upload error:', e);
-      setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message });
+      setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message, base64Data: null });
       onToast("error", `Failed to upload photo: ${e.message}`);
     }
   };
@@ -4344,13 +4235,21 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   onDragLeave={(e) => {
                     e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
                   }}
-                  onDrop={(e) => {
+                  onDrop={async (e) => {
                     e.preventDefault();
                     e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
                     const files = e.dataTransfer.files;
                     if (files.length > 0) {
                       console.log('File dropped:', files[0].name);
-                      handlePhotoUpload(files[0]);
+                      try {
+                        // Read file immediately during user interaction
+                        const base64Data = await readFileAsBase64(files[0]);
+                        setUploadState(prev => ({ ...prev, base64Data }));
+                        handlePhotoUpload(base64Data);
+                      } catch (error) {
+                        console.error('File read failed:', error);
+                        setUploadState(prev => ({ ...prev, error: 'Failed to read file' }));
+                      }
                     }
                   }}
                 >
@@ -4373,12 +4272,20 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                     id="photo-upload"
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       console.log('File input onChange triggered');
                       const file = e.target.files[0];
                       if (file) {
                         console.log('File selected via input:', file.name);
-                        handlePhotoUpload(file);
+                        try {
+                          // Read file immediately during user interaction
+                          const base64Data = await readFileAsBase64(file);
+                          setUploadState(prev => ({ ...prev, base64Data }));
+                          handlePhotoUpload(base64Data);
+                        } catch (error) {
+                          console.error('File read failed:', error);
+                          setUploadState(prev => ({ ...prev, error: 'Failed to read file' }));
+                        }
                       }
                     }}
                     className="hidden"
