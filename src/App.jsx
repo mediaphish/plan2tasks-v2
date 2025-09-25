@@ -4077,27 +4077,20 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
       console.log('Uploading photo with FormData:', { plannerEmail, fileName: file.name, size: file.size });
 
-      // Test with simple endpoint first - try GET first
-      const response = await fetch('/api/test-upload');
+      // Try the real upload directly
+      console.log('Attempting direct upload to /api/planner/upload-photo-direct');
+      
+      const response = await fetch('/api/planner/upload-photo-direct', {
+        method: 'POST',
+        body: formData
+      });
 
       setUploadState(prev => ({ ...prev, progress: 60 }));
 
       const result = await response.json();
-      console.log('Test endpoint response:', result);
+      console.log('Upload response:', result);
 
-      if (response.ok && result.success) {
-        // Test endpoint worked, now try the real upload
-        console.log('Test endpoint successful, trying real upload...');
-        
-        const uploadResponse = await fetch('/api/planner/upload-photo-direct', {
-          method: 'POST',
-          body: formData
-        });
-
-        const uploadResult = await uploadResponse.json();
-        console.log('Real upload response:', uploadResult);
-
-        if (uploadResponse.ok && uploadResult.photoUrl) {
+      if (response.ok && result.photoUrl) {
           setUploadState(prev => ({ ...prev, progress: 80 }));
           
           // Update profile with new photo URL
@@ -4107,7 +4100,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
             body: JSON.stringify({
               plannerEmail,
               ...profile,
-              profile_photo_url: uploadResult.photoUrl
+              profile_photo_url: result.photoUrl
             })
           });
 
@@ -4120,13 +4113,9 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
           } else {
             throw new Error('Failed to update profile');
           }
-        } else {
-          console.error('Real upload failed:', uploadResult);
-          throw new Error(uploadResult.error || 'Real upload failed');
-        }
       } else {
-        console.error('Test endpoint failed:', result);
-        throw new Error('Test endpoint failed');
+        console.error('Upload failed:', result);
+        throw new Error(result.error || 'Upload failed');
       }
     } catch (e) {
       console.error('Photo upload error:', e);
