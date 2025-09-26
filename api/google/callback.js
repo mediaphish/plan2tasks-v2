@@ -103,6 +103,7 @@ export default async function handler(req, res) {
 
     // Redirect to the main app instead of returning JSON
     const redirectUrl = `https://www.plan2tasks.com/?view=users&user=${encodeURIComponent(userEmail)}`;
+    console.log('OAuth callback success, redirecting to:', redirectUrl);
     return res.redirect(302, redirectUrl);
   } catch (e) {
     console.error("GET /api/google/callback error", e);
