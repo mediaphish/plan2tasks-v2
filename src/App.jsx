@@ -4044,99 +4044,6 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
     });
   };
 
-  const handlePhotoUploadDirect = async (file) => {
-    console.log('handlePhotoUploadDirect called with file:', file.name, file.size, file.type);
-    
-    // Basic validation
-    if (!file || !file.type.startsWith('image/')) {
-      setUploadState(prev => ({ ...prev, error: 'Invalid file type' }));
-      onToast("error", "Please select a valid image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadState(prev => ({ ...prev, error: 'File too large' }));
-      onToast("error", "Image must be smaller than 5MB");
-      return;
-    }
-
-    console.log('File validation passed');
-
-    setUploadState({ isUploading: true, progress: 0, preview: null, error: null, file });
-
-    try {
-      setUploadState(prev => ({ ...prev, progress: 20 }));
-      console.log('Starting direct upload, progress: 20%');
-
-      setUploadState(prev => ({ ...prev, progress: 40 }));
-
-      // Check for basic JavaScript errors
-      console.log('Checking for JavaScript errors...');
-      console.log('Window location:', window.location.href);
-      console.log('Document ready state:', document.readyState);
-      console.log('Navigator online:', navigator.onLine);
-      console.log('User agent:', navigator.userAgent);
-      
-      // Test with a simple console.log to see if we can even reach this point
-      console.log('Reached upload function - JavaScript is working');
-      
-      // Test with a simple alert to see if we can interact with the browser
-      // alert('Testing browser interaction');
-      
-      console.log('All basic checks passed, proceeding with upload...');
-
-      // Upload file directly with FormData
-      console.log('Uploading file with FormData...');
-      const formData = new FormData();
-      formData.append('plannerEmail', plannerEmail);
-      formData.append('file', file);
-      
-      const response = await fetch('/api/planner/upload-photo', {
-        method: 'POST',
-        body: formData
-      });
-      
-      console.log('Upload response status:', response.status);
-
-      setUploadState(prev => ({ ...prev, progress: 60 }));
-
-      const result = await response.json();
-      console.log('Upload response:', result);
-
-      if (response.ok && result.photoUrl) {
-          setUploadState(prev => ({ ...prev, progress: 80 }));
-          
-          // Update profile with new photo URL
-          const profileResponse = await fetch('/api/planner/profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              plannerEmail,
-              ...profile,
-              profile_photo_url: result.photoUrl
-            })
-          });
-
-          if (profileResponse.ok) {
-            setUploadState(prev => ({ ...prev, progress: 100 }));
-            onToast("ok", "Profile photo updated successfully");
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
-          } else {
-            throw new Error('Failed to update profile');
-          }
-      } else {
-        console.error('Upload failed:', result);
-        throw new Error(result.error || result.message || 'Upload failed');
-      }
-    } catch (e) {
-      console.error('Photo upload error:', e);
-      const errorMessage = e.message || e.toString() || 'Unknown error';
-      setUploadState({ isUploading: false, progress: 0, preview: null, error: errorMessage, file: null });
-      onToast("error", `Failed to upload photo: ${errorMessage}`);
-    }
-  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -4229,7 +4136,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                           preview: URL.createObjectURL(files[0]),
                           file: files[0]
                         }));
-                        handlePhotoUploadDirect(files[0]);
+                        // Upload functionality removed
                       } catch (error) {
                         console.error('File validation failed:', error);
                         setUploadState(prev => ({ ...prev, error: error.message || 'Invalid file' }));
@@ -4269,7 +4176,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                             preview: URL.createObjectURL(file),
                             file: file
                           }));
-                          handlePhotoUploadDirect(file);
+                          // Upload functionality removed
                         } catch (error) {
                           console.error('File validation failed:', error);
                           setUploadState(prev => ({ ...prev, error: error.message || 'Invalid file' }));
