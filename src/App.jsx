@@ -477,7 +477,7 @@ function updateQueryUser(userEmail){
     } else {
       url.searchParams.delete("user");
     }
-    url.searchParams.set("view", "plan");
+    // Don't automatically change the view - let the calling code decide
     window.history.replaceState({}, "", url.toString());
   }catch{/* noop */}
 }
