@@ -143,29 +143,10 @@ function MainApp(){
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
-  // Clean up OAuth URLs from browser history on page load
+  // Add clean URLs to browser history to prevent OAuth URLs from being accessible via back button
   useEffect(() => {
-    // Check if we're on an OAuth URL and redirect immediately
-    if (window.location.href.includes('accounts.google.com') || 
-        window.location.href.includes('oauth2') ||
-        window.location.href.includes('google.com')) {
-      window.history.replaceState(null, '', 'https://www.plan2tasks.com/?view=users');
-      window.location.href = 'https://www.plan2tasks.com/?view=users';
-      return;
-    }
-    
-    // Clean up any OAuth parameters from the current URL
-    const url = new URL(window.location.href);
-    const hasOAuthParams = url.searchParams.has('state') || url.searchParams.has('code') || 
-                         url.searchParams.has('scope') || url.searchParams.has('authuser');
-    if (hasOAuthParams) {
-      url.searchParams.delete('state');
-      url.searchParams.delete('code');
-      url.searchParams.delete('scope');
-      url.searchParams.delete('authuser');
-      url.searchParams.delete('prompt');
-      window.history.replaceState(null, '', url.toString());
-    }
+    // Add a clean URL to the history stack
+    window.history.pushState(null, '', 'https://www.plan2tasks.com/?view=users');
   }, []);
 
   // Load prefs, but do NOT override URL-driven view
@@ -1029,27 +1010,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           </select>
         </div>
         
-        {/* User Selection Guidance */}
-        {!selectedUserEmail && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">!</div>
-              <div className="text-sm font-medium text-blue-900">Select a User First</div>
-            </div>
-            <p className="text-sm text-blue-700 ml-7">Choose a user from the dropdown above to create a plan for them.</p>
-          </div>
-        )}
-        
-        {/* Plan Creation Guidance */}
-        {selectedUserEmail && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">✓</div>
-              <div className="text-sm font-medium text-green-900">Ready to Create Plan</div>
-            </div>
-            <p className="text-sm text-green-700 ml-7">Creating plan for: <strong>{selectedUserEmail}</strong></p>
-          </div>
-        )}
       </div>
 
       {/* Plan Tab Content */}
