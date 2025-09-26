@@ -143,6 +143,20 @@ function MainApp(){
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
+  // Clean up OAuth parameters on app initialization
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const hasOAuthParams = url.searchParams.has("state") || url.searchParams.has("code") || 
+                           url.searchParams.has("scope") || url.searchParams.has("authuser");
+      if (hasOAuthParams) {
+        // Redirect to main app if OAuth parameters are present
+        window.location.href = 'https://www.plan2tasks.com/?view=users';
+        return;
+      }
+    } catch {/* noop */}
+  }, []);
+
   // Load prefs, but do NOT override URL-driven view
   useEffect(()=>{ (async ()=>{
     try{
