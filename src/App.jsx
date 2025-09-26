@@ -143,7 +143,7 @@ function MainApp(){
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
-  // Remove OAuth URLs from browser history
+  // Clean up OAuth URLs from browser history on app load
   useEffect(() => {
     // Check if current URL contains OAuth parameters
     const url = new URL(window.location.href);
@@ -157,6 +157,31 @@ function MainApp(){
       // Replace the OAuth URL with a clean URL
       window.history.replaceState(null, '', 'https://www.plan2tasks.com/?view=users');
     }
+    
+    // Clean up any OAuth URLs in the browser history stack
+    // This prevents back button from navigating to OAuth URLs
+    const cleanHistory = () => {
+      const currentUrl = window.location.href;
+      if (currentUrl.includes('accounts.google.com') || 
+          currentUrl.includes('oauth2') ||
+          currentUrl.includes('api/google/callback')) {
+        window.history.replaceState(null, '', 'https://www.plan2tasks.com/?view=users');
+      }
+    };
+    
+    // Clean up immediately
+    cleanHistory();
+    
+    // Listen for navigation events to clean up OAuth URLs
+    const handlePopState = (event) => {
+      cleanHistory();
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, []);
 
   // Load prefs, but do NOT override URL-driven view
