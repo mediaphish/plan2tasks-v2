@@ -4140,12 +4140,13 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
           }
       } else {
         console.error('Upload failed:', result);
-        throw new Error(result.error || 'Upload failed');
+        throw new Error(result.error || result.message || 'Upload failed');
       }
     } catch (e) {
       console.error('Photo upload error:', e);
-      setUploadState({ isUploading: false, progress: 0, preview: null, error: e.message, file: null });
-      onToast("error", `Failed to upload photo: ${e.message}`);
+      const errorMessage = e.message || e.toString() || 'Unknown error';
+      setUploadState({ isUploading: false, progress: 0, preview: null, error: errorMessage, file: null });
+      onToast("error", `Failed to upload photo: ${errorMessage}`);
     }
   };
 
