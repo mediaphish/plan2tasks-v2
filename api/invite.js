@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.4">
         <h2>Connect your Google Tasks to Plan2Tasks</h2>
         <p>${plannerEmail} wants to send tasks to your Google Tasks list.</p>
-        <p><a href="${inviteLink}" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none">Authorize Planner</a></p>
+        <p><a href="${inviteLink}" target="_blank" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none">Authorize Planner</a></p>
         <p>If the button doesn’t work, copy and paste this URL:</p>
         <p style="font-size:12px;color:#555">${inviteLink}</p>
       </div>
