@@ -4085,30 +4085,15 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       
       console.log('All basic checks passed, proceeding with upload...');
 
-      // Convert file to base64 for JSON upload
-      console.log('Converting file to base64 for upload...');
-      const reader = new FileReader();
-      const base64Promise = new Promise((resolve, reject) => {
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = (error) => {
-          console.error('FileReader error:', error);
-          reject(new Error(`Failed to read file: ${error.type || 'Unknown error'}`));
-        };
-      });
-      reader.readAsDataURL(file);
-      const base64Data = await base64Promise;
+      // Use FormData for direct file upload (no FileReader needed)
+      console.log('Uploading file directly with FormData...');
+      const formData = new FormData();
+      formData.append('plannerEmail', plannerEmail);
+      formData.append('file', file);
       
-      console.log('Uploading with base64 data...');
       const response = await fetch('/api/planner/upload-photo', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          plannerEmail: plannerEmail,
-          imageData: base64Data,
-          fileName: file.name
-        })
+        body: formData
       });
       
       console.log('Upload response status:', response.status);
