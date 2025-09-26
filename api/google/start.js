@@ -1,38 +1,8 @@
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
-
 export default async function handler(req, res) {
-  const { userEmail, invite } = req.query;
-  let finalUserEmail = userEmail;
-
-  // If invite is provided, get userEmail from invite
-  if (invite && !userEmail) {
-    try {
-      const { data: inviteData, error: inviteError } = await supabaseAdmin
-        .from("invites")
-        .select("user_email")
-        .eq("id", invite)
-        .single();
-      
-      if (inviteError || !inviteData) {
-        return res.status(400).json({ 
-          ok: false, 
-          error: "start_failed", 
-          detail: "Invalid invite" 
-        });
-      }
-      
-      finalUserEmail = inviteData.user_email;
-    } catch (error) {
-      return res.status(400).json({ 
-        ok: false, 
-        error: "start_failed", 
-        detail: "Invalid invite" 
-      });
-    }
-  }
+  const { userEmail } = req.query;
 
   // Validate userEmail parameter
-  if (!finalUserEmail) {
+  if (!userEmail) {
     return res.status(400).json({ 
       ok: false, 
       error: "start_failed", 
@@ -42,7 +12,7 @@ export default async function handler(req, res) {
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(finalUserEmail)) {
+  if (!emailRegex.test(userEmail)) {
     return res.status(400).json({ 
       ok: false, 
       error: "start_failed", 
@@ -52,7 +22,7 @@ export default async function handler(req, res) {
 
   try {
     // Build state as base64url-encoded JSON
-    const state = Buffer.from(JSON.stringify({ userEmail: finalUserEmail })).toString('base64url');
+    const state = Buffer.from(JSON.stringify({ userEmail })).toString('base64url');
 
     // Google OAuth configuration
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -84,8 +54,32 @@ export default async function handler(req, res) {
     authUrl.searchParams.set('include_granted_scopes', 'true');
     authUrl.searchParams.set('prompt', 'consent');
 
-    // Redirect to Google OAuth
-    res.redirect(302, authUrl.toString());
+    // Return HTML that opens OAuth in new window
+    res.setHeader('Content-Type', 'text/html');
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Authorizing...</title>
+        </head>
+        <body>
+          <script>
+            // Open OAuth in new window
+            const oauthWindow = window.open('${authUrl.toString()}', '_blank', 'width=500,height=600');
+            
+            // Listen for the OAuth window to close
+            const checkClosed = setInterval(() => {
+              if (oauthWindow.closed) {
+                clearInterval(checkClosed);
+                // Redirect to main app
+                window.location.href = 'https://www.plan2tasks.com/?view=users';
+              }
+            }, 1000);
+          </script>
+          <p>Opening authorization window...</p>
+        </body>
+      </html>
+    `);
 
   } catch (error) {
     console.error('Google OAuth start error:', error);
@@ -96,4 +90,3 @@ export default async function handler(req, res) {
     });
   }
 }
-
