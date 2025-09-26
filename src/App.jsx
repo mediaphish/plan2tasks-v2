@@ -4090,7 +4090,10 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       const reader = new FileReader();
       const base64Promise = new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
+        reader.onerror = (error) => {
+          console.error('FileReader error:', error);
+          reject(new Error(`Failed to read file: ${error.type || 'Unknown error'}`));
+        };
       });
       reader.readAsDataURL(file);
       const base64Data = await base64Promise;
