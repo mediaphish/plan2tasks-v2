@@ -506,7 +506,16 @@ function updateQueryView(next){
   try{
     const url = new URL(window.location.href);
     url.searchParams.set("view", next);
-    window.history.replaceState({}, "", url.toString());
+    
+    // Clean up OAuth parameters that might be in the URL
+    url.searchParams.delete("code");
+    url.searchParams.delete("state");
+    url.searchParams.delete("scope");
+    url.searchParams.delete("authuser");
+    url.searchParams.delete("prompt");
+    
+    // Use pushState to add new history entry instead of replaceState
+    window.history.pushState({}, "", url.toString());
   }catch{/* noop */}
 }
 
@@ -519,7 +528,16 @@ function updateQueryUser(userEmail){
       url.searchParams.delete("user");
     }
     url.searchParams.set("view", "plan");
-    window.history.replaceState({}, "", url.toString());
+    
+    // Clean up OAuth parameters that might be in the URL
+    url.searchParams.delete("code");
+    url.searchParams.delete("state");
+    url.searchParams.delete("scope");
+    url.searchParams.delete("authuser");
+    url.searchParams.delete("prompt");
+    
+    // Use pushState to add new history entry instead of replaceState
+    window.history.pushState({}, "", url.toString());
   }catch{/* noop */}
 }
 
