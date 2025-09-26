@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -301,9 +301,8 @@ function MainApp(){
                onClick={()=>setProfileOpen(!profileOpen)}
                className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
              >
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                <User className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Profile</span>
+              <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                <SettingsIcon className="h-4 w-4 text-gray-600" />
               </div>
              </button>
               
@@ -324,15 +323,29 @@ function MainApp(){
                    <div className="py-1">
                      <button 
                        onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(true);}}
-                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
                      >
-                       Edit Profile
+                       <User className="h-4 w-4" />
+                       Profile
                      </button>
                      <button 
                        onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
-                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
                      >
+                       <SettingsIcon className="h-4 w-4" />
                        Settings
+                     </button>
+                     <div className="border-t border-gray-100 my-1"></div>
+                     <button 
+                       onClick={()=>{
+                         setProfileOpen(false);
+                         // Add logout functionality here
+                         console.log('Logout clicked');
+                       }}
+                       className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-md flex items-center gap-2"
+                     >
+                       <LogOut className="h-4 w-4" />
+                       Logout
                      </button>
                    </div>
                   </div>
