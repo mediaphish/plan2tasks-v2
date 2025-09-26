@@ -872,9 +872,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   useEffect(()=>{ 
     setTasks([]); 
     setMsg(""); 
-    // Show user-first flow when no user is selected
-    setShowUserFirstFlow(!selectedUserEmail);
-  },[selectedUserEmail]);
+    // Show user-first flow when no user is selected AND we're in plan tab
+    setShowUserFirstFlow(!selectedUserEmail && activeTab === "plan");
+  },[selectedUserEmail, activeTab]);
 
   async function loadNewBundleCount(){
     if (!selectedUserEmail) { setNewBundleCount(0); return; }
