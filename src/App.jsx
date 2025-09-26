@@ -143,12 +143,28 @@ function MainApp(){
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
-  // Redirect if loaded with OAuth URLs
+  // Clean up OAuth URLs from browser history on page load
   useEffect(() => {
+    // Check if we're on an OAuth URL and redirect immediately
     if (window.location.href.includes('accounts.google.com') || 
         window.location.href.includes('oauth2') ||
         window.location.href.includes('google.com')) {
+      window.history.replaceState(null, '', 'https://www.plan2tasks.com/?view=users');
       window.location.href = 'https://www.plan2tasks.com/?view=users';
+      return;
+    }
+    
+    // Clean up any OAuth parameters from the current URL
+    const url = new URL(window.location.href);
+    const hasOAuthParams = url.searchParams.has('state') || url.searchParams.has('code') || 
+                         url.searchParams.has('scope') || url.searchParams.has('authuser');
+    if (hasOAuthParams) {
+      url.searchParams.delete('state');
+      url.searchParams.delete('code');
+      url.searchParams.delete('scope');
+      url.searchParams.delete('authuser');
+      url.searchParams.delete('prompt');
+      window.history.replaceState(null, '', url.toString());
     }
   }, []);
 
