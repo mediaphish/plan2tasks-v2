@@ -68,6 +68,7 @@ async function handleSuggestionsMode(req, res, openaiApiKey, userEmail, userProm
 User: ${userEmail}
 Current Task: ${userPrompt}
 User Notes: ${userNotes || 'No specific notes available'}
+${userNotes ? 'IMPORTANT: Use these user notes to provide personalized suggestions that match this user\'s specific needs and preferences.' : ''}
 
 Provide 3-5 specific, actionable suggestions to improve this task. Focus on:
 - Better task structure
@@ -119,6 +120,7 @@ async function handleConversationalMode(req, res, openaiApiKey, userEmail, userP
 
 User being planned for: ${userEmail}
 User Notes: ${userNotes || 'No specific notes available'}
+${userNotes ? 'IMPORTANT: Use these user notes to provide personalized insights and recommendations that match this user\'s specific needs and preferences.' : ''}
 
 You should:
 - Be conversational and helpful
@@ -197,9 +199,10 @@ async function handlePlanGenerationMode(req, res, openaiApiKey, userEmail, plann
   // Build context for AI
   const context = [];
   
-  // Add user notes if available
+  // Add user notes if available - enhanced context
   if (userNotes && userNotes.trim()) {
     context.push(`User Notes: ${userNotes.trim()}`);
+    context.push(`IMPORTANT: Use these user notes to personalize the plan and make it more relevant to this specific user's needs, preferences, and situation.`);
   }
   
   // Add plan context
