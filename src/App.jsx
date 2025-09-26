@@ -4085,8 +4085,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
       
       console.log('All basic checks passed, proceeding with upload...');
 
-      // Use FormData for direct file upload (no FileReader needed)
-      console.log('Uploading file directly with FormData...');
+      // Upload file directly with FormData
+      console.log('Uploading file with FormData...');
       const formData = new FormData();
       formData.append('plannerEmail', plannerEmail);
       formData.append('file', file);
