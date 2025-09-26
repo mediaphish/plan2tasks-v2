@@ -301,17 +301,10 @@ function MainApp(){
                onClick={()=>setProfileOpen(!profileOpen)}
                className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
              >
-               {plannerProfile?.profile_photo_url ? (
-                 <img 
-                   src={plannerProfile.profile_photo_url} 
-                   alt="Profile" 
-                   className="h-8 w-8 rounded-full object-cover"
-                 />
-               ) : (
-                 <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                   <User className="h-5 w-5 text-gray-500" />
-                 </div>
-               )}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                <User className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">Profile</span>
+              </div>
              </button>
               
               {profileOpen && (
