@@ -1,8 +1,38 @@
+import { supabaseAdmin } from "../../lib/supabase-admin.js";
+
 export default async function handler(req, res) {
-  const { userEmail } = req.query;
+  const { userEmail, invite } = req.query;
+  let finalUserEmail = userEmail;
+
+  // If invite is provided, get userEmail from invite
+  if (invite && !userEmail) {
+    try {
+      const { data: inviteData, error: inviteError } = await supabaseAdmin
+        .from("invites")
+        .select("user_email")
+        .eq("id", invite)
+        .single();
+      
+      if (inviteError || !inviteData) {
+        return res.status(400).json({ 
+          ok: false, 
+          error: "start_failed", 
+          detail: "Invalid invite" 
+        });
+      }
+      
+      finalUserEmail = inviteData.user_email;
+    } catch (error) {
+      return res.status(400).json({ 
+        ok: false, 
+        error: "start_failed", 
+        detail: "Invalid invite" 
+      });
+    }
+  }
 
   // Validate userEmail parameter
-  if (!userEmail) {
+  if (!finalUserEmail) {
     return res.status(400).json({ 
       ok: false, 
       error: "start_failed", 
@@ -12,7 +42,7 @@ export default async function handler(req, res) {
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(userEmail)) {
+  if (!emailRegex.test(finalUserEmail)) {
     return res.status(400).json({ 
       ok: false, 
       error: "start_failed", 
@@ -22,7 +52,7 @@ export default async function handler(req, res) {
 
   try {
     // Build state as base64url-encoded JSON
-    const state = Buffer.from(JSON.stringify({ userEmail })).toString('base64url');
+    const state = Buffer.from(JSON.stringify({ userEmail: finalUserEmail })).toString('base64url');
 
     // Google OAuth configuration
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -66,3 +96,4 @@ export default async function handler(req, res) {
     });
   }
 }
+
