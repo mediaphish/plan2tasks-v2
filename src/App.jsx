@@ -138,24 +138,6 @@ function MainApp(){
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
   const [toasts,setToasts]=useState([]);
-
-  // Clean up OAuth parameters on app initialization
-  useEffect(() => {
-    try {
-      const url = new URL(window.location.href);
-      const hasOAuthParams = url.searchParams.has("state") || url.searchParams.has("code") || 
-                           url.searchParams.has("scope") || url.searchParams.has("authuser");
-      if (hasOAuthParams) {
-        // Clean up OAuth parameters
-        url.searchParams.delete("state");
-        url.searchParams.delete("code");
-        url.searchParams.delete("scope");
-        url.searchParams.delete("authuser");
-        url.searchParams.delete("prompt");
-        window.history.replaceState({}, "", url.toString());
-      }
-    } catch {/* noop */}
-  }, []);
   const [profileOpen,setProfileOpen]=useState(false);
   const [plannerProfile,setPlannerProfile]=useState(null);
   const [profileEditMode,setProfileEditMode]=useState(false);
@@ -482,12 +464,6 @@ function MainApp(){
 function updateQueryView(next){
   try{
     const url = new URL(window.location.href);
-    // Clean up OAuth parameters that might be in the URL
-    url.searchParams.delete("state");
-    url.searchParams.delete("code");
-    url.searchParams.delete("scope");
-    url.searchParams.delete("authuser");
-    url.searchParams.delete("prompt");
     url.searchParams.set("view", next);
     window.history.replaceState({}, "", url.toString());
   }catch{/* noop */}
@@ -496,18 +472,12 @@ function updateQueryView(next){
 function updateQueryUser(userEmail){
   try{
     const url = new URL(window.location.href);
-    // Clean up OAuth parameters that might be in the URL
-    url.searchParams.delete("state");
-    url.searchParams.delete("code");
-    url.searchParams.delete("scope");
-    url.searchParams.delete("authuser");
-    url.searchParams.delete("prompt");
     if (userEmail) {
       url.searchParams.set("user", userEmail);
     } else {
       url.searchParams.delete("user");
     }
-    // Don't automatically change the view - let the calling code decide
+    url.searchParams.set("view", "plan");
     window.history.replaceState({}, "", url.toString());
   }catch{/* noop */}
 }
@@ -893,8 +863,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       const fallback = arr[0]?.email || "";
       const newUser = fromUrl || fromProp || connected || fallback || "";
       setSelectedUserEmail(newUser);
-      // Only call onUserChange if we have a valid user and we're not just loading
-      if (newUser && !urlUser && newUser !== "") {
+      if (newUser && !urlUser) {
         onUserChange?.(newUser);
       }
     }
@@ -904,7 +873,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     setTasks([]); 
     setMsg(""); 
     // Show user-first flow when no user is selected AND we're in plan tab
-    // Only show if we're actually in the plan view (not just plan tab)
     setShowUserFirstFlow(!selectedUserEmail && activeTab === "plan");
   },[selectedUserEmail, activeTab]);
 
