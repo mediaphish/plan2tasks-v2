@@ -143,22 +143,6 @@ function MainApp(){
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
-  // Clean up OAuth parameters on app initialization
-  useEffect(() => {
-    try {
-      const url = new URL(window.location.href);
-      const hasOAuthParams = url.searchParams.has("state") || url.searchParams.has("code") || 
-                           url.searchParams.has("scope") || url.searchParams.has("authuser");
-      const isGoogleOAuth = window.location.href.includes('accounts.google.com');
-      
-      if (hasOAuthParams || isGoogleOAuth) {
-        // Redirect to main app if OAuth parameters or Google OAuth URL is present
-        window.location.href = 'https://www.plan2tasks.com/?view=users';
-        return;
-      }
-    } catch {/* noop */}
-  }, []);
-
   // Load prefs, but do NOT override URL-driven view
   useEffect(()=>{ (async ()=>{
     try{
@@ -857,7 +841,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
-  const [showUserFirstFlow,setShowUserFirstFlow]=useState(false);
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -885,12 +868,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     }
   })(); },[plannerEmail]);
 
-  useEffect(()=>{ 
-    setTasks([]); 
-    setMsg(""); 
-    // Show user-first flow when no user is selected AND we're in plan tab
-    setShowUserFirstFlow(!selectedUserEmail && activeTab === "plan");
-  },[selectedUserEmail, activeTab]);
+  useEffect(()=>{ setTasks([]); setMsg(""); },[selectedUserEmail]);
 
   async function loadNewBundleCount(){
     if (!selectedUserEmail) { setNewBundleCount(0); return; }
@@ -956,63 +934,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
   return (
     <div>
-      {/* User-First Plan Creation Flow */}
-      {showUserFirstFlow && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Create a Plan</h1>
-            <p className="text-gray-600">Start by selecting the user for this plan</p>
-          </div>
-          
-          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
-                <div className="text-lg font-semibold text-gray-900">Select User</div>
-              </div>
-              <p className="text-sm text-gray-600 ml-10">Choose the user who will receive this plan</p>
-            </div>
-
-            <div className="ml-10">
-              <label className="block mb-2">
-                <div className="text-sm font-medium text-gray-700 mb-1">User</div>
-                <select 
-                  value={selectedUserEmail || ""} 
-                  onChange={(e) => {
-                    const newUser = e.target.value;
-                    setSelectedUserEmail(newUser);
-                    onUserChange?.(newUser);
-                    if (newUser) {
-                      setShowUserFirstFlow(false);
-                    }
-                  }}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                >
-                  <option value="">— Choose user —</option>
-                  {users.map(u => (
-                    <option key={u.email} value={u.email} title={u.email}>
-                      {u.email}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              
-              {selectedUserEmail && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <div className="font-medium text-blue-900">Selected: {selectedUserEmail}</div>
-                      <div className="text-sm text-blue-700">Ready to create plan for this user</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Folder Tabs Navigation - Floating on Gray Background */}
       <div className="flex items-center justify-between px-4">
         <div className="flex">
