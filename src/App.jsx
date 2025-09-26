@@ -863,7 +863,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       const fallback = arr[0]?.email || "";
       const newUser = fromUrl || fromProp || connected || fallback || "";
       setSelectedUserEmail(newUser);
-      if (newUser && !urlUser) {
+      // Only call onUserChange if we have a valid user and we're not just loading
+      if (newUser && !urlUser && newUser !== "") {
         onUserChange?.(newUser);
       }
     }
@@ -873,6 +874,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     setTasks([]); 
     setMsg(""); 
     // Show user-first flow when no user is selected AND we're in plan tab
+    // Only show if we're actually in the plan view (not just plan tab)
     setShowUserFirstFlow(!selectedUserEmail && activeTab === "plan");
   },[selectedUserEmail, activeTab]);
 
