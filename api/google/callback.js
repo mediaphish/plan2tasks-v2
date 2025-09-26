@@ -92,8 +92,29 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok: false, error: "Database error (upsert)" });
     }
 
-    // Redirect to main app instead of returning JSON
-    return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
+    // Return HTML that closes popup and redirects parent
+    res.setHeader('Content-Type', 'text/html');
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Authorization Complete</title>
+        </head>
+        <body>
+          <script>
+            // Close the popup window and redirect parent
+            if (window.opener) {
+              window.opener.location.href = 'https://www.plan2tasks.com/?view=users';
+              window.close();
+            } else {
+              // If not in popup, redirect directly
+              window.location.href = 'https://www.plan2tasks.com/?view=users';
+            }
+          </script>
+          <p>Authorization complete. Closing window...</p>
+        </body>
+      </html>
+    `);
   } catch (e) {
     console.error("GET /api/google/callback error", e);
     return res.status(500).json({ ok: false, error: "Server error" });
