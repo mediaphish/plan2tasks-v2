@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok: false, error: "Missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET" });
     }
 
-    const redirectUri = `https://${req.headers.host}/api/google/callback`; // <â€” locked path
+    const redirectUri = `https://${req.headers.host}/api/google/callback`; // <— locked path
 
     const form = new URLSearchParams({
       code,
