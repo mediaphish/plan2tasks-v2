@@ -143,10 +143,15 @@ function MainApp(){
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
-  // Add clean URLs to browser history to prevent OAuth URLs from being accessible via back button
+  // Clean up browser history to remove OAuth URLs
   useEffect(() => {
-    // Add a clean URL to the history stack
-    window.history.pushState(null, '', 'https://www.plan2tasks.com/?view=users');
+    // Replace current history entry with clean URL
+    window.history.replaceState(null, '', 'https://www.plan2tasks.com/?view=users');
+    
+    // Add multiple clean entries to push OAuth URLs out of reach
+    for (let i = 0; i < 5; i++) {
+      window.history.pushState(null, '', 'https://www.plan2tasks.com/?view=users');
+    }
   }, []);
 
   // Load prefs, but do NOT override URL-driven view
