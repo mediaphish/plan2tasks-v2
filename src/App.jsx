@@ -149,8 +149,10 @@ function MainApp(){
       const url = new URL(window.location.href);
       const hasOAuthParams = url.searchParams.has("state") || url.searchParams.has("code") || 
                            url.searchParams.has("scope") || url.searchParams.has("authuser");
-      if (hasOAuthParams) {
-        // Redirect to main app if OAuth parameters are present
+      const isGoogleOAuth = window.location.href.includes('accounts.google.com');
+      
+      if (hasOAuthParams || isGoogleOAuth) {
+        // Redirect to main app if OAuth parameters or Google OAuth URL is present
         window.location.href = 'https://www.plan2tasks.com/?view=users';
         return;
       }
