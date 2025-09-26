@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok: false, error: "Missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET" });
     }
 
-    const redirectUri = `https://${req.headers.host}/api/google/callback`; // <— locked path
+    const redirectUri = `https://${req.headers.host}/api/google/callback`; // <â€” locked path
 
     const form = new URLSearchParams({
       code,
@@ -92,12 +92,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok: false, error: "Database error (upsert)" });
     }
 
-    return res.status(200).json({
-      ok: true,
-      userEmail,
-      google_expires_at: expiresAtIso,
-      scopes: scope.split(" ")
-    });
+    // Redirect to the main app instead of returning JSON
+    const redirectUrl = `https://www.plan2tasks.com/?view=users&user=${encodeURIComponent(userEmail)}`;
+    return res.redirect(302, redirectUrl);
   } catch (e) {
     console.error("GET /api/google/callback error", e);
     return res.status(500).json({ ok: false, error: "Server error" });
