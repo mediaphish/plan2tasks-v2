@@ -143,14 +143,13 @@ function MainApp(){
   const [profileEditMode,setProfileEditMode]=useState(false);
   const profileRef = useRef(null);
 
-  // Clean up browser history to remove OAuth URLs
+  // Detect and redirect OAuth URLs immediately
   useEffect(() => {
-    // Replace current history entry with clean URL
-    window.history.replaceState(null, '', 'https://www.plan2tasks.com/?view=users');
-    
-    // Add multiple clean entries to push OAuth URLs out of reach
-    for (let i = 0; i < 5; i++) {
-      window.history.pushState(null, '', 'https://www.plan2tasks.com/?view=users');
+    if (window.location.href.includes('accounts.google.com') || 
+        window.location.href.includes('oauth2') ||
+        window.location.href.includes('google.com') ||
+        window.location.href.includes('api/google/callback')) {
+      window.location.replace('https://www.plan2tasks.com/?view=users');
     }
   }, []);
 
