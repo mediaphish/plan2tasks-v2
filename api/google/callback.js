@@ -15,22 +15,32 @@ export default async function handler(req, res) {
     const state = url.searchParams.get("state");
     const err = url.searchParams.get("error");
 
-    if (err) return res.status(400).json({ ok: false, error: err });
-    if (!code) return res.status(400).json({ ok: false, error: "Missing code" });
+    if (err) {
+      // Redirect to main app on OAuth error
+      return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
+    }
+    if (!code) {
+      // Redirect to main app on missing code
+      return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
+    }
 
     let userEmail = null;
     try {
       userEmail = JSON.parse(Buffer.from(String(state || ""), "base64url").toString("utf8"))?.userEmail || null;
     } catch {}
-    if (!userEmail) return res.status(400).json({ ok: false, error: "Missing userEmail in state" });
+    if (!userEmail) {
+      // Redirect to main app on missing userEmail
+      return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
+    }
 
     const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
     const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      return res.status(500).json({ ok: false, error: "Missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET" });
+      // Redirect to main app on missing credentials
+      return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
     }
 
-    const redirectUri = `https://${req.headers.host}/api/google/callback`; // <â€” locked path
+    const redirectUri = `https://${req.headers.host}/api/google/callback`; // <— locked path
 
     const form = new URLSearchParams({
       code,
@@ -47,11 +57,8 @@ export default async function handler(req, res) {
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) {
-      return res.status(400).json({
-        ok: false,
-        error: j?.error || `http_${r.status}`,
-        error_description: j?.error_description || null
-      });
+      // Redirect to main app on token exchange failure
+      return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
     }
 
     const accessToken  = j.access_token || null;
@@ -63,7 +70,8 @@ export default async function handler(req, res) {
     const expiresAtIso = new Date(expUnix * 1000).toISOString();
 
     if (!scope.includes("https://www.googleapis.com/auth/tasks")) {
-      return res.status(400).json({ ok: false, error: "missing_tasks_scope", detail: scope });
+      // Redirect to main app on missing tasks scope
+      return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
     }
 
     const { data: existing } = await supabaseAdmin
@@ -89,7 +97,8 @@ export default async function handler(req, res) {
       .upsert(upsertRow, { onConflict: "user_email" });
 
     if (upErr) {
-      return res.status(500).json({ ok: false, error: "Database error (upsert)" });
+      // Redirect to main app on database error
+      return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
     }
 
     // Redirect to the main app instead of returning JSON
@@ -97,6 +106,7 @@ export default async function handler(req, res) {
     return res.redirect(302, redirectUrl);
   } catch (e) {
     console.error("GET /api/google/callback error", e);
-    return res.status(500).json({ ok: false, error: "Server error" });
+    // Redirect to main app on any error
+    return res.redirect(302, 'https://www.plan2tasks.com/?view=users');
   }
 }
