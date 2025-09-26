@@ -138,6 +138,24 @@ function MainApp(){
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
   const [toasts,setToasts]=useState([]);
+
+  // Clean up OAuth parameters on app initialization
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const hasOAuthParams = url.searchParams.has("state") || url.searchParams.has("code") || 
+                           url.searchParams.has("scope") || url.searchParams.has("authuser");
+      if (hasOAuthParams) {
+        // Clean up OAuth parameters
+        url.searchParams.delete("state");
+        url.searchParams.delete("code");
+        url.searchParams.delete("scope");
+        url.searchParams.delete("authuser");
+        url.searchParams.delete("prompt");
+        window.history.replaceState({}, "", url.toString());
+      }
+    } catch {/* noop */}
+  }, []);
   const [profileOpen,setProfileOpen]=useState(false);
   const [plannerProfile,setPlannerProfile]=useState(null);
   const [profileEditMode,setProfileEditMode]=useState(false);
@@ -464,6 +482,12 @@ function MainApp(){
 function updateQueryView(next){
   try{
     const url = new URL(window.location.href);
+    // Clean up OAuth parameters that might be in the URL
+    url.searchParams.delete("state");
+    url.searchParams.delete("code");
+    url.searchParams.delete("scope");
+    url.searchParams.delete("authuser");
+    url.searchParams.delete("prompt");
     url.searchParams.set("view", next);
     window.history.replaceState({}, "", url.toString());
   }catch{/* noop */}
@@ -472,6 +496,12 @@ function updateQueryView(next){
 function updateQueryUser(userEmail){
   try{
     const url = new URL(window.location.href);
+    // Clean up OAuth parameters that might be in the URL
+    url.searchParams.delete("state");
+    url.searchParams.delete("code");
+    url.searchParams.delete("scope");
+    url.searchParams.delete("authuser");
+    url.searchParams.delete("prompt");
     if (userEmail) {
       url.searchParams.set("user", userEmail);
     } else {
