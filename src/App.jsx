@@ -128,12 +128,12 @@ function MainApp(){
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
   const urlUser = usp.get("user") || "";
-  const validViews = new Set(["users","plan","settings","profile"]);
+  const validViews = new Set(["dashboard","users","plan","settings","profile"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
   const plannerEmail = (urlPE || storedPE || "bartpaden@gmail.com");
   if (urlPE) { try { localStorage.setItem("plannerEmail", urlPE); } catch {} }
-  const [view,setView]=useState(validViews.has(urlView) ? urlView : "users");
+  const [view,setView]=useState(validViews.has(urlView) ? urlView : "dashboard");
   const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
@@ -150,7 +150,7 @@ function MainApp(){
       const r=await fetch(`/api/prefs/get?${qs.toString()}`);
       if (r.ok){ const j=await r.json(); const p=j.prefs||j;
         setPrefs(p||{});
-        if (!validViews.has(urlView)) setView((p&&p.default_view) || "users");
+        if (!validViews.has(urlView)) setView((p&&p.default_view) || "dashboard");
       }
     }catch(e){/* noop */}
   })(); },[plannerEmail]);
@@ -261,6 +261,16 @@ function MainApp(){
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8" />
             <nav className="hidden md:flex items-center gap-1 bg-gray-50/50 rounded-lg p-1 border border-gray-200/60 backdrop-blur-sm">
               <button 
+                onClick={()=>{ setView("dashboard"); updateQueryView("dashboard"); }}
+                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
+                  view === "dashboard" 
+                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
+                Dashboard
+              </button>
+              <button 
                 onClick={()=>{ setView("users"); updateQueryView("users"); }}
                 className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
                   view === "users" 
@@ -354,6 +364,21 @@ function MainApp(){
             </div>
           </div>
         </div>
+
+        {view==="dashboard" && (
+          <DashboardView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onNavigate={(view, user) => {
+              setView(view);
+              updateQueryView(view);
+              if (user) {
+                setSelectedUserEmail(user);
+                updateQueryUser(user);
+              }
+            }}
+          />
+        )}
 
         {view==="users" && (
           <UsersView
@@ -2295,6 +2320,186 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
 
       <div className="mt-2 text-xs text-gray-500">
         Click "Review" to edit tasks before pushing to Google Tasks, or "Archive" to remove from assigned list.
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Dashboard view ───────── */
+function DashboardView({ plannerEmail, onToast, onNavigate }){
+  const [users, setUsers] = useState([]);
+  const [recentPlans, setRecentPlans] = useState([]);
+  const [userActivity, setUserActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load dashboard data
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load users
+        const usersResponse = await fetch(`/api/users?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          setUsers(usersData.users || []);
+        }
+
+        // Load recent plans (placeholder - would need API endpoint)
+        setRecentPlans([
+          { id: 1, name: "Q1 Marketing Campaign", user: "john@company.com", tasks: 12, status: "active" },
+          { id: 2, name: "Product Launch", user: "sarah@company.com", tasks: 8, status: "completed" }
+        ]);
+
+        // Load user activity (placeholder - would need API endpoint)
+        setUserActivity([
+          { user: "john@company.com", action: "completed task", task: "Create social media content", time: "2 hours ago" },
+          { user: "sarah@company.com", action: "started task", task: "Write blog post", time: "1 day ago" }
+        ]);
+
+      } catch (error) {
+        console.error('Dashboard data load error:', error);
+        onToast("error", "Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [plannerEmail, onToast]);
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading dashboard...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      {/* Dashboard Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-1">Overview of your planning activities</p>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <button
+          onClick={() => onNavigate("users", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <Users className="h-8 w-8 text-blue-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Manage Users</h3>
+              <p className="text-sm text-gray-600">Invite and manage your users</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate("plan", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <Calendar className="h-8 w-8 text-green-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Create Plan</h3>
+              <p className="text-sm text-gray-600">Start a new plan for a user</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate("settings", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <SettingsIcon className="h-8 w-8 text-purple-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Settings</h3>
+              <p className="text-sm text-gray-600">Configure your preferences</p>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Recent Plans */}
+      <div className="bg-white rounded-lg border border-gray-200 mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Plans</h2>
+        </div>
+        <div className="p-6">
+          {recentPlans.length > 0 ? (
+            <div className="space-y-4">
+              {recentPlans.map((plan) => (
+                <div key={plan.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{plan.name}</h3>
+                    <p className="text-sm text-gray-600">{plan.user} • {plan.tasks} tasks</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {plan.status}
+                    </span>
+                    <button
+                      onClick={() => onNavigate("plan", plan.user)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No recent plans</p>
+              <button
+                onClick={() => onNavigate("plan", null)}
+                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Create your first plan
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* User Activity */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+        </div>
+        <div className="p-6">
+          {userActivity.length > 0 ? (
+            <div className="space-y-3">
+              {userActivity.map((activity, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-900">
+                      <span className="font-medium">{activity.user}</span> {activity.action} "{activity.task}"
+                    </p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No recent activity</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
