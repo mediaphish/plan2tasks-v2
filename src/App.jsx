@@ -1095,6 +1095,23 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     </button>
                   </div>
                 </div>
+
+                {/* Template Suggestions */}
+                <TemplateSuggestions 
+                  plannerEmail={plannerEmail}
+                  planTitle={plan.title}
+                  planDescription={plan.description}
+                  userNotes={userNotes}
+                  onSelectTemplate={(template) => {
+                    setPlan({
+                      ...plan,
+                      title: template.title,
+                      description: template.description
+                    });
+                    setTasks(template.tasks || []);
+                    onToast?.("ok", `Applied template: ${template.title}`);
+                  }}
+                />
               </div>
             </div>
           )}
@@ -1152,6 +1169,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               planStartDate={plan.startDate}
               userEmail={selectedUserEmail}
               plannerEmail={plannerEmail}
+              tasks={tasks}
+              setTasks={setTasks}
               onAdd={(items)=>{
                 setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
                 onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
@@ -3748,7 +3767,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
 }
 
 /* ───────── AI-Assisted Task Editor ───────── */
-function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, onToast }){
+function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, onToast, tasks, setTasks }){
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDayOffset, setTaskDayOffset] = useState(0);
   const [taskTime, setTaskTime] = useState("");
@@ -3841,6 +3860,52 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
     setTaskNotes(suggestion.notes || taskNotes);
     if (suggestion.time) setTaskTime(suggestion.time);
     if (suggestion.duration) setTaskDuration(suggestion.duration);
+  }
+
+  async function optimizeDeadlines() {
+    if (!tasks || tasks.length === 0) {
+      onToast?.("warn", "No tasks to optimize");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/ai/suggest-deadlines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle: "Task Optimization",
+          planDescription: "",
+          startDate: planStartDate,
+          timezone: "America/Chicago",
+          userNotes: "",
+          tasks
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.ok && result.optimizedTasks) {
+        // Show optimization results in a modal or confirmation
+        const confirmed = window.confirm(
+          `AI has optimized deadlines for ${result.optimizedTasks.length} tasks. Apply these optimizations?\n\n` +
+          result.optimizedTasks.map(task => 
+            `• ${task.title}: ${task.suggestedDeadline} (${task.reasoning})`
+          ).join('\n')
+        );
+        
+        if (confirmed) {
+          setTasks(result.optimizedTasks);
+          onToast?.("ok", "Task deadlines optimized successfully");
+        }
+      } else {
+        throw new Error(result.error || 'Optimization failed');
+      }
+    } catch (e) {
+      console.error('Deadline optimization error:', e);
+      onToast?.("warn", `Failed to optimize deadlines: ${e.message}`);
+    }
   }
 
   return (
@@ -3944,7 +4009,17 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
       )}
 
       {/* Add Task Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div>
+          {tasks.length > 0 && (
+            <button
+              onClick={optimizeDeadlines}
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium"
+            >
+              Optimize Deadlines
+            </button>
+          )}
+        </div>
         <button
           onClick={addTask}
           className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium"
@@ -4480,6 +4555,98 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ───────── Template Suggestions ───────── */
+function TemplateSuggestions({ plannerEmail, planTitle, planDescription, userNotes, onSelectTemplate }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Debounced search for template suggestions
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (planTitle || planDescription || userNotes) {
+        loadSuggestions();
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [planTitle, planDescription, userNotes]);
+
+  async function loadSuggestions() {
+    if (!plannerEmail) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/templates/suggest?plannerEmail=${encodeURIComponent(plannerEmail)}&planTitle=${encodeURIComponent(planTitle || '')}&planDescription=${encodeURIComponent(planDescription || '')}&userNotes=${encodeURIComponent(userNotes || '')}&limit=3`);
+      const result = await response.json();
+      
+      if (result.ok && result.suggestions.length > 0) {
+        setSuggestions(result.suggestions);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    } catch (e) {
+      console.error('Template suggestions error:', e);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+    setLoading(false);
+  }
+
+  if (!showSuggestions || suggestions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-sm font-medium text-blue-900">
+          Suggested Templates
+        </div>
+        <button
+          onClick={() => setShowSuggestions(false)}
+          className="text-blue-600 hover:text-blue-800 text-xs"
+        >
+          Hide
+        </button>
+      </div>
+      
+      <div className="space-y-2">
+        {suggestions.map((template) => (
+          <div key={template.id} className="flex items-center justify-between rounded-lg border border-blue-200 bg-white p-3">
+            <div className="flex-1">
+              <div className="text-sm font-medium text-gray-900">{template.title}</div>
+              {template.description && (
+                <div className="text-xs text-gray-600 mt-1">{template.description}</div>
+              )}
+              <div className="text-xs text-blue-600 mt-1">
+                {template.itemsCount} task{template.itemsCount !== 1 ? 's' : ''}
+              </div>
+            </div>
+            <button
+              onClick={() => onSelectTemplate(template)}
+              className="ml-3 rounded-lg border border-blue-300 bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+            >
+              Use Template
+            </button>
+          </div>
+        ))}
+      </div>
+      
+      {loading && (
+        <div className="text-center text-xs text-blue-600 mt-2">
+          Loading suggestions...
+        </div>
+      )}
     </div>
   );
 }
