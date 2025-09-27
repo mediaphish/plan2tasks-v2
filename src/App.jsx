@@ -1134,7 +1134,13 @@ History
                   <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">📋</div>
                   <div className="text-base sm:text-lg font-semibold">Choose a Template</div>
                 </div>
-                <div className="text-sm text-gray-600 ml-8">Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></div>
+                <div className="text-sm text-gray-600 ml-8">
+                  {selectedUserEmail ? (
+                    <>Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></>
+                  ) : (
+                    <>Browse your saved plan templates. Select a user first to apply a template.</>
+                  )}
+                </div>
               </div>
 
               <div className="ml-8">
@@ -1142,6 +1148,11 @@ History
                   plannerEmail={plannerEmail}
                   selectedUserEmail={selectedUserEmail}
                   onTemplateSelect={(template) => {
+                    if (!selectedUserEmail) {
+                      onToast?.("error", "Please select a user first before applying a template");
+                      return;
+                    }
+                    
                     setPlan({
                       title: template.title,
                       description: template.description,
