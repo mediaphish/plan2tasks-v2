@@ -1101,7 +1101,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                   plannerEmail={plannerEmail}
                   planTitle={plan.title}
                   planDescription={plan.description}
-                  userNotes={userNotes}
+                  userNotes=""
                   onSelectTemplate={(template) => {
                     setPlan({
                       ...plan,
