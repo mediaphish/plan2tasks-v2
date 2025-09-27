@@ -315,6 +315,16 @@ function MainApp(){
               >
                 Plan
               </button>
+              <button 
+                onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
+                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
+                  view === "templates" 
+                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
+                Templates
+              </button>
             </nav>
           </div>
 
@@ -424,6 +434,13 @@ function MainApp(){
             urlUser={urlUser}
             onToast={(t,m)=>toast(t,m)}
             onUserChange={(email)=>updateQueryUser(email)}
+          />
+        )}
+
+        {view==="templates" && (
+          <TemplatesManagementView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
           />
         )}
 
@@ -3352,6 +3369,502 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
           </div>
         </div>
     </>
+  );
+}
+
+/* ───────── Templates Management View ───────── */
+function TemplatesManagementView({ plannerEmail, onToast }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+
+  // Fetch templates on mount
+  useEffect(() => {
+    fetchTemplates();
+  }, [plannerEmail]);
+
+  const fetchTemplates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        setTemplates(data.templates || []);
+        
+        // Extract unique tags
+        const allTags = new Set();
+        (data.templates || []).forEach(template => {
+          if (template.tags && Array.isArray(template.tags)) {
+            template.tags.forEach(tag => allTags.add(tag));
+          }
+        });
+        setAvailableTags(Array.from(allTags));
+      } else {
+        onToast?.("error", data.error || "Failed to fetch templates");
+      }
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      onToast?.("error", "Failed to fetch templates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter templates based on search and tags
+  const filteredTemplates = templates.filter(template => {
+    const matchesSearch = !searchTerm || 
+      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesTags = selectedTags.length === 0 || 
+      (template.tags && selectedTags.every(tag => template.tags.includes(tag)));
+    
+    return matchesSearch && matchesTags;
+  });
+
+  const handleTagToggle = (tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const handleDeleteTemplate = async (templateId) => {
+    if (!confirm("Are you sure you want to delete this template? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/templates/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          plannerEmail, 
+          templateId 
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.ok) {
+        onToast?.("ok", "Template deleted successfully");
+        fetchTemplates(); // Refresh the list
+      } else {
+        onToast?.("error", data.error || "Failed to delete template");
+      }
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      onToast?.("error", "Failed to delete template");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">⏳</div>
+          <div className="text-sm text-gray-600">Loading templates...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Templates</h1>
+            <p className="text-gray-600 mt-1">Manage your plan templates for quick reuse</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            + Create Template
+          </button>
+        </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="mb-6 space-y-4">
+        {/* Search Bar */}
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            placeholder="Search templates by name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+            <div className="text-gray-400 text-sm">🔍</div>
+          </div>
+        </div>
+
+        {/* Tags Filter */}
+        {availableTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <div className="text-sm text-gray-600 mr-2">Filter by tags:</div>
+            {availableTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  selectedTags.includes(tag)
+                    ? "bg-purple-100 border-purple-300 text-purple-700"
+                    : "bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Templates Grid */}
+      {filteredTemplates.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-2 text-4xl">📋</div>
+          <div className="font-semibold text-gray-700 mb-1">No templates found</div>
+          <div className="text-sm text-gray-500 mb-4">
+            {templates.length === 0 
+              ? "You haven't created any templates yet. Create your first template to get started."
+              : "Try adjusting your search terms or tag filters."
+            }
+          </div>
+          {templates.length === 0 && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Create Your First Template
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTemplates.map(template => (
+            <div
+              key={template.id}
+              className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">
+                  {template.title}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditingTemplate(template)}
+                    className="opacity-0 group-hover:opacity-100 text-blue-400 hover:text-blue-600 transition-all"
+                    title="Edit template"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all"
+                    title="Delete template"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              
+              {template.description && (
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  {template.description}
+                </p>
+              )}
+              
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{template.itemsCount || 0} tasks</span>
+                {template.tags && template.tags.length > 0 && (
+                  <div className="flex gap-1">
+                    {template.tags.slice(0, 2).map(tag => (
+                      <span key={tag} className="px-2 py-1 bg-purple-50 text-purple-600 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                    {template.tags.length > 2 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                        +{template.tags.length - 2}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create/Edit Template Modal */}
+      {showCreateModal && (
+        <CreateTemplateModal
+          plannerEmail={plannerEmail}
+          template={editingTemplate}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingTemplate(null);
+          }}
+          onSave={() => {
+            fetchTemplates();
+            setShowCreateModal(false);
+            setEditingTemplate(null);
+          }}
+          onToast={onToast}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ───────── Create Template Modal ───────── */
+function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast }) {
+  const [formData, setFormData] = useState({
+    title: template?.title || '',
+    description: template?.description || '',
+    tasks: template?.tasks || [],
+    tags: template?.tags || []
+  });
+  const [newTag, setNewTag] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleAddTask = () => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: [...prev.tasks, {
+        id: Date.now().toString(),
+        title: '',
+        description: '',
+        dayOffset: 0,
+        time: '09:00',
+        durationMins: 30
+      }]
+    }));
+  };
+
+  const handleUpdateTask = (taskId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(task => 
+        task.id === taskId ? { ...task, [field]: value } : task
+      )
+    }));
+  };
+
+  const handleRemoveTask = (taskId) => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(task => task.id !== taskId)
+    }));
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()]
+      }));
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!formData.title.trim()) {
+      onToast?.("error", "Please enter a template name");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/templates/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plannerEmail,
+          templateId: template?.id,
+          name: formData.title,
+          description: formData.description,
+          tasks: formData.tasks.filter(task => task.title.trim()),
+          tags: formData.tags
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.ok) {
+        onToast?.("ok", template ? "Template updated successfully" : "Template created successfully");
+        onSave();
+      } else {
+        onToast?.("error", data.error || "Failed to save template");
+      }
+    } catch (error) {
+      console.error("Error saving template:", error);
+      onToast?.("error", "Failed to save template");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title={template ? "Edit Template" : "Create Template"} onClose={onClose}>
+      <div className="space-y-4">
+        {/* Template Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Template Name *
+          </label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="e.g., Weekly Planning Template"
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            rows={3}
+            placeholder="Describe what this template is used for..."
+          />
+        </div>
+
+        {/* Tags */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tags
+          </label>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Add a tag..."
+              />
+              <button
+                onClick={handleAddTag}
+                className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm"
+                  >
+                    {tag}
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      className="text-purple-500 hover:text-purple-700"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tasks */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Tasks
+            </label>
+            <button
+              onClick={handleAddTask}
+              className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+            >
+              + Add Task
+            </button>
+          </div>
+          
+          {formData.tasks.length === 0 ? (
+            <div className="text-center py-4 text-gray-500 text-sm">
+              No tasks yet. Click "Add Task" to get started.
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {formData.tasks.map(task => (
+                <div key={task.id} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <input
+                      type="text"
+                      value={task.title}
+                      onChange={(e) => handleUpdateTask(task.id, 'title', e.target.value)}
+                      className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
+                      placeholder="Task title..."
+                    />
+                    <button
+                      onClick={() => handleRemoveTask(task.id)}
+                      className="ml-2 text-red-400 hover:text-red-600"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={task.description || ''}
+                    onChange={(e) => handleUpdateTask(task.id, 'description', e.target.value)}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
+                    placeholder="Task description (optional)..."
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={loading || !formData.title.trim()}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? 'Saving...' : (template ? 'Update Template' : 'Create Template')}
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
