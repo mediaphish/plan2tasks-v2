@@ -1110,6 +1110,17 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     });
                     setTasks(template.tasks || []);
                     onToast?.("ok", `Applied template: ${template.title}`);
+                    
+                    // Auto-scroll to delivery section after template selection
+                    setTimeout(() => {
+                      const deliverySection = document.querySelector('[data-section="delivery"]');
+                      if (deliverySection) {
+                        deliverySection.scrollIntoView({ 
+                          behavior: 'smooth', 
+                          block: 'start' 
+                        });
+                      }
+                    }, 100);
                   }}
                 />
               </div>
@@ -1205,7 +1216,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
       {/* Deliver Section */}
       {tasks.length>0 && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+        <div data-section="delivery" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">3</div>
@@ -4586,6 +4597,7 @@ function TemplateSuggestions({ plannerEmail, planTitle, planDescription, userNot
     try {
       const response = await fetch(`/api/templates/suggest?plannerEmail=${encodeURIComponent(plannerEmail)}&planTitle=${encodeURIComponent(planTitle || '')}&planDescription=${encodeURIComponent(planDescription || '')}&userNotes=${encodeURIComponent(userNotes || '')}&limit=3`);
       const result = await response.json();
+      
       
       if (result.ok && result.suggestions.length > 0) {
         setSuggestions(result.suggestions);
