@@ -881,7 +881,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [activeTab,setActiveTab]=useState("plan");
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
-  const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual"
+  const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual", "templates"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
 
@@ -3391,7 +3391,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 
              <div className="ml-8 space-y-3">
                {/* Planning Mode Options */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Full AI Option */}
                  <button
                    onClick={() => onModeSelect("full-ai")}
@@ -3445,6 +3445,24 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
               Traditional task creation without AI assistance
             </div>
           </button>
+
+          {/* Templates Option */}
+          <button
+            onClick={() => onModeSelect("templates")}
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              planningMode === "templates"
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs">📋</div>
+              <div className="font-semibold text-sm">Use Template</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              Select from your saved plan templates
+            </div>
+          </button>
         </div>
 
         {/* Mode Description */}
@@ -3472,6 +3490,15 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
             <div className="text-sm font-medium text-gray-800 mb-1">Pure Manual</div>
             <div className="text-xs text-gray-600">
               Complete control over task creation without AI assistance. Perfect when you prefer full manual control.
+            </div>
+          </div>
+        )}
+
+        {planningMode === "templates" && (
+          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="text-sm font-medium text-purple-800 mb-1">Use Template</div>
+            <div className="text-xs text-purple-600">
+              Select from your saved plan templates to quickly create plans for your users. Perfect for recurring workflows.
             </div>
           </div>
         )}
