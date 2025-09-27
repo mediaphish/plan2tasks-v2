@@ -1023,7 +1023,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                 : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
             }`}
           >
-            Templates & History
+History
           </button>
         </div>
         
@@ -1119,6 +1119,48 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                     setPlan(generatedPlan.plan);
                     setTasks(generatedPlan.tasks);
                     onToast?.("ok", "AI has generated your complete plan!");
+                  }}
+                  onToast={onToast}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Templates View Interface */}
+          {planningMode === "templates" && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">📋</div>
+                  <div className="text-base sm:text-lg font-semibold">Choose a Template</div>
+                </div>
+                <div className="text-sm text-gray-600 ml-8">Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></div>
+              </div>
+
+              <div className="ml-8">
+                <TemplatesView
+                  plannerEmail={plannerEmail}
+                  selectedUserEmail={selectedUserEmail}
+                  onTemplateSelect={(template) => {
+                    setPlan({
+                      title: template.title,
+                      description: template.description,
+                      startDate: new Date().toISOString().split('T')[0]
+                    });
+                    setTasks(template.tasks || []);
+                    setPlanningMode("ai-assisted"); // Switch to review mode
+                    onToast?.("ok", `Applied template: ${template.title}`);
+                    
+                    // Auto-scroll to delivery section
+                    setTimeout(() => {
+                      const deliverySection = document.querySelector('[data-section="delivery"]');
+                      if (deliverySection) {
+                        deliverySection.scrollIntoView({ 
+                          behavior: 'smooth', 
+                          block: 'start' 
+                        });
+                      }
+                    }, 100);
                   }}
                   onToast={onToast}
                 />
@@ -2042,20 +2084,17 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
   );
 }
 
-/* ───────── Templates & History ───────── */
+/* ───────── History ───────── */
 function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   const [rows,setRows]=useState([]);
-  const [templates,setTemplates]=useState([]);
   const [page,setPage]=useState(1);
   const [pageSize,setPageSize]=useState(25);
   const [total,setTotal]=useState(0);
-  const [templateTotal,setTemplateTotal]=useState(0);
   const [loading,setLoading]=useState(false);
-  const [filter,setFilter]=useState('all'); // 'all', 'history', 'templates'
   const [searchQuery,setSearchQuery]=useState('');
 
   async function load(){
-    if (!userEmail) { setRows([]); setTemplates([]); setTotal(0); setTemplateTotal(0); return; }
+    if (!userEmail) { setRows([]); setTotal(0); return; }
     setLoading(true);
     try{
       // Load history
@@ -2067,40 +2106,26 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
       const historyJ=await historyR.json();
       setRows(historyJ.rows||[]);
       setTotal(historyJ.total||0);
-
-      // Load templates
-      const templateR=await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}&page=${page}&pageSize=${pageSize}`);
-      const templateJ=await templateR.json();
-      setTemplates(templateJ.templates||[]);
-      setTemplateTotal(templateJ.total||0);
     }catch(e){/* noop */}
     setLoading(false);
   }
   useEffect(()=>{ load(); },[plannerEmail,userEmail,page,pageSize,reloadKey]);
 
-  // Combine and filter data
-  const allItems = [
-    ...rows.map(r => ({ ...r, isTemplate: false })),
-    ...templates.map(t => ({ ...t, isTemplate: true, startDate: 'Template' }))
-  ].sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
+  // Filter data
+  const allItems = rows.sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
 
   // Apply search filter
-  const searchFilteredItems = searchQuery ? allItems.filter(item => 
+  const filteredItems = searchQuery ? allItems.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
   ) : allItems;
 
-  const filteredItems = filter === 'all' ? searchFilteredItems : 
-                       filter === 'history' ? searchFilteredItems.filter(item => !item.isTemplate) :
-                       searchFilteredItems.filter(item => item.isTemplate);
-
-  const totalItems = filter === 'all' ? (total + templateTotal) :
-                     filter === 'history' ? total : templateTotal;
+  const totalItems = total;
 
   return (
     <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm font-semibold">Templates & History</div>
+        <div className="text-sm font-semibold">History</div>
         <div className="text-xs text-gray-500">{filteredItems.length} of {totalItems} item(s)</div>
       </div>
 
@@ -2110,7 +2135,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Search templates and history..."
+            placeholder="Search history..."
             value={searchQuery}
             onChange={(e)=>setSearchQuery(e.target.value)}
             className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
@@ -2118,29 +2143,8 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         </div>
 
         {/* Filter Controls and Page Size */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex gap-2">
-            <button 
-              onClick={()=>setFilter('all')} 
-              className={`px-3 py-1 text-xs rounded-lg border ${filter === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
-            >
-              All ({total + templateTotal})
-            </button>
-            <button 
-              onClick={()=>setFilter('history')} 
-              className={`px-3 py-1 text-xs rounded-lg border ${filter === 'history' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
-            >
-              History ({total})
-            </button>
-            <button 
-              onClick={()=>setFilter('templates')} 
-              className={`px-3 py-1 text-xs rounded-lg border ${filter === 'templates' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
-            >
-              Templates ({templateTotal})
-            </button>
-          </div>
-
-          {/* Page Size Selector */}
+        {/* Page Size Selector */}
+        <div className="flex items-center justify-end gap-4">
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500">Show:</span>
             <select 
@@ -2170,59 +2174,36 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
           </thead>
           <tbody>
             {filteredItems.map(item=>(
-              <tr key={`${item.isTemplate ? 'template' : 'history'}-${item.id}`} className="border-t">
+              <tr key={`history-${item.id}`} className="border-t">
                 <td className="py-1.5 px-2">
                   <div className="flex items-center gap-2">
                     {item.title}
-                    {item.isTemplate && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                        Template
-                      </span>
-                    )}
                   </div>
                 </td>
                 <td className="py-1.5 px-2">
-                  {item.isTemplate ? (
-                    <span className="text-blue-600 text-xs">Template</span>
-                  ) : (
-                    <span className="text-gray-600 text-xs">History</span>
-                  )}
+                  <span className="text-gray-600 text-xs">History</span>
                 </td>
                 <td className="py-1.5 px-2">{item.startDate}</td>
                 <td className="py-1.5 px-2">{item.itemsCount||"—"}</td>
                 <td className="py-1.5 px-2">
                   <div className="flex justify-end">
-                    {item.isTemplate ? (
-                      <button 
-                        onClick={()=>onPrefill?.({ 
-                          plan:{ title:item.title, description:item.description, startDate:format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" }, 
-                          tasks:item.tasks, 
-                          mode:"append" 
-                        })} 
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-blue-600 border-blue-200"
-                      >
-                        Use Template
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={()=>onPrefill?.({ 
-                          plan:{ title:item.title, startDate:item.startDate, timezone:item.timezone }, 
-                          tasks:item.tasks, 
-                          mode:item.mode 
-                        })} 
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
-                      >
-                        Restore
-                      </button>
-                    )}
+                    <button 
+                      onClick={()=>onPrefill?.({ 
+                        plan:{ title:item.title, startDate:item.startDate, timezone:item.timezone }, 
+                        tasks:item.tasks, 
+                        mode:item.mode 
+                      })} 
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                    >
+                      Restore
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
             {filteredItems.length === 0 && (
               <tr><td colSpan={5} className="py-6 text-center text-gray-500">
-                {filter === 'all' ? 'No history or templates yet' :
-                 filter === 'history' ? 'No history yet' : 'No templates yet'}
+                No history yet
               </td></tr>
             )}
           </tbody>
@@ -3361,6 +3342,211 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
           </div>
         </div>
     </>
+  );
+}
+
+/* ───────── Templates View ───────── */
+function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onToast }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+
+  // Fetch templates on mount
+  useEffect(() => {
+    fetchTemplates();
+  }, [plannerEmail]);
+
+  const fetchTemplates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        setTemplates(data.templates || []);
+        
+        // Extract unique tags
+        const allTags = new Set();
+        (data.templates || []).forEach(template => {
+          if (template.tags && Array.isArray(template.tags)) {
+            template.tags.forEach(tag => allTags.add(tag));
+          }
+        });
+        setAvailableTags(Array.from(allTags));
+      } else {
+        onToast?.("error", data.error || "Failed to fetch templates");
+      }
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      onToast?.("error", "Failed to fetch templates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter templates based on search and tags
+  const filteredTemplates = templates.filter(template => {
+    const matchesSearch = !searchTerm || 
+      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesTags = selectedTags.length === 0 || 
+      (template.tags && selectedTags.every(tag => template.tags.includes(tag)));
+    
+    return matchesSearch && matchesTags;
+  });
+
+  const handleTagToggle = (tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const handleDeleteTemplate = async (templateId) => {
+    if (!confirm("Are you sure you want to delete this template? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/templates/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          plannerEmail, 
+          templateId 
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.ok) {
+        onToast?.("ok", "Template deleted successfully");
+        fetchTemplates(); // Refresh the list
+      } else {
+        onToast?.("error", data.error || "Failed to delete template");
+      }
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      onToast?.("error", "Failed to delete template");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-gray-500 mb-2">⏳</div>
+        <div className="text-sm text-gray-600">Loading templates...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search and Filter Controls */}
+      <div className="space-y-3">
+        {/* Search Bar */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search templates by name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+            <div className="text-gray-400 text-sm">🔍</div>
+          </div>
+        </div>
+
+        {/* Tags Filter */}
+        {availableTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <div className="text-sm text-gray-600 mr-2">Filter by tags:</div>
+            {availableTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  selectedTags.includes(tag)
+                    ? "bg-purple-100 border-purple-300 text-purple-700"
+                    : "bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Templates Grid */}
+      {filteredTemplates.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">📋</div>
+          <div className="font-semibold text-gray-700 mb-1">No templates found</div>
+          <div className="text-sm text-gray-500">
+            {templates.length === 0 
+              ? "You haven't created any templates yet. Create a plan and save it as a template to get started."
+              : "Try adjusting your search terms or tag filters."
+            }
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTemplates.map(template => (
+            <div
+              key={template.id}
+              className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer group"
+              onClick={() => onTemplateSelect(template)}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">
+                  {template.title}
+                </h3>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTemplate(template.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all"
+                  title="Delete template"
+                >
+                  🗑️
+                </button>
+              </div>
+              
+              {template.description && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {template.description}
+                </p>
+              )}
+              
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{template.itemsCount || 0} tasks</span>
+                {template.tags && template.tags.length > 0 && (
+                  <div className="flex gap-1">
+                    {template.tags.slice(0, 2).map(tag => (
+                      <span key={tag} className="px-2 py-1 bg-purple-50 text-purple-600 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                    {template.tags.length > 2 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                        +{template.tags.length - 2}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
