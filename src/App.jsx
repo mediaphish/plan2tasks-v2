@@ -1096,33 +1096,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                   </div>
                 </div>
 
-                {/* Template Suggestions */}
-                <TemplateSuggestions 
-                  plannerEmail={plannerEmail}
-                  planTitle={plan.title}
-                  planDescription={plan.description}
-                  userNotes=""
-                  onSelectTemplate={(template) => {
-                    setPlan({
-                      ...plan,
-                      title: template.title,
-                      description: template.description
-                    });
-                    setTasks(template.tasks || []);
-                    onToast?.("ok", `Applied template: ${template.title}`);
-                    
-                    // Auto-scroll to delivery section after template selection
-                    setTimeout(() => {
-                      const deliverySection = document.querySelector('[data-section="delivery"]');
-                      if (deliverySection) {
-                        deliverySection.scrollIntoView({ 
-                          behavior: 'smooth', 
-                          block: 'start' 
-                        });
-                      }
-                    }, 100);
-                  }}
-                />
               </div>
             </div>
           )}
@@ -4570,98 +4543,6 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   );
 }
 
-/* ───────── Template Suggestions ───────── */
-function TemplateSuggestions({ plannerEmail, planTitle, planDescription, userNotes, onSelectTemplate }) {
-  const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  // Debounced search for template suggestions
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (planTitle || planDescription || userNotes) {
-        loadSuggestions();
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [planTitle, planDescription, userNotes]);
-
-  async function loadSuggestions() {
-    if (!plannerEmail) return;
-    
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/templates/suggest?plannerEmail=${encodeURIComponent(plannerEmail)}&planTitle=${encodeURIComponent(planTitle || '')}&planDescription=${encodeURIComponent(planDescription || '')}&userNotes=${encodeURIComponent(userNotes || '')}&limit=3`);
-      const result = await response.json();
-      
-      
-      if (result.ok && result.suggestions.length > 0) {
-        setSuggestions(result.suggestions);
-        setShowSuggestions(true);
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    } catch (e) {
-      console.error('Template suggestions error:', e);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-    setLoading(false);
-  }
-
-  if (!showSuggestions || suggestions.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-sm font-medium text-blue-900">
-          Suggested Templates
-        </div>
-        <button
-          onClick={() => setShowSuggestions(false)}
-          className="text-blue-600 hover:text-blue-800 text-xs"
-        >
-          Hide
-        </button>
-      </div>
-      
-      <div className="space-y-2">
-        {suggestions.map((template) => (
-          <div key={template.id} className="flex items-center justify-between rounded-lg border border-blue-200 bg-white p-3">
-            <div className="flex-1">
-              <div className="text-sm font-medium text-gray-900">{template.title}</div>
-              {template.description && (
-                <div className="text-xs text-gray-600 mt-1">{template.description}</div>
-              )}
-              <div className="text-xs text-blue-600 mt-1">
-                {template.itemsCount} task{template.itemsCount !== 1 ? 's' : ''}
-              </div>
-            </div>
-            <button
-              onClick={() => onSelectTemplate(template)}
-              className="ml-3 rounded-lg border border-blue-300 bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-            >
-              Use Template
-            </button>
-          </div>
-        ))}
-      </div>
-      
-      {loading && (
-        <div className="text-center text-xs text-blue-600 mt-2">
-          Loading suggestions...
-        </div>
-      )}
-    </div>
-  );
-}
 
 /* ───────── Timezones ───────── */
 const TIMEZONES = [
