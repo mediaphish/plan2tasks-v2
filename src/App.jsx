@@ -1059,8 +1059,61 @@ History
               planningMode={planningMode}
             />
 
+          {/* Templates View Interface - Show first when templates mode is selected */}
+          {planningMode === "templates" && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">1</div>
+                  <div className="text-base sm:text-lg font-semibold">Choose a Template</div>
+                </div>
+                <div className="text-sm text-gray-600 ml-8">
+                  {selectedUserEmail ? (
+                    <>Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></>
+                  ) : (
+                    <>Browse your saved plan templates. Select a user first to apply a template.</>
+                  )}
+                </div>
+              </div>
+
+              <div className="ml-8">
+                <TemplatesView
+                  plannerEmail={plannerEmail}
+                  selectedUserEmail={selectedUserEmail}
+                  onTemplateSelect={(template) => {
+                    if (!selectedUserEmail) {
+                      onToast?.("error", "Please select a user first before applying a template");
+                      return;
+                    }
+                    
+                    setPlan({
+                      title: template.title,
+                      description: template.description,
+                      startDate: new Date().toISOString().split('T')[0]
+                    });
+                    setTasks(template.tasks || []);
+                    setPlanningMode("ai-assisted"); // Switch to review mode
+                    onToast?.("ok", `Applied template: ${template.title}`);
+                    
+                    // Auto-scroll to delivery section
+                    setTimeout(() => {
+                      const deliverySection = document.querySelector('[data-section="delivery"]');
+                      if (deliverySection) {
+                        deliverySection.scrollIntoView({ 
+                          behavior: 'smooth', 
+                          block: 'start' 
+                        });
+                      }
+                    }, 100);
+                  }}
+                  onToast={onToast}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Plan Setup Section - Only show for AI-Assisted and Manual modes */}
-          {planningMode !== "full-ai" && (
+          {planningMode !== "full-ai" && planningMode !== "templates" && (
             <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -1125,60 +1178,6 @@ History
               </div>
             </div>
           )}
-
-          {/* Templates View Interface */}
-          {planningMode === "templates" && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">📋</div>
-                  <div className="text-base sm:text-lg font-semibold">Choose a Template</div>
-                </div>
-                <div className="text-sm text-gray-600 ml-8">
-                  {selectedUserEmail ? (
-                    <>Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></>
-                  ) : (
-                    <>Browse your saved plan templates. Select a user first to apply a template.</>
-                  )}
-                </div>
-              </div>
-
-              <div className="ml-8">
-                <TemplatesView
-                  plannerEmail={plannerEmail}
-                  selectedUserEmail={selectedUserEmail}
-                  onTemplateSelect={(template) => {
-                    if (!selectedUserEmail) {
-                      onToast?.("error", "Please select a user first before applying a template");
-                      return;
-                    }
-                    
-                    setPlan({
-                      title: template.title,
-                      description: template.description,
-                      startDate: new Date().toISOString().split('T')[0]
-                    });
-                    setTasks(template.tasks || []);
-                    setPlanningMode("ai-assisted"); // Switch to review mode
-                    onToast?.("ok", `Applied template: ${template.title}`);
-                    
-                    // Auto-scroll to delivery section
-                    setTimeout(() => {
-                      const deliverySection = document.querySelector('[data-section="delivery"]');
-                      if (deliverySection) {
-                        deliverySection.scrollIntoView({ 
-                          behavior: 'smooth', 
-                          block: 'start' 
-                        });
-                      }
-                    }, 100);
-                  }}
-                  onToast={onToast}
-                />
-              </div>
-            </div>
-          )}
-
 
       {planDateOpen && (
         <Modal title="Choose Plan Start Date" onClose={()=>setPlanDateOpen(false)}>
