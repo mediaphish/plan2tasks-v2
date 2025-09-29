@@ -944,6 +944,13 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
   useEffect(()=>{ setTasks([]); setMsg(""); },[selectedUserEmail]);
 
+  // Clear template data when user starts modifying the plan
+  const clearTemplateData = () => {
+    if (templateData) {
+      onTemplateApplied?.();
+    }
+  };
+
   // Apply template data when available
   useEffect(() => {
     if (templateData) {
@@ -954,11 +961,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         timezone: "America/Chicago"
       });
       setTasks(templateData.tasks || []);
-      setPlanningMode("templates");
-      onTemplateApplied?.(); // Clear template data
+      setPlanningMode("ai-assisted"); // Use normal planning mode, not templates mode
       onToast?.("ok", `Template "${templateData.title}" applied successfully`);
+      // Don't clear template data immediately - let it persist for the user to see
     }
-  }, [templateData, onTemplateApplied, onToast]);
+  }, [templateData, onToast]);
 
   async function loadNewBundleCount(){
     if (!selectedUserEmail) { setNewBundleCount(0); return; }
@@ -1176,11 +1183,11 @@ History
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <label className="block">
                     <div className="mb-1 text-sm font-medium">Plan Name</div>
-                    <input value={plan.title} onChange={(e)=>setPlan({...plan, title:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
+                    <input value={plan.title} onChange={(e)=>{setPlan({...plan, title:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
                   </label>
                   <label className="block md:col-span-2">
                     <div className="mb-1 text-sm font-medium">Plan Description</div>
-                    <input value={plan.description} onChange={(e)=>setPlan({...plan, description:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
+                    <input value={plan.description} onChange={(e)=>{setPlan({...plan, description:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
                   </label>
                   <label className="block">
                     <div className="mb-1 text-sm font-medium">Timezone</div>
