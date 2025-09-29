@@ -438,6 +438,7 @@ function MainApp(){
             onUserChange={(email)=>updateQueryUser(email)}
             templateData={templateData}
             onTemplateApplied={() => setTemplateData(null)}
+            clearAllToasts={clearAllToasts}
           />
         )}
 
@@ -901,7 +902,7 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
 }
 
 /* ───────── Plan view ───────── */
-function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange, templateData, onTemplateApplied }){
+function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange, templateData, onTemplateApplied, clearAllToasts }){
   const [users,setUsers]=useState([]);
   const [selectedUserEmail,setSelectedUserEmail]=useState("");
   const [plan,setPlan]=useState({ title:"Weekly Plan", description:"", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
