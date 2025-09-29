@@ -1121,50 +1121,6 @@ History
         
       </div>
 
-      {/* Progress Indicator - Only show for Plan tab */}
-      {activeTab === "plan" && (
-        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-center space-x-8">
-              {/* Step 1: Plan Setup */}
-              <div className="flex items-center">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  planningMode === "ai-assisted" || planningMode === "manual" || planningMode === "templates" 
-                    ? "bg-blue-500 text-white" 
-                    : "bg-gray-300 text-gray-600"
-                }`}>
-                  1
-                </div>
-                <span className="ml-2 text-sm text-gray-700">Setup</span>
-              </div>
-
-              {/* Step 2: Add Tasks */}
-              <div className="flex items-center">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  tasks.length > 0 
-                    ? "bg-blue-500 text-white" 
-                    : "bg-gray-300 text-gray-600"
-                }`}>
-                  2
-                </div>
-                <span className="ml-2 text-sm text-gray-700">Tasks</span>
-              </div>
-
-              {/* Step 3: Deliver */}
-              <div className="flex items-center">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  tasks.length > 0 && plan.title && plan.title !== "Weekly Plan"
-                    ? "bg-blue-500 text-white" 
-                    : "bg-gray-300 text-gray-600"
-                }`}>
-                  3
-                </div>
-                <span className="ml-2 text-sm text-gray-700">Deliver</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
