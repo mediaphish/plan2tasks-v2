@@ -912,7 +912,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual", "templates"
-  const [templateData,setTemplateData]=useState(null); // Template data from Templates view
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
 
