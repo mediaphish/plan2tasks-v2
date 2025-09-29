@@ -1121,6 +1121,66 @@ History
         
       </div>
 
+      {/* Progress Indicator - Only show for Plan tab */}
+      {activeTab === "plan" && (
+        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between">
+              {/* Step 1: Plan Setup */}
+              <div className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                  planningMode === "ai-assisted" || planningMode === "manual" || planningMode === "templates" 
+                    ? "bg-blue-500 text-white" 
+                    : "bg-gray-200 text-gray-500"
+                }`}>
+                  1
+                </div>
+                <div className="ml-3">
+                  <div className="text-sm font-medium text-gray-900">Plan Setup</div>
+                  <div className="text-xs text-gray-500">Choose planning mode</div>
+                </div>
+              </div>
+
+              {/* Connector Line */}
+              <div className="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+
+              {/* Step 2: Add Tasks */}
+              <div className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                  tasks.length > 0 
+                    ? "bg-blue-500 text-white" 
+                    : "bg-gray-200 text-gray-500"
+                }`}>
+                  2
+                </div>
+                <div className="ml-3">
+                  <div className="text-sm font-medium text-gray-900">Add Tasks</div>
+                  <div className="text-xs text-gray-500">Create your tasks</div>
+                </div>
+              </div>
+
+              {/* Connector Line */}
+              <div className="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+
+              {/* Step 3: Deliver */}
+              <div className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                  tasks.length > 0 && plan.title && plan.title !== "Weekly Plan"
+                    ? "bg-blue-500 text-white" 
+                    : "bg-gray-200 text-gray-500"
+                }`}>
+                  3
+                </div>
+                <div className="ml-3">
+                  <div className="text-sm font-medium text-gray-900">Deliver</div>
+                  <div className="text-xs text-gray-500">Review and send</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
         <>
