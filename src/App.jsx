@@ -141,6 +141,7 @@ function MainApp(){
   const [profileOpen,setProfileOpen]=useState(false);
   const [plannerProfile,setPlannerProfile]=useState(null);
   const [profileEditMode,setProfileEditMode]=useState(false);
+  const [templateData,setTemplateData]=useState(null); // Template data from Templates view
   const profileRef = useRef(null);
 
   // Handle browser back/forward navigation
