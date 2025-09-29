@@ -441,6 +441,13 @@ function MainApp(){
           <TemplatesManagementView
             plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
+            onNavigate={(view, user) => {
+              setView(view);
+              updateQueryView(view);
+              if (user) {
+                updateQueryUser(user);
+              }
+            }}
           />
         )}
 
@@ -3373,7 +3380,7 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
 }
 
 /* ───────── Templates Management View ───────── */
-function TemplatesManagementView({ plannerEmail, onToast }) {
+function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -3381,10 +3388,15 @@ function TemplatesManagementView({ plannerEmail, onToast }) {
   const [availableTags, setAvailableTags] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
 
-  // Fetch templates on mount
+  // Fetch templates and users on mount
   useEffect(() => {
     fetchTemplates();
+    fetchUsers();
   }, [plannerEmail]);
 
   const fetchTemplates = async () => {
@@ -3462,6 +3474,44 @@ function TemplatesManagementView({ plannerEmail, onToast }) {
       console.error("Error deleting template:", error);
       onToast?.("error", "Failed to delete template");
     }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`/api/users?plannerEmail=${encodeURIComponent(plannerEmail)}&status=active`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        setUsers(data.users || []);
+      } else {
+        onToast?.("error", data.error || "Failed to fetch users");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      onToast?.("error", "Failed to fetch users");
+    }
+  };
+
+  const handleTemplateClick = (template) => {
+    setSelectedTemplate(template);
+    setShowAssignModal(true);
+  };
+
+  const handleAssignTemplate = () => {
+    if (!selectedUser) {
+      onToast?.("error", "Please select a user first");
+      return;
+    }
+
+    // Navigate to plan creation with template pre-filled
+    onNavigate("plan", selectedUser);
+    
+    // Close modal
+    setShowAssignModal(false);
+    setSelectedTemplate(null);
+    setSelectedUser('');
+    
+    onToast?.("ok", `Template "${selectedTemplate.title}" will be applied to ${selectedUser}`);
   };
 
   if (loading) {
@@ -3553,7 +3603,8 @@ function TemplatesManagementView({ plannerEmail, onToast }) {
           {filteredTemplates.map(template => (
             <div
               key={template.id}
-              className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow group"
+              onClick={() => handleTemplateClick(template)}
+              className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow group cursor-pointer"
             >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors text-sm">
@@ -3621,6 +3672,66 @@ function TemplatesManagementView({ plannerEmail, onToast }) {
           }}
           onToast={onToast}
         />
+      )}
+
+      {/* Assign Template Modal */}
+      {showAssignModal && selectedTemplate && (
+        <Modal title="Assign Template" onClose={() => {
+          setShowAssignModal(false);
+          setSelectedTemplate(null);
+          setSelectedUser('');
+        }}>
+          <div className="space-y-4">
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">Template</div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="font-semibold text-sm">{selectedTemplate.title}</div>
+                {selectedTemplate.description && (
+                  <div className="text-xs text-gray-600 mt-1">{selectedTemplate.description}</div>
+                )}
+                <div className="text-xs text-gray-500 mt-1">{selectedTemplate.itemsCount || 0} tasks</div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select User *
+              </label>
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">Choose a user...</option>
+                {users.map(user => (
+                  <option key={user.email} value={user.email}>
+                    {user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedTemplate(null);
+                  setSelectedUser('');
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignTemplate}
+                disabled={!selectedUser}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Assign Template
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
