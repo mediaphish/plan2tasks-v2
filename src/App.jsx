@@ -128,7 +128,7 @@ function MainApp(){
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
   const urlUser = usp.get("user") || "";
-  const validViews = new Set(["dashboard","users","plan","settings","profile"]);
+  const validViews = new Set(["dashboard","users","plan","settings","profile","templates"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
   const plannerEmail = (urlPE || storedPE || "bartpaden@gmail.com");
@@ -149,7 +149,8 @@ function MainApp(){
     const handlePopState = (event) => {
       // Get the current URL parameters
       const urlParams = new URLSearchParams(window.location.search);
-      const newView = urlParams.get('view') || 'dashboard';
+      const urlView = urlParams.get('view') || '';
+      const newView = validViews.has(urlView) ? urlView : 'dashboard';
       const newUser = urlParams.get('user') || '';
       
       // Update the view and user state to match the URL
