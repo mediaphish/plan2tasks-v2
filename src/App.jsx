@@ -969,6 +969,18 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       setTasks(templateData.tasks || []);
       setPlanningMode("ai-assisted"); // Use normal planning mode, not templates mode
       clearAllToasts(); // Clear any existing toasts
+      
+      // Auto-scroll to Plan Setup section
+      setTimeout(() => {
+        const planSetupSection = document.querySelector('[data-section="plan-setup"]');
+        if (planSetupSection) {
+          planSetupSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 100);
+      
       // Don't clear template data immediately - let it persist for the user to see
     }
   }, [templateData, onToast]);
@@ -1174,7 +1186,7 @@ History
 
           {/* Plan Setup Section - Only show for AI-Assisted and Manual modes */}
           {planningMode !== "full-ai" && planningMode !== "templates" && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+            <div data-section="plan-setup" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
