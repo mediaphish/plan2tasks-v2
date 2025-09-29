@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       return send(res, 405, { ok: false, error: 'Method not allowed' });
     }
 
-    const { plannerEmail, name, description, tasks } = req.body;
+    const { plannerEmail, name, description, tasks, tags } = req.body;
 
     // Validation
     if (!plannerEmail || !plannerEmail.includes('@')) {
@@ -37,7 +37,8 @@ export default async function handler(req, res) {
         planner_email: plannerEmail.toLowerCase().trim(),
         name: name.trim(),
         description: description.trim(),
-        tasks: tasks
+        tasks: tasks,
+        tags: tags || []
       })
       .select('id, name, created_at')
       .single();
