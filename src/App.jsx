@@ -434,6 +434,8 @@ function MainApp(){
             urlUser={urlUser}
             onToast={(t,m)=>toast(t,m)}
             onUserChange={(email)=>updateQueryUser(email)}
+            templateData={templateData}
+            onTemplateApplied={() => setTemplateData(null)}
           />
         )}
 
@@ -441,11 +443,15 @@ function MainApp(){
           <TemplatesManagementView
             plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
-            onNavigate={(view, user) => {
+            onNavigate={(view, user, template) => {
               setView(view);
               updateQueryView(view);
               if (user) {
                 updateQueryUser(user);
+              }
+              if (template) {
+                // Store template data for Plan view to use
+                setTemplateData(template);
               }
             }}
           />
@@ -893,7 +899,7 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
 }
 
 /* ───────── Plan view ───────── */
-function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange }){
+function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange, templateData, onTemplateApplied }){
   const [users,setUsers]=useState([]);
   const [selectedUserEmail,setSelectedUserEmail]=useState("");
   const [plan,setPlan]=useState({ title:"Weekly Plan", description:"", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
@@ -906,6 +912,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
   const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual", "templates"
+  const [templateData,setTemplateData]=useState(null); // Template data from Templates view
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
 
@@ -936,6 +943,22 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   })(); },[plannerEmail]);
 
   useEffect(()=>{ setTasks([]); setMsg(""); },[selectedUserEmail]);
+
+  // Apply template data when available
+  useEffect(() => {
+    if (templateData) {
+      setPlan({
+        title: templateData.title,
+        description: templateData.description || "",
+        startDate: format(new Date(),"yyyy-MM-dd"),
+        timezone: "America/Chicago"
+      });
+      setTasks(templateData.tasks || []);
+      setPlanningMode("templates");
+      onTemplateApplied?.(); // Clear template data
+      onToast?.("ok", `Template "${templateData.title}" applied successfully`);
+    }
+  }, [templateData, onTemplateApplied, onToast]);
 
   async function loadNewBundleCount(){
     if (!selectedUserEmail) { setNewBundleCount(0); return; }
@@ -3504,7 +3527,7 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
     }
 
     // Navigate to plan creation with template pre-filled
-    onNavigate("plan", selectedUser);
+    onNavigate("plan", selectedUser, selectedTemplate);
     
     // Close modal
     setShowAssignModal(false);
