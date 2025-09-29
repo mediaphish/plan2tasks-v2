@@ -249,6 +249,7 @@ function MainApp(){
 
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
+  function clearAllToasts(){ setToasts([]); }
 
   async function saveUserNotes(newNotes) {
     try {
@@ -954,15 +955,18 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   // Apply template data when available
   useEffect(() => {
     if (templateData) {
-      setPlan({
-        title: templateData.title,
+      console.log("Applying template data:", templateData);
+      const newPlan = {
+        title: templateData.title || "Untitled Plan",
         description: templateData.description || "",
         startDate: format(new Date(),"yyyy-MM-dd"),
         timezone: "America/Chicago"
-      });
+      };
+      console.log("Setting plan to:", newPlan);
+      setPlan(newPlan);
       setTasks(templateData.tasks || []);
       setPlanningMode("ai-assisted"); // Use normal planning mode, not templates mode
-      onToast?.("ok", `Template "${templateData.title}" applied successfully`);
+      clearAllToasts(); // Clear any existing toasts
       // Don't clear template data immediately - let it persist for the user to see
     }
   }, [templateData, onToast]);
