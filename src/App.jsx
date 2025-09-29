@@ -3466,7 +3466,8 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = !searchTerm || 
       template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     
     const matchesTags = selectedTags.length === 0 || 
       (template.tags && selectedTags.every(tag => template.tags.includes(tag)));
@@ -4057,7 +4058,8 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = !searchTerm || 
       template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     
     const matchesTags = selectedTags.length === 0 || 
       (template.tags && selectedTags.every(tag => template.tags.includes(tag)));
