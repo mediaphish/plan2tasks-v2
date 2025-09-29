@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     // Get templates for this planner
     const { data, error, count } = await supabaseAdmin
       .from('plan_templates')
-      .select('id, name, description, tasks, created_at', { count: 'exact' })
+      .select('id, name, description, tasks, tags, created_at', { count: 'exact' })
       .eq('planner_email', plannerEmail.toLowerCase().trim())
       .order('created_at', { ascending: false })
       .range(from, to);
@@ -43,6 +43,7 @@ export default async function handler(req, res) {
       title: t.name,
       description: t.description,
       tasks: t.tasks || [],
+      tags: t.tags || [],
       itemsCount: Array.isArray(t.tasks) ? t.tasks.length : 0,
       created_at: t.created_at,
       isTemplate: true
