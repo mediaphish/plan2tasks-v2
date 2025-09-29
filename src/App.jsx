@@ -1458,6 +1458,27 @@ History
             }}
           />
         </div>
+
+        {/* Task Feedback Section */}
+        {selectedUserEmail && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">📊</div>
+                <div className="text-base sm:text-lg font-semibold">Task Completion Status</div>
+              </div>
+              <div className="text-sm text-gray-600 ml-8">Track task completion and user engagement for {selectedUserEmail}</div>
+            </div>
+            
+            <div className="ml-8">
+              <TaskFeedbackPanel 
+                plannerEmail={plannerEmail} 
+                userEmail={selectedUserEmail} 
+                onToast={onToast}
+              />
+            </div>
+          </div>
+        )}
       </div>
       )}
 
@@ -2297,6 +2318,143 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-lg border px-2 py-1 text-xs"><ChevronLeft className="h-3 w-3" /></button>
         <div className="text-xs">Page {page}</div>
         <button onClick={()=>setPage(p=>p+1)} className="rounded-lg border px-2 py-1 text-xs"><ChevronRight className="h-3 w-3" /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Task Feedback Panel ───────── */
+function TaskFeedbackPanel({ plannerEmail, userEmail, onToast }){
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [bundles, setBundles] = useState([]);
+
+  useEffect(() => {
+    loadFeedback();
+  }, [plannerEmail, userEmail]);
+
+  async function loadFeedback() {
+    if (!userEmail) return;
+    
+    setLoading(true);
+    try {
+      // Get assigned bundles for this user
+      const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
+      const r = await fetch(`/api/inbox?${qs.toString()}`);
+      const j = await r.json();
+      
+      if (r.ok && j.bundles) {
+        const userBundles = j.bundles.filter(b => 
+          (b.assigned_user_email || b.assigned_user) === userEmail
+        );
+        setBundles(userBundles);
+        
+        // Get feedback for the most recent bundle
+        if (userBundles.length > 0) {
+          const latestBundle = userBundles[0];
+          await loadBundleFeedback(latestBundle.id);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load feedback:', e);
+      onToast?.("error", "Failed to load task feedback");
+    }
+    setLoading(false);
+  }
+
+  async function loadBundleFeedback(bundleId) {
+    try {
+      const qs = new URLSearchParams({ plannerEmail, bundleId });
+      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
+      const j = await r.json();
+      
+      if (r.ok && j.feedback) {
+        setFeedback(j.feedback);
+      }
+    } catch (e) {
+      console.error('Failed to load bundle feedback:', e);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-4">
+        <div className="text-sm text-gray-500">Loading task feedback...</div>
+      </div>
+    );
+  }
+
+  if (!feedback) {
+    return (
+      <div className="text-center py-4">
+        <div className="text-sm text-gray-500">No feedback data available</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Connection Status */}
+      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+        <div className={`w-3 h-3 rounded-full ${feedback.hasConnection ? 'bg-green-500' : 'bg-red-500'}`}></div>
+        <div className="text-sm">
+          <span className="font-medium">Google Tasks Connection:</span>
+          <span className={`ml-2 ${feedback.hasConnection ? 'text-green-700' : 'text-red-700'}`}>
+            {feedback.hasConnection ? 'Connected' : 'Not Connected'}
+          </span>
+        </div>
+      </div>
+
+      {/* Task Completion Summary */}
+      {feedback.hasConnection && feedback.totalTasks > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{feedback.tasksCompleted}</div>
+            <div className="text-sm text-blue-700">Tasks Completed</div>
+          </div>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="text-2xl font-bold text-gray-600">{feedback.totalTasks - feedback.tasksCompleted}</div>
+            <div className="text-sm text-gray-700">Tasks Pending</div>
+          </div>
+          <div className="p-4 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">
+              {Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)}%
+            </div>
+            <div className="text-sm text-green-700">Completion Rate</div>
+          </div>
+        </div>
+      )}
+
+      {/* Task Details */}
+      {feedback.taskDetails && feedback.taskDetails.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-gray-700 mb-2">Task Details:</div>
+          <div className="space-y-1">
+            {feedback.taskDetails.map((task, index) => (
+              <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <div className={`w-2 h-2 rounded-full ${
+                  task.completed ? 'bg-green-500' : 
+                  task.found ? 'bg-yellow-500' : 'bg-red-500'
+                }`}></div>
+                <div className="flex-1 text-sm">
+                  <span className="font-medium">{task.title}</span>
+                  <span className={`ml-2 text-xs ${
+                    task.completed ? 'text-green-700' : 
+                    task.found ? 'text-yellow-700' : 'text-red-700'
+                  }`}>
+                    {task.completed ? 'Completed' : 
+                     task.found ? 'Found in Google Tasks' : 'Not Found'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Last Checked */}
+      <div className="text-xs text-gray-500">
+        Last checked: {new Date(feedback.lastChecked).toLocaleString()}
       </div>
     </div>
   );
