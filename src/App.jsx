@@ -5629,6 +5629,8 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
   const [userData, setUserData] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [bundles, setBundles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -5653,6 +5655,23 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         status: connData.status || 'unknown'
       });
 
+      // Load assigned bundles for this user
+      const bundlesRes = await fetch(`/api/inbox?plannerEmail=${encodeURIComponent(plannerEmail)}&status=assigned`);
+      const bundlesData = await bundlesRes.json();
+      
+      if (bundlesData.bundles) {
+        const userBundles = bundlesData.bundles.filter(b => 
+          (b.assigned_user_email || b.assigned_user) === userEmail
+        );
+        setBundles(userBundles);
+        
+        // Get feedback for the most recent bundle
+        if (userBundles.length > 0 && connData.connected) {
+          const latestBundle = userBundles[0];
+          await loadBundleFeedback(latestBundle.id);
+        }
+      }
+
       // Set basic user data
       setUserData({
         email: userEmail,
@@ -5675,6 +5694,20 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
       });
     }
     setLoading(false);
+  }
+
+  async function loadBundleFeedback(bundleId) {
+    try {
+      const qs = new URLSearchParams({ plannerEmail, bundleId });
+      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
+      const j = await r.json();
+      
+      if (r.ok && j.feedback) {
+        setFeedback(j.feedback);
+      }
+    } catch (e) {
+      console.error('Failed to load bundle feedback:', e);
+    }
   }
 
   if (!userEmail) {
@@ -5791,13 +5824,97 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         </div>
       </div>
 
+      {/* Task Completion Overview */}
+      {connectionStatus?.isConnected && feedback && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">📊 Task Completion Overview</h2>
+          
+          {/* Completion Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="text-3xl font-bold text-blue-600">{feedback.tasksCompleted || 0}</div>
+              <div className="text-sm text-blue-700 mt-1">Tasks Completed</div>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="text-3xl font-bold text-gray-600">
+                {(feedback.totalTasks || 0) - (feedback.tasksCompleted || 0)}
+              </div>
+              <div className="text-sm text-gray-700 mt-1">Tasks Pending</div>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="text-3xl font-bold text-green-600">
+                {feedback.totalTasks > 0 
+                  ? Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)
+                  : 0}%
+              </div>
+              <div className="text-sm text-green-700 mt-1">Completion Rate</div>
+            </div>
+          </div>
+
+          {/* Task Details */}
+          {feedback.taskDetails && feedback.taskDetails.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700 mb-3">Task Details:</div>
+              <div className="space-y-2">
+                {feedback.taskDetails.map((task, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                      task.completed ? 'bg-green-500' : 
+                      task.found ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">{task.title}</div>
+                      <div className={`text-xs mt-0.5 ${
+                        task.completed ? 'text-green-700' : 
+                        task.found ? 'text-yellow-700' : 'text-red-700'
+                      }`}>
+                        {task.completed ? '✓ Completed' : 
+                         task.found ? '◷ Found in Google Tasks' : '○ Not Found'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Last Checked */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="text-xs text-gray-500">
+              Last checked: {new Date(feedback.lastChecked).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No Feedback Available Message */}
+      {connectionStatus?.isConnected && !feedback && bundles.length > 0 && (
+        <div className="bg-blue-50 rounded-2xl border border-blue-200 p-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-2">📊 Task Completion Tracking</h2>
+          <p className="text-sm text-blue-700">
+            Task completion data will be available after the daily sync runs. 
+            The system checks Google Tasks status every night at 2 AM UTC.
+          </p>
+        </div>
+      )}
+
+      {/* No Connection Message */}
+      {!connectionStatus?.isConnected && bundles.length > 0 && (
+        <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6">
+          <h2 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Google Tasks Not Connected</h2>
+          <p className="text-sm text-yellow-700">
+            This user needs to authorize Google Tasks connection to enable task completion tracking.
+          </p>
+        </div>
+      )}
+
       {/* Placeholder for next sections */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          📊 More Dashboard Features Coming Soon
+          🚀 More Features Coming Soon
         </h2>
         <p className="text-gray-600">
-          Task completion metrics, planning workspace, recent activity, and more will be added in the next steps.
+          Planning workspace, quick actions, recent activity, and more will be added in the next steps.
         </p>
       </div>
     </div>
