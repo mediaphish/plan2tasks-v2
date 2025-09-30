@@ -57,15 +57,24 @@ async function refreshAccessToken(refreshToken) {
 export default async function handler(req, res) {
   try {
     const userEmail = (req.query.userEmail || '').toString().trim();
+    const plannerEmail = (req.query.plannerEmail || '').toString().trim();
+    
     if (!userEmail) {
       res.status(400).json({ ok: false, error: 'Missing userEmail' });
+      return;
+    }
+    
+    if (!plannerEmail) {
+      res.status(400).json({ ok: false, error: 'Missing plannerEmail' });
       return;
     }
 
     const { data: row, error } = await supabase
       .from('user_connections')
-      .select('provider, user_email, google_access_token, google_refresh_token, google_scope, google_token_type, google_token_expiry, google_expires_at, google_tasklist_id')
+      .select('provider, user_email, google_access_token, google_refresh_token, google_scope, google_token_type, google_token_expiry, google_expires_at, google_tasklist_id, status')
       .eq('user_email', userEmail)
+      .eq('planner_email', plannerEmail)
+      .eq('status', 'connected')
       .single();
 
     if (error || !row) {
