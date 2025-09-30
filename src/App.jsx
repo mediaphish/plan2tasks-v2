@@ -5628,6 +5628,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 /* ───────── User Dashboard (NEW) ───────── */
 function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
   const [userData, setUserData] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -5642,8 +5643,17 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
 
     setLoading(true);
     try {
-      // For now, just set basic user data
-      // We'll add more data in subsequent steps
+      // Load user connection status
+      const connRes = await fetch(`/api/connections/status?plannerEmail=${encodeURIComponent(plannerEmail)}&userEmail=${encodeURIComponent(userEmail)}`);
+      const connData = await connRes.json();
+      
+      setConnectionStatus({
+        isConnected: connData.connected || false,
+        lastSync: connData.lastSync || null,
+        status: connData.status || 'unknown'
+      });
+
+      // Set basic user data
       setUserData({
         email: userEmail,
         name: userEmail.split('@')[0],
@@ -5652,6 +5662,17 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
     } catch (e) {
       console.error('Failed to load user data:', e);
       onToast?.("error", "Failed to load user dashboard");
+      // Set defaults on error
+      setConnectionStatus({
+        isConnected: false,
+        lastSync: null,
+        status: 'unknown'
+      });
+      setUserData({
+        email: userEmail,
+        name: userEmail.split('@')[0],
+        status: 'active'
+      });
     }
     setLoading(false);
   }
@@ -5694,14 +5715,89 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         </button>
       </div>
 
-      {/* Placeholder content - will be enhanced in next steps */}
+      {/* User Profile & Connection Status */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* User Profile Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+              {userData?.name?.[0]?.toUpperCase() || '?'}
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">{userData?.name || 'Unknown'}</h3>
+              <p className="text-xs text-gray-500">{userEmail}</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-600">Status:</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Active
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Tasks Connection Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-600 font-semibold text-sm">GT</span>
+            </div>
+            <h3 className="font-semibold text-gray-900">Google Tasks</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${connectionStatus?.isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm font-medium">
+                {connectionStatus?.isConnected ? 'Connected' : 'Not Connected'}
+              </span>
+            </div>
+            {connectionStatus?.isConnected && connectionStatus?.lastSync && (
+              <div className="text-xs text-gray-500">
+                Last sync: {new Date(connectionStatus.lastSync).toLocaleString()}
+              </div>
+            )}
+            {!connectionStatus?.isConnected && (
+              <div className="text-xs text-gray-500 mt-2">
+                User needs to authorize Google Tasks connection
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Connection Health Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <span className="text-green-600 font-semibold text-lg">✓</span>
+            </div>
+            <h3 className="font-semibold text-gray-900">Connection Health</h3>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">API Status:</span>
+              <span className={`font-medium ${connectionStatus?.isConnected ? 'text-green-600' : 'text-gray-400'}`}>
+                {connectionStatus?.isConnected ? 'Healthy' : 'N/A'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Connection:</span>
+              <span className={`font-medium ${connectionStatus?.status === 'connected' ? 'text-green-600' : 'text-gray-400'}`}>
+                {connectionStatus?.status || 'Unknown'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Placeholder for next sections */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          📊 User Dashboard (Coming Soon)
+          📊 More Dashboard Features Coming Soon
         </h2>
         <p className="text-gray-600">
-          This comprehensive dashboard will show all user information, task completion status, 
-          Google Tasks feedback, planning tools, and more.
+          Task completion metrics, planning workspace, recent activity, and more will be added in the next steps.
         </p>
       </div>
     </div>
