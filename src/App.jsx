@@ -5645,11 +5645,18 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
 
     setLoading(true);
     try {
-      // Load user connection status
-      const connRes = await fetch(`/api/connections/status?plannerEmail=${encodeURIComponent(plannerEmail)}&userEmail=${encodeURIComponent(userEmail)}`);
+      // Load user connection status (Google Tasks API only checks userEmail, not planner)
+      console.log('Fetching connection status for:', { userEmail });
+      const connRes = await fetch(`/api/connections/status?userEmail=${encodeURIComponent(userEmail)}`);
       const connData = await connRes.json();
+      console.log('Connection status response:', connData);
       
       setConnectionStatus({
+        isConnected: connData.canCallTasks || false,
+        lastSync: connData.google_expires_at || null,
+        status: connData.canCallTasks ? 'connected' : (connData.googleError || 'unknown')
+      });
+      console.log('Set connection status to:', {
         isConnected: connData.canCallTasks || false,
         lastSync: connData.google_expires_at || null,
         status: connData.canCallTasks ? 'connected' : (connData.googleError || 'unknown')
