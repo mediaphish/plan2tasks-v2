@@ -5646,13 +5646,13 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
     setLoading(true);
     try {
       // Load user connection status
-      const connRes = await fetch(`/api/connections/status?plannerEmail=${encodeURIComponent(plannerEmail)}&userEmail=${encodeURIComponent(userEmail)}`);
+      const connRes = await fetch(`/api/connections/status?userEmail=${encodeURIComponent(userEmail)}`);
       const connData = await connRes.json();
       
       setConnectionStatus({
-        isConnected: connData.connected || false,
-        lastSync: connData.lastSync || null,
-        status: connData.status || 'unknown'
+        isConnected: connData.canCallTasks || false,
+        lastSync: connData.google_expires_at || null,
+        status: connData.canCallTasks ? 'connected' : (connData.googleError || 'unknown')
       });
 
       // Load assigned bundles for this user
@@ -5666,7 +5666,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         setBundles(userBundles);
         
         // Get feedback for the most recent bundle
-        if (userBundles.length > 0 && connData.connected) {
+        if (userBundles.length > 0 && connData.canCallTasks) {
           const latestBundle = userBundles[0];
           await loadBundleFeedback(latestBundle.id);
         }
