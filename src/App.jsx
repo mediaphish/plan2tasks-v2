@@ -128,7 +128,7 @@ function MainApp(){
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
   const urlUser = usp.get("user") || "";
-  const validViews = new Set(["dashboard","users","plan","settings","profile","templates"]);
+  const validViews = new Set(["dashboard","users","plan","settings","profile","templates","user-dashboard"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
   const plannerEmail = (urlPE || storedPE || "bartpaden@gmail.com");
@@ -427,6 +427,12 @@ function MainApp(){
               setView("plan"); 
               updateQueryUser(email);
             }}
+            onViewDashboard={(email) => {
+              setSelectedUserEmail(email);
+              setView("user-dashboard");
+              updateQueryView("user-dashboard");
+              updateQueryUser(email);
+            }}
           />
         )}
 
@@ -457,6 +463,18 @@ function MainApp(){
                 // Store template data for Plan view to use
                 setTemplateData(template);
               }
+            }}
+          />
+        )}
+
+        {view==="user-dashboard" && (
+          <UserDashboard
+            plannerEmail={plannerEmail}
+            userEmail={selectedUserEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onNavigate={(newView) => {
+              setView(newView);
+              updateQueryView(newView);
             }}
           />
         )}
@@ -2775,7 +2793,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
 }
 
 /* ───────── Users view — Active/Archived/Deleted ───────── */
-function UsersView({ plannerEmail, onToast, onManage }){
+function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
   const [rows,setRows]=useState([]);
   const [filter,setFilter]=useState("");
   const [groups,setGroups]=useState({});
@@ -3039,6 +3057,15 @@ function UsersView({ plannerEmail, onToast, onManage }){
                                 {bundleInfo.new}
                               </span>
                             )}
+                          </button>
+
+                          {/* NEW: View User Dashboard button */}
+                          <button
+                            onClick={() => onViewDashboard?.(r.email)}
+                            className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100 relative"
+                            title="View comprehensive dashboard for this user"
+                          >
+                            Dashboard
                           </button>
 
                           {/* NEW: Cancel invite for pending invite-only rows */}
@@ -5597,6 +5624,89 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   );
 }
 
+
+/* ───────── User Dashboard (NEW) ───────── */
+function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserData();
+  }, [plannerEmail, userEmail]);
+
+  async function loadUserData() {
+    if (!userEmail) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // For now, just set basic user data
+      // We'll add more data in subsequent steps
+      setUserData({
+        email: userEmail,
+        name: userEmail.split('@')[0],
+        status: 'active'
+      });
+    } catch (e) {
+      console.error('Failed to load user data:', e);
+      onToast?.("error", "Failed to load user dashboard");
+    }
+    setLoading(false);
+  }
+
+  if (!userEmail) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500">No user selected</div>
+        <button
+          onClick={() => onNavigate?.("users")}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Back to Users
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500">Loading user dashboard...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">User Dashboard</h1>
+          <p className="text-sm text-gray-600 mt-1">{userEmail}</p>
+        </div>
+        <button
+          onClick={() => onNavigate?.("users")}
+          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+        >
+          ← Back to Users
+        </button>
+      </div>
+
+      {/* Placeholder content - will be enhanced in next steps */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          📊 User Dashboard (Coming Soon)
+        </h2>
+        <p className="text-gray-600">
+          This comprehensive dashboard will show all user information, task completion status, 
+          Google Tasks feedback, planning tools, and more.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 /* ───────── Timezones ───────── */
 const TIMEZONES = [
