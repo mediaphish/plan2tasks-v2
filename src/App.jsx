@@ -5646,7 +5646,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
     setLoading(true);
     try {
       // Load user connection status
-      const connRes = await fetch(`/api/connections/status?userEmail=${encodeURIComponent(userEmail)}`);
+      const connRes = await fetch(`/api/connections/status?plannerEmail=${encodeURIComponent(plannerEmail)}&userEmail=${encodeURIComponent(userEmail)}`);
       const connData = await connRes.json();
       
       setConnectionStatus({
