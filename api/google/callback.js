@@ -81,7 +81,10 @@ export default async function handler(req, res) {
       google_token_type: tokenType,
       google_token_expiry: expUnix,
       google_expires_at: expiresAtIso,
-      google_tasklist_id: existing?.google_tasklist_id || null
+      google_tasklist_id: existing?.google_tasklist_id || null,
+      // Preserve existing planner_email and status if they exist
+      ...(existing?.planner_email && { planner_email: existing.planner_email }),
+      ...(existing?.status && { status: existing.status })
     };
 
     const { error: upErr } = await supabaseAdmin
