@@ -52,9 +52,9 @@ export default async function handler(req, res) {
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('access_type', 'offline');
     authUrl.searchParams.set('include_granted_scopes', 'true');
-    authUrl.searchParams.set('prompt', 'consent');
+    authUrl.searchParams.set('prompt', 'consent select_account');
 
-    // Return HTML that opens OAuth in new window
+    // Return HTML that opens OAuth in popup and replaces current page
     res.setHeader('Content-Type', 'text/html');
     res.status(200).send(`
       <!DOCTYPE html>
@@ -64,8 +64,11 @@ export default async function handler(req, res) {
         </head>
         <body>
           <script>
-            // Open OAuth in new window
-            const oauthWindow = window.open('${authUrl.toString()}', '_blank', 'width=500,height=600');
+            // Immediately replace current history entry to prevent OAuth URL from being stored
+            window.history.replaceState(null, '', 'https://www.plan2tasks.com/?view=users');
+            
+            // Open OAuth in popup window
+            const oauthWindow = window.open('${authUrl.toString()}', 'oauth', 'width=500,height=600,scrollbars=yes,resizable=yes');
             
             // Listen for the OAuth window to close
             const checkClosed = setInterval(() => {
@@ -75,8 +78,15 @@ export default async function handler(req, res) {
                 window.location.href = 'https://www.plan2tasks.com/?view=users';
               }
             }, 1000);
+            
+            // If popup is blocked, redirect to Google directly
+            if (!oauthWindow || oauthWindow.closed) {
+              alert('Popup blocked. Please allow popups and try again.');
+              window.location.href = 'https://www.plan2tasks.com/?view=users';
+            }
           </script>
           <p>Opening authorization window...</p>
+          <p>If nothing happens, please allow popups and <a href="javascript:location.reload()">try again</a>.</p>
         </body>
       </html>
     `);
@@ -90,3 +100,4 @@ export default async function handler(req, res) {
     });
   }
 }
+
