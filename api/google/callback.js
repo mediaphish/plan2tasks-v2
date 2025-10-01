@@ -76,9 +76,7 @@ export default async function handler(req, res) {
       user_email: userEmail,
       provider: "google",
       google_access_token: accessToken,
-      // CRITICAL: Only update refresh_token if we got a new one from Google
-      // Google often doesn't return a refresh_token on re-consent if one already exists
-      ...(refreshToken ? { google_refresh_token: refreshToken } : existing?.google_refresh_token ? { google_refresh_token: existing.google_refresh_token } : {}),
+      google_refresh_token: refreshToken || existing?.google_refresh_token || null,
       google_scope: scope,
       google_token_type: tokenType,
       google_token_expiry: expUnix,
