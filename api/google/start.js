@@ -52,7 +52,7 @@ export default async function handler(req, res) {
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('access_type', 'offline');
     authUrl.searchParams.set('include_granted_scopes', 'true');
-    authUrl.searchParams.set('prompt', 'consent select_account');
+    authUrl.searchParams.set('prompt', 'consent');
 
     // Return HTML that opens OAuth in popup and replaces current page
     res.setHeader('Content-Type', 'text/html');
