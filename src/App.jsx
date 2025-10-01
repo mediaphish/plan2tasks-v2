@@ -428,10 +428,13 @@ function MainApp(){
               updateQueryUser(email);
             }}
             onViewDashboard={(email) => {
+              console.log('[onViewDashboard] Called with email:', email);
               setSelectedUserEmail(email);
               setView("user-dashboard");
+              console.log('[onViewDashboard] Calling updateQueryView("user-dashboard")');
               updateQueryView("user-dashboard");
               updateQueryUser(email);
+              console.log('[onViewDashboard] URL should now be:', window.location.href);
             }}
           />
         )}
@@ -5650,6 +5653,12 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
       const connRes = await fetch(`/api/connections/status?userEmail=${encodeURIComponent(userEmail)}`);
       const connData = await connRes.json();
       console.log('Connection status response:', connData);
+      console.log('CRITICAL FIELDS:', {
+        canCallTasks: connData.canCallTasks,
+        googleError: connData.googleError,
+        hasAccessToken: connData.hasAccessToken,
+        hasRefreshToken: connData.hasRefreshToken
+      });
       
       setConnectionStatus({
         isConnected: connData.canCallTasks || false,
