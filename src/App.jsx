@@ -5923,15 +5923,12 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
               ? 'The Google Tasks authorization has expired or been revoked. The user needs to re-authorize.'
               : 'This user needs to authorize Google Tasks connection to enable task completion tracking.'}
           </p>
-          <button
-            onClick={() => {
-              const authUrl = `/api/google/start?userEmail=${encodeURIComponent(userEmail)}`;
-              window.open(authUrl, 'google-auth', 'width=600,height=700');
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+          <a
+            href={`/api/google/start?userEmail=${encodeURIComponent(userEmail)}`}
+            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
           >
             Authorize Google Tasks
-          </button>
+          </a>
         </div>
       )}
 
