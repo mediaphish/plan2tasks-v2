@@ -46,15 +46,13 @@ export default async function handler(req, res) {
           console.log(`Checking feedback for bundle ${bundle.id} (user: ${bundle.assigned_user_email})`);
           
           try {
-               // Get bundle tasks
-                const { data: bundleDetails } = await supabaseAdmin
-                  .from('inbox_bundles')
-                  .select('tasks')
-                  .eq('id', bundle.id)
-                  .single();
+            // Get bundle tasks from inbox_tasks table
+            const { data: tasks } = await supabaseAdmin
+              .from('inbox_tasks')
+              .select('title')
+              .eq('bundle_id', bundle.id);
 
-            if (bundleDetails?.tasks) {
-              const tasks = bundleDetails.tasks;
+            if (tasks && tasks.length > 0) {
               const taskResults = [];
 
               // Initialize Google Tasks API

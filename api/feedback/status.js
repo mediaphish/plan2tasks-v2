@@ -43,20 +43,26 @@ export default async function handler(req, res) {
       .eq('status', 'connected')
       .single();
 
+    // Get tasks from inbox_tasks table
+    const { data: tasks } = await supabaseAdmin
+      .from('inbox_tasks')
+      .select('title')
+      .eq('bundle_id', bundleId);
+
     // Check actual task completion if connection exists
     let taskCompletionData = {
       tasksCompleted: 0,
-      totalTasks: bundle.tasks?.length || 0,
+      totalTasks: tasks?.length || 0,
       taskDetails: []
     };
 
-    if (connection && bundle.tasks) {
+    if (connection && tasks && tasks.length > 0) {
       try {
         const { GoogleTasksFeedback } = await import('../../lib/google-tasks-feedback.js');
         const googleTasks = new GoogleTasksFeedback(connection.access_token);
         
         const taskResults = [];
-        for (const task of bundle.tasks) {
+        for (const task of tasks) {
           try {
             const completion = await googleTasks.checkTaskCompletion(task.title);
             taskResults.push({
@@ -76,7 +82,7 @@ export default async function handler(req, res) {
 
         taskCompletionData = {
           tasksCompleted: taskResults.filter(t => t.completed).length,
-          totalTasks: bundle.tasks.length,
+          totalTasks: tasks.length,
           taskDetails: taskResults
         };
       } catch (apiError) {
