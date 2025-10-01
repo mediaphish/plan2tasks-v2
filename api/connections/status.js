@@ -106,14 +106,19 @@ export default async function handler(req, res) {
     let currentAccessToken = row.google_access_token;
 
     if (hasAccessToken) {
+      console.log('[/api/connections/status] Testing access token with Google Tasks API...');
       const firstTry = await fetchTasklists(currentAccessToken);
+      console.log('[/api/connections/status] First API call result:', { status: firstTry.status, hasError: !!firstTry.json?.error });
       if (firstTry.status >= 200 && firstTry.status < 300) {
+        console.log('[/api/connections/status] Token is valid! Setting canCallTasks = true');
         canCallTasks = true;
       } else if (firstTry.status === 401 || firstTry.status === 403) {
+        console.log('[/api/connections/status] Token expired (401/403), attempting refresh...');
         // Attempt silent refresh if we can
         if (hasRefreshToken) {
           try {
             const refreshed = await refreshAccessToken(row.google_refresh_token);
+            console.log('[/api/connections/status] Token refresh successful');
 
             // Persist refreshed token (and scope/type if present)
             const updatePayload = {
