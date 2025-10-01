@@ -156,7 +156,7 @@ export default async function handler(req, res) {
       googleError = 'no_access_token';
     }
 
-    res.status(200).json({
+    const responseData = {
       ok: true,
       userEmail,
       tableUsed: 'user_connections',
@@ -170,7 +170,16 @@ export default async function handler(req, res) {
       google_tasklist_id: row.google_tasklist_id || null,
       canCallTasks,
       googleError
+    };
+    
+    console.log('[/api/connections/status] Response:', { 
+      canCallTasks, 
+      googleError,
+      hasAccessToken: !!currentAccessToken,
+      hasRefreshToken
     });
+    
+    res.status(200).json(responseData);
   } catch (err) {
     res.status(200).json({
       ok: true,
