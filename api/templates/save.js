@@ -44,8 +44,8 @@ export default async function handler(req, res) {
       .single();
 
     if (error) {
-      console.error('Template save error:', error);
-      return send(res, 500, { ok: false, error: 'Failed to save template' });
+      console.error('Template save database error:', error);
+      return send(res, 500, { ok: false, error: `Failed to save template: ${error.message || error.code || 'Unknown database error'}` });
     }
 
     return send(res, 200, { 
