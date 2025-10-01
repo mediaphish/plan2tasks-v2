@@ -5917,18 +5917,10 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
       {/* No Connection Message */}
       {!connectionStatus?.isConnected && bundles.length > 0 && (
         <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6">
-          <h2 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Google Tasks Connection Required</h2>
-          <p className="text-sm text-yellow-700 mb-4">
-            {connectionStatus?.status?.includes('revoked') || connectionStatus?.status?.includes('expired') 
-              ? 'The Google Tasks authorization has expired or been revoked. The user needs to re-authorize.'
-              : 'This user needs to authorize Google Tasks connection to enable task completion tracking.'}
+          <h2 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Google Tasks Not Connected</h2>
+          <p className="text-sm text-yellow-700">
+            This user needs to authorize Google Tasks connection to enable task completion tracking.
           </p>
-          <a
-            href={`/api/google/start?userEmail=${encodeURIComponent(userEmail)}`}
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-          >
-            Authorize Google Tasks
-          </a>
         </div>
       )}
 
