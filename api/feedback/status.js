@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
     // Get bundle details
     const { data: bundle, error: bundleError } = await supabaseAdmin
-      .from('plan_bundles')
+      .from('inbox_bundles')
       .select('*')
       .eq('id', bundleId)
       .eq('planner_email', plannerEmail.toLowerCase().trim())
@@ -43,8 +43,48 @@ export default async function handler(req, res) {
       .eq('status', 'connected')
       .single();
 
-    // For now, return basic status
-    // TODO: Add actual feedback data when we implement Google Tasks API checking
+    // Check actual task completion if connection exists
+    let taskCompletionData = {
+      tasksCompleted: 0,
+      totalTasks: bundle.tasks?.length || 0,
+      taskDetails: []
+    };
+
+    if (connection && bundle.tasks) {
+      try {
+        const { GoogleTasksFeedback } = await import('../../lib/google-tasks-feedback.js');
+        const googleTasks = new GoogleTasksFeedback(connection.access_token);
+        
+        const taskResults = [];
+        for (const task of bundle.tasks) {
+          try {
+            const completion = await googleTasks.checkTaskCompletion(task.title);
+            taskResults.push({
+              title: task.title,
+              found: completion.found,
+              completed: completion.completed,
+              status: completion.status
+            });
+          } catch (taskError) {
+            taskResults.push({
+              title: task.title,
+              error: taskError.message,
+              status: 'error'
+            });
+          }
+        }
+
+        taskCompletionData = {
+          tasksCompleted: taskResults.filter(t => t.completed).length,
+          totalTasks: bundle.tasks.length,
+          taskDetails: taskResults
+        };
+      } catch (apiError) {
+        console.error('Error checking Google Tasks:', apiError);
+        taskCompletionData.error = apiError.message;
+      }
+    }
+
     return send(res, 200, {
       ok: true,
       feedback: {
@@ -53,9 +93,7 @@ export default async function handler(req, res) {
         hasConnection: !!connection,
         status: connection ? 'monitoring' : 'no_connection',
         lastChecked: new Date().toISOString(),
-        // TODO: Add actual task completion data
-        tasksCompleted: 0,
-        totalTasks: bundle.tasks?.length || 0
+        ...taskCompletionData
       }
     });
 

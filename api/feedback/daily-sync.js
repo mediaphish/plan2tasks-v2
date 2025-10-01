@@ -5,6 +5,7 @@ export const config = {
 };
 
 import { supabaseAdmin } from '../../lib/supabase-admin.js';
+import { GoogleTasksFeedback } from '../../lib/google-tasks-feedback.js';
 
 export default async function handler(req, res) {
   try {
@@ -15,10 +16,11 @@ export default async function handler(req, res) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const { data: bundles, error: bundlesError } = await supabaseAdmin
-      .from('plan_bundles')
+      .from('inbox_bundles')
       .select('id, planner_email, assigned_user_email, created_at')
       .gte('created_at', thirtyDaysAgo.toISOString())
-      .eq('status', 'assigned');
+      .not('assigned_at', 'is', null)
+      .is('archived_at', null);
 
     if (bundlesError) {
       console.error('Error fetching bundles:', bundlesError);
@@ -41,16 +43,70 @@ export default async function handler(req, res) {
           .single();
 
         if (connection) {
-          // TODO: Implement actual Google Tasks API checking
           console.log(`Checking feedback for bundle ${bundle.id} (user: ${bundle.assigned_user_email})`);
           
-          // For now, just log that we would check this
-          results.push({
-            bundleId: bundle.id,
-            userEmail: bundle.assigned_user_email,
-            status: 'checked',
-            hasConnection: true
-          });
+          try {
+               // Get bundle tasks
+                const { data: bundleDetails } = await supabaseAdmin
+                  .from('inbox_bundles')
+                  .select('tasks')
+                  .eq('id', bundle.id)
+                  .single();
+
+            if (bundleDetails?.tasks) {
+              const tasks = bundleDetails.tasks;
+              const taskResults = [];
+
+              // Initialize Google Tasks API
+              const googleTasks = new GoogleTasksFeedback(connection.access_token);
+
+              // Check each task
+              for (const task of tasks) {
+                try {
+                  const completion = await googleTasks.checkTaskCompletion(task.title);
+                  taskResults.push({
+                    taskTitle: task.title,
+                    found: completion.found,
+                    completed: completion.completed,
+                    status: completion.status
+                  });
+                } catch (taskError) {
+                  console.error(`Error checking task "${task.title}":`, taskError);
+                  taskResults.push({
+                    taskTitle: task.title,
+                    error: taskError.message,
+                    status: 'error'
+                  });
+                }
+              }
+
+              results.push({
+                bundleId: bundle.id,
+                userEmail: bundle.assigned_user_email,
+                status: 'checked',
+                hasConnection: true,
+                taskResults: taskResults,
+                totalTasks: tasks.length,
+                completedTasks: taskResults.filter(t => t.completed).length
+              });
+            } else {
+              results.push({
+                bundleId: bundle.id,
+                userEmail: bundle.assigned_user_email,
+                status: 'no_tasks',
+                hasConnection: true
+              });
+            }
+          } catch (apiError) {
+            console.error(`Error checking Google Tasks for bundle ${bundle.id}:`, apiError);
+            results.push({
+              bundleId: bundle.id,
+              userEmail: bundle.assigned_user_email,
+              status: 'api_error',
+              hasConnection: true,
+              error: apiError.message
+            });
+          }
         } else {
           results.push({
             bundleId: bundle.id,

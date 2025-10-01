@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
     // Get bundle details
     const { data: bundle, error: bundleError } = await supabaseAdmin
-      .from('plan_bundles')
+      .from('inbox_bundles')
       .select('*')
       .eq('id', bundleId)
       .eq('planner_email', plannerEmail.toLowerCase().trim())
