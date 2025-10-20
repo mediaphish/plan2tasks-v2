@@ -26,7 +26,9 @@ export default async function handler(req, res) {
 
     if (status === "archived") sel = sel.not("archived_at", "is", null);
     else if (status === "assigned") sel = sel.not("assigned_at", "is", null).is("archived_at", null);
-    else sel = sel.is("assigned_at", null).is("archived_at", null);
+    else if (status === "all") {
+      // No filtering - show all bundles
+    } else sel = sel.is("assigned_at", null).is("archived_at", null);
 
     if (q) sel = sel.ilike("title", `%${q}%`);
 
