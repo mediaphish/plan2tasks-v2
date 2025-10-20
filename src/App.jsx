@@ -5671,14 +5671,16 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         status: connData.canCallTasks ? 'connected' : (connData.googleError || 'unknown')
       });
 
-      // Load assigned bundles for this user
-      const bundlesRes = await fetch(`/api/inbox?plannerEmail=${encodeURIComponent(plannerEmail)}&status=assigned`);
+      // Load bundles for this user (both assigned and archived)
+      const bundlesRes = await fetch(`/api/inbox?plannerEmail=${encodeURIComponent(plannerEmail)}&status=all`);
       const bundlesData = await bundlesRes.json();
       
       if (bundlesData.bundles) {
         const userBundles = bundlesData.bundles.filter(b => 
           (b.assigned_user_email || b.assigned_user) === userEmail
         );
+        // Sort by created_at descending to get most recent first
+        userBundles.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setBundles(userBundles);
         
         // Get feedback for the most recent bundle
@@ -5756,12 +5758,20 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
           <h1 className="text-2xl font-bold text-gray-900">User Dashboard</h1>
           <p className="text-sm text-gray-600 mt-1">{userEmail}</p>
         </div>
-        <button
-          onClick={() => onNavigate?.("users")}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-        >
-          ← Back to Users
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={loadUserData}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            onClick={() => onNavigate?.("users")}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+          >
+            ← Back to Users
+          </button>
+        </div>
       </div>
 
       {/* User Profile & Connection Status */}
