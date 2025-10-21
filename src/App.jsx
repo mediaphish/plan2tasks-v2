@@ -411,6 +411,7 @@ function MainApp(){
             onManage={(email)=>{ 
               setSelectedUserEmail(email);
               setView("plan"); 
+              updateQueryView("plan");
               updateQueryUser(email);
             }}
             onViewDashboard={(email) => {
@@ -433,6 +434,7 @@ function MainApp(){
             onManage={(email)=>{ 
               setSelectedUserEmail(email);
               setView("plan"); 
+              updateQueryView("plan");
               updateQueryUser(email);
             }}
             onViewDashboard={(email) => {
@@ -580,7 +582,8 @@ function updateQueryUser(userEmail){
     } else {
       url.searchParams.delete("user");
     }
-    url.searchParams.set("view", "plan");
+    // DON'T override the view - let the calling function control the view
+    // url.searchParams.set("view", "plan"); // REMOVED - this was causing the bug!
     
     // Clean up OAuth parameters that might be in the URL
     url.searchParams.delete("code");
