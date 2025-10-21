@@ -308,16 +308,7 @@ function MainApp(){
               >
                 Users
               </button>
-              <button 
-                onClick={()=>{ setView("plan"); updateQueryView("plan"); }}
-                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
-                  view === "plan" 
-                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                }`}
-              >
-                Plan
-              </button>
+              {/* Hidden: Plan navigation - Plan creation now accessed via User Dashboard */}
               <button 
                 onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
                 className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
@@ -404,20 +395,27 @@ function MainApp(){
         </div>
 
         {view==="dashboard" && (
-          <DashboardView
+          <UsersView
             plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
-            onNavigate={(view, user) => {
-              setView(view);
-              updateQueryView(view);
-              if (user) {
-                setSelectedUserEmail(user);
-                updateQueryUser(user);
-              }
+            onManage={(email)=>{ 
+              setSelectedUserEmail(email);
+              setView("plan"); 
+              updateQueryUser(email);
+            }}
+            onViewDashboard={(email) => {
+              console.log('[onViewDashboard] Called with email:', email);
+              setSelectedUserEmail(email);
+              setView("user-dashboard");
+              console.log('[onViewDashboard] Calling updateQueryView("user-dashboard")');
+              updateQueryView("user-dashboard");
+              updateQueryUser(email);
+              console.log('[onViewDashboard] URL should now be:', window.location.href);
             }}
           />
         )}
 
+        {/* Users view is now handled by Dashboard - keeping this for backward compatibility */}
         {view==="users" && (
           <UsersView
             plannerEmail={plannerEmail}
