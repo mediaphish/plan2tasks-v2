@@ -3085,7 +3085,11 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
 
                           {/* NEW: View User Dashboard button */}
                           <button
-                            onClick={() => onViewDashboard?.(r.email)}
+                            onClick={() => {
+                              console.log('[User Dashboard Button] Clicked for email:', r.email);
+                              console.log('[User Dashboard Button] onViewDashboard function:', typeof onViewDashboard);
+                              onViewDashboard?.(r.email);
+                            }}
                             className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100 relative"
                             title="View comprehensive dashboard for this user"
                           >
