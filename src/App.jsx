@@ -5807,9 +5807,9 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${connectionStatus?.isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-3 h-3 rounded-full ${connectionStatus?.isConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
               <span className="text-sm font-medium">
-                {connectionStatus?.isConnected ? 'Connected' : 'Not Connected'}
+                {connectionStatus?.isConnected ? 'Connected' : 'Re-authorizing...'}
               </span>
             </div>
             {connectionStatus?.isConnected && connectionStatus?.lastSync && (
@@ -5819,7 +5819,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
             )}
             {!connectionStatus?.isConnected && (
               <div className="text-xs text-gray-500 mt-2">
-                User needs to authorize Google Tasks connection
+                User has been notified to re-authorize their Google account
               </div>
             )}
           </div>
