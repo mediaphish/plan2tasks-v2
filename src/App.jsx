@@ -290,9 +290,15 @@ function MainApp(){
             <nav className="hidden md:flex items-center gap-1 bg-gray-50/50 rounded-lg p-1 border border-gray-200/60 backdrop-blur-sm">
               <button 
                 onClick={()=>{ 
+                  // Clear user parameter first
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete("user");
+                  url.searchParams.set("view", "dashboard");
+                  window.history.pushState({}, "", url.toString());
+                  
+                  // Update state
                   setView("dashboard"); 
-                  setSelectedUserEmail(""); // Clear selected user when going to main dashboard
-                  updateQueryView("dashboard"); 
+                  setSelectedUserEmail("");
                 }}
                 className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
                   view === "dashboard" 
