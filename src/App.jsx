@@ -289,7 +289,11 @@ function MainApp(){
             <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8" />
             <nav className="hidden md:flex items-center gap-1 bg-gray-50/50 rounded-lg p-1 border border-gray-200/60 backdrop-blur-sm">
               <button 
-                onClick={()=>{ setView("dashboard"); updateQueryView("dashboard"); }}
+                onClick={()=>{ 
+                  setView("dashboard"); 
+                  setSelectedUserEmail(""); // Clear selected user when going to main dashboard
+                  updateQueryView("dashboard"); 
+                }}
                 className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
                   view === "dashboard" 
                     ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
@@ -544,6 +548,11 @@ function updateQueryView(next){
   try{
     const url = new URL(window.location.href);
     url.searchParams.set("view", next);
+    
+    // Clear user parameter when going to main dashboard
+    if (next === "dashboard") {
+      url.searchParams.delete("user");
+    }
     
     // Clean up OAuth parameters that might be in the URL
     url.searchParams.delete("code");
@@ -3074,7 +3083,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                             className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100 relative"
                             title="View comprehensive dashboard for this user"
                           >
-                            Dashboard
+                            User Dashboard
                           </button>
 
                           {/* NEW: Cancel invite for pending invite-only rows */}
