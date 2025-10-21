@@ -5934,15 +5934,8 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         </div>
       )}
 
-      {/* Placeholder for next sections */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          🚀 More Features Coming Soon
-        </h2>
-        <p className="text-gray-600">
-          Planning workspace, quick actions, recent activity, and more will be added in the next steps.
-        </p>
-      </div>
+      {/* Hidden: Incomplete features - Planning workspace, quick actions, recent activity */}
+      {/* These features will be restored when fully implemented */}
     </div>
   );
 }
