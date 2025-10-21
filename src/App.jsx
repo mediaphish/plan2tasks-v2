@@ -447,6 +447,7 @@ function MainApp(){
             templateData={templateData}
             onTemplateApplied={() => setTemplateData(null)}
             clearAllToasts={clearAllToasts}
+            prefs={prefs}
           />
         )}
 
@@ -922,7 +923,7 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
 }
 
 /* ───────── Plan view ───────── */
-function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange, templateData, onTemplateApplied, clearAllToasts }){
+function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange, templateData, onTemplateApplied, clearAllToasts, prefs }){
   const [users,setUsers]=useState([]);
   const [selectedUserEmail,setSelectedUserEmail]=useState("");
   const [plan,setPlan]=useState({ title:"Weekly Plan", description:"", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
@@ -934,7 +935,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [activeTab,setActiveTab]=useState("plan");
   const [newBundleCount,setNewBundleCount]=useState(0);
   const [taskMode,setTaskMode]=useState("manual");
-  const [planningMode,setPlanningMode]=useState("ai-assisted"); // "full-ai", "ai-assisted", "manual", "templates"
+  const [planningMode,setPlanningMode]=useState(prefs?.default_planning_mode || "full-ai"); // "full-ai", "ai-assisted", "manual", "templates"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
 
@@ -945,6 +946,13 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       setSelectedUserEmail(selectedUserEmailProp);
     }
   },[urlUser, selectedUserEmailProp]);
+
+  // Update planning mode when preferences change
+  useEffect(() => {
+    if (prefs?.default_planning_mode) {
+      setPlanningMode(prefs.default_planning_mode);
+    }
+  }, [prefs?.default_planning_mode]);
 
   useEffect(()=>{ (async ()=>{
     const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
@@ -3423,6 +3431,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
       default_view: prefs.default_view || "users",
       default_timezone: prefs.default_timezone || "America/Chicago",
       default_push_mode: prefs.default_push_mode || "append",
+      default_planning_mode: prefs.default_planning_mode || "full-ai",
       auto_archive_after_assign: !!prefs.auto_archive_after_assign,
       show_inbox_badge: !!prefs.show_inbox_badge,
     };
@@ -3433,6 +3442,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     default_view: prefs.default_view || "users",
     default_timezone: prefs.default_timezone || "America/Chicago",
     default_push_mode: prefs.default_push_mode || "append",
+    default_planning_mode: prefs.default_planning_mode || "full-ai",
     auto_archive_after_assign: !!prefs.auto_archive_after_assign,
     show_inbox_badge: !!prefs.show_inbox_badge,
   }); },[prefs]);
@@ -3477,6 +3487,16 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
           <select value={local.default_push_mode} onChange={(e)=>setLocal({...local, default_push_mode:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
             <option value="append">Append</option>
             <option value="replace">Replace</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default planning mode</div>
+          <select value={local.default_planning_mode} onChange={(e)=>setLocal({...local, default_planning_mode:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="full-ai">Full AI Planning</option>
+            <option value="ai-assisted">AI-Assisted Manual</option>
+            <option value="manual">Pure Manual</option>
+            <option value="templates">Use Template</option>
           </select>
         </label>
 
