@@ -3576,6 +3576,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
   }
 
   return (
+    <>
     <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-3 text-sm font-semibold">Settings</div>
 
@@ -3735,6 +3736,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
         </div>
       )}
     </div>
+    </>
   );
 }
 
