@@ -417,9 +417,9 @@ function MainApp(){
             onViewDashboard={(email) => {
               console.log('[onViewDashboard] Called with email:', email);
               setSelectedUserEmail(email);
-              setView("user-dashboard");
-              console.log('[onViewDashboard] Calling updateQueryView("user-dashboard")');
-              updateQueryView("user-dashboard");
+              setView("plan");
+              console.log('[onViewDashboard] Calling updateQueryView("plan")');
+              updateQueryView("plan");
               updateQueryUser(email);
               console.log('[onViewDashboard] URL should now be:', window.location.href);
             }}
@@ -440,9 +440,9 @@ function MainApp(){
             onViewDashboard={(email) => {
               console.log('[onViewDashboard] Called with email:', email);
               setSelectedUserEmail(email);
-              setView("user-dashboard");
-              console.log('[onViewDashboard] Calling updateQueryView("user-dashboard")');
-              updateQueryView("user-dashboard");
+              setView("plan");
+              console.log('[onViewDashboard] Calling updateQueryView("plan")');
+              updateQueryView("plan");
               updateQueryUser(email);
               console.log('[onViewDashboard] URL should now be:', window.location.href);
             }}
