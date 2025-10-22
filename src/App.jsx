@@ -3388,8 +3388,16 @@ function SendInviteModal({ plannerEmail, onClose, onToast }){
       });
       const parsed = await parseMaybeJson(resp);
       if (!resp.ok) {
-        if (parsed.kind==="json") onToast?.("error", `Invite failed: ${parsed.json?.error || JSON.stringify(parsed.json)}`);
-        else onToast?.("error", `Invite failed: ${parsed.txt.slice(0,120)}`);
+        if (parsed.kind==="json") {
+          const errorData = parsed.json;
+          if (errorData.needsUpgrade) {
+            onToast?.("error", `User limit reached! You can invite up to ${errorData.userLimit} users. Upgrade your plan to invite more users.`);
+          } else {
+            onToast?.("error", `Invite failed: ${errorData.error || JSON.stringify(errorData)}`);
+          }
+        } else {
+          onToast?.("error", `Invite failed: ${parsed.txt.slice(0,120)}`);
+        }
         setLoading(false); return;
       }
       onToast?.("ok", `Invite sent to ${email}`);
@@ -3459,6 +3467,8 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     };
   });
   const [saving,setSaving]=useState(false);
+  const [billingStatus, setBillingStatus] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(()=>{ setLocal({
     default_view: prefs.default_view || "users",
@@ -3468,6 +3478,87 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     auto_archive_after_assign: !!prefs.auto_archive_after_assign,
     show_inbox_badge: !!prefs.show_inbox_badge,
   }); },[prefs]);
+
+  // Load billing status
+  useEffect(() => {
+    loadBillingStatus();
+  }, [plannerEmail]);
+
+  async function loadBillingStatus() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch(`/api/billing/status?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      if (data.ok) {
+        setBillingStatus(data);
+      }
+    } catch (error) {
+      console.error('Failed to load billing status:', error);
+    }
+    setBillingLoading(false);
+  }
+
+  async function createCustomer() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        onToast?.("ok", "Customer created successfully");
+        loadBillingStatus();
+      } else {
+        throw new Error(data.error || 'Failed to create customer');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function createSubscription(priceId) {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, priceId })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error(data.error || 'Failed to create subscription');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function openPortal() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to open portal');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
 
   async function save(){
     setSaving(true);
@@ -3538,6 +3629,111 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
           {saving ? "Saving…" : "Save"}
         </button>
       </div>
+    </div>
+
+    {/* Billing Section */}
+    <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="mb-3 text-sm font-semibold">Billing & Subscription</div>
+      
+      {billingLoading ? (
+        <div className="text-sm text-gray-500">Loading billing status...</div>
+      ) : billingStatus ? (
+        <div className="space-y-4">
+          {/* Current Plan */}
+          <div className="rounded-lg border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium">
+                  {billingStatus.subscription.plan_tier === 'free' ? 'Free Plan' : 
+                   billingStatus.subscription.plan_tier === 'starter' ? 'Starter Plan' :
+                   billingStatus.subscription.plan_tier === 'professional' ? 'Professional Plan' :
+                   billingStatus.subscription.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {billingStatus.userCount} / {billingStatus.userLimit} users
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                Status: {billingStatus.subscription.status}
+              </div>
+            </div>
+          </div>
+
+          {/* Upgrade Options */}
+          {billingStatus.subscription.plan_tier === 'free' && (
+            <div className="space-y-3">
+              <div className="text-sm font-medium">Upgrade your plan:</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Starter</div>
+                  <div className="text-xs text-gray-500">Up to 10 users</div>
+                  <div className="text-sm font-semibold">$9.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('price_starter_monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Professional</div>
+                  <div className="text-xs text-gray-500">Up to 50 users</div>
+                  <div className="text-sm font-semibold">$24.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('price_professional_monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Business</div>
+                  <div className="text-xs text-gray-500">Up to 100 users</div>
+                  <div className="text-sm font-semibold">$49.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('price_business_monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Manage Billing */}
+          {billingStatus.subscription.plan_tier !== 'free' && (
+            <div>
+              <button 
+                onClick={openPortal}
+                disabled={billingLoading}
+                className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
+              >
+                Manage Billing
+              </button>
+            </div>
+          )}
+
+          {/* Enterprise Contact */}
+          <div className="text-xs text-gray-500">
+            Need more than 100 users? <a href="mailto:support@plan2tasks.com" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
+          <button 
+            onClick={createCustomer}
+            disabled={billingLoading}
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            Set Up Billing
+          </button>
+        </div>
+      )}
     </div>
   );
 }
