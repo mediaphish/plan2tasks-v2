@@ -1,40 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plan2Tasks - Coming Soon</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow-sm">
-            <div class="max-w-4xl mx-auto px-4 py-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <img src="/brand/logo-dark.svg" alt="Plan2Tasks" class="h-10 w-auto" />
-                        <span class="text-xl font-bold text-gray-900">Plan2Tasks</span>
-                    </div>
-                    <a href="#contact" class="text-purple-600 hover:text-purple-700 font-medium">
-                        Contact
-                    </a>
-                </div>
-            </div>
-        </header>
-
-        <!-- Hero Section -->
-        <main class="max-w-4xl mx-auto px-4 py-16">
-            <div class="text-center mb-16">
-                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                    Coming Soon: The Easiest Way to Give People Things to Do
-                </h1>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                    Plan2Tasks is a simple, AI-powered tool that helps you plan and deliver task lists to anyone — fast.
+        // Contact form submission
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('contactEmail').value;
+            const message = document.getElementById('message').value;
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/contact/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert('Thank you for your message! We\'ll get back to you soon.');
+                    document.getElementById('contactForm').reset();
+                } else {
+                    throw new Error(data.error || 'Failed to send message');
+                }
+            } catch (error) {
+                console.error('Contact form error:', error);
+                alert('Sorry, there was an error sending your message. Please try again.');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });lan2Tasks is a simple, AI-powered tool that helps you plan and deliver task lists to anyone — fast.
                     Trainers, contractors, lenders, and families can all use it to create and share to-dos without messy spreadsheets or complex project apps.
                 </p>
             </div>
@@ -221,22 +222,42 @@
         });
 
         // Contact form submission
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
             const email = document.getElementById('contactEmail').value;
             const message = document.getElementById('message').value;
             
-            // Create mailto link
-            const subject = encodeURIComponent('Contact from Plan2Tasks Website');
-            const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
-            const mailtoLink = `mailto:bartpaden@gmail.com?subject=${subject}&body=${body}`;
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
             
-            // Open email client
-            window.location.href = mailtoLink;
-            
-            // Show confirmation
-            alert('Opening your email client. Please send the message to complete your contact request.');
+            try {
+                const response = await fetch('/api/contact/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert('Thank you for your message! We\'ll get back to you soon.');
+                    document.getElementById('contactForm').reset();
+                } else {
+                    throw new Error(data.error || 'Failed to send message');
+                }
+            } catch (error) {
+                console.error('Contact form error:', error);
+                alert('Sorry, there was an error sending your message. Please try again.');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
         });
     </script>
 </body>
