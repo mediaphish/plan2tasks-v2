@@ -149,7 +149,7 @@ function MainApp(){
                 </div>
                 <span className="text-xl font-bold text-gray-900">Plan2Tasks</span>
               </div>
-              <a href="mailto:support@plan2tasks.com" className="text-purple-600 hover:text-purple-700 font-medium">
+              <a href="#contact" className="text-purple-600 hover:text-purple-700 font-medium">
                 Contact
               </a>
             </div>
@@ -308,7 +308,7 @@ function MainApp(){
             <div className="bg-gray-100 p-8 rounded-xl">
               <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">About Us</h2>
               <p className="text-lg text-gray-700 text-center leading-relaxed">
-                Plan2Tasks is created by <strong>Archetype Labs LLC</strong>, based in Carthage, Missouri (USA).<br/>
+                Plan2Tasks is created by <strong>Archetype Original</strong>, based in Carthage, Missouri (USA).<br/>
                 We build straightforward, people-first software that helps real teams and individuals work better.
               </p>
             </div>
@@ -317,7 +317,6 @@ function MainApp(){
           {/* Contact Info */}
           <section className="text-center">
             <div className="space-y-2">
-              <p className="text-gray-600">📧 <a href="mailto:support@plan2tasks.com" className="text-purple-600 hover:text-purple-700">support@plan2tasks.com</a></p>
               <p className="text-gray-600">🌐 <a href="https://www.plan2tasks.com" className="text-purple-600 hover:text-purple-700">www.plan2tasks.com</a></p>
             </div>
           </section>
@@ -325,6 +324,44 @@ function MainApp(){
       </div>
     );
   }
+
+  // Add form handlers for landing page
+  useEffect(() => {
+    if (!plannerEmail) {
+      // Waitlist form handler
+      const waitlistForm = document.getElementById('waitlistForm');
+      if (waitlistForm) {
+        waitlistForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const email = document.getElementById('email').value;
+          if (!email.includes('@')) {
+            alert('Please enter a valid email address');
+            return;
+          }
+          alert('Thanks for joining the waitlist! We\'ll be in touch soon.');
+          document.getElementById('email').value = '';
+        });
+      }
+
+      // Contact form handler
+      const contactForm = document.getElementById('contactForm');
+      if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const name = document.getElementById('name').value;
+          const email = document.getElementById('contactEmail').value;
+          const message = document.getElementById('message').value;
+          
+          const subject = encodeURIComponent('Contact from Plan2Tasks Website');
+          const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+          const mailtoLink = `mailto:bartpaden@gmail.com?subject=${subject}&body=${body}`;
+          
+          window.location.href = mailtoLink;
+          alert('Opening your email client. Please send the message to complete your contact request.');
+        });
+      }
+    }
+  }, [plannerEmail]);
   const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
@@ -3911,7 +3948,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
 
           {/* Enterprise Contact */}
           <div className="text-xs text-gray-500">
-            Need more than 100 users? <a href="mailto:support@plan2tasks.com" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+            Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
           </div>
         </div>
       ) : (
