@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import {
-  Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
-  Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut
+              <div className="flex items-center space-x-3">
+                <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-10 w-auto" />
+                <span className="text-xl font-bold text-gray-900">Plan2Tasks</span>
+              </div>, Mail, Tag, Edit, User, ChevronDown, LogOut
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -144,9 +143,7 @@ function MainApp(){
           <div className="max-w-4xl mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">P</span>
-                </div>
+                <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-10 w-auto" />
                 <span className="text-xl font-bold text-gray-900">Plan2Tasks</span>
               </div>
               <a href="#contact" className="text-purple-600 hover:text-purple-700 font-medium">
