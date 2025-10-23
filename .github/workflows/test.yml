@@ -1,7 +1,9 @@
-    - uses: actions/checkout@v4
-    
-    - uses: actions/setup-node@v4uest:
-    branches: [ main ]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]est:
+    branches: [main]
 
 jobs:
   test:
