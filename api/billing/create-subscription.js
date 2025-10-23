@@ -4,23 +4,17 @@ import { supabaseAdmin } from '../../lib/supabase-admin.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Stripe price IDs (you'll need to create these in Stripe dashboard)
+// Stripe price IDs from your Stripe dashboard
 const PRICE_IDS = {
-  'starter-monthly': 'price_starter_monthly', // $9.99/month
-  'starter-yearly': 'price_starter_yearly',   // $99/year
-  'professional-monthly': 'price_professional_monthly', // $24.99/month
-  'professional-yearly': 'price_professional_yearly',   // $249/year
-  'business-monthly': 'price_business_monthly', // $49.99/month
-  'business-yearly': 'price_business_yearly'   // $499/year
+  'starter-monthly': 'price_1SLQSTRylwiLTngtgqjry3CU', // $9.99/month
+  'professional-monthly': 'price_1SLQSvRylwiLTngtLsgS057g', // $24.99/month
+  'business-monthly': 'price_1SLQTKRylwiLTngtuQSZGvmY' // $49.99/month
 };
 
 const PLAN_TIERS = {
   'starter-monthly': { tier: 'starter', limit: 10 },
-  'starter-yearly': { tier: 'starter', limit: 10 },
   'professional-monthly': { tier: 'professional', limit: 50 },
-  'professional-yearly': { tier: 'professional', limit: 50 },
-  'business-monthly': { tier: 'business', limit: 100 },
-  'business-yearly': { tier: 'business', limit: 100 }
+  'business-monthly': { tier: 'business', limit: 100 }
 };
 
 export default async function handler(req, res) {
