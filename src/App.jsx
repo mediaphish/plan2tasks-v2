@@ -3670,7 +3670,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                   <div className="text-xs text-gray-500">Up to 10 users</div>
                   <div className="text-sm font-semibold">$9.99/month</div>
                   <button 
-                    onClick={() => createSubscription('price_starter_monthly')}
+                    onClick={() => createSubscription('starter-monthly')}
                     disabled={billingLoading}
                     className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
                   >
@@ -3682,7 +3682,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                   <div className="text-xs text-gray-500">Up to 50 users</div>
                   <div className="text-sm font-semibold">$24.99/month</div>
                   <button 
-                    onClick={() => createSubscription('price_professional_monthly')}
+                    onClick={() => createSubscription('professional-monthly')}
                     disabled={billingLoading}
                     className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
                   >
@@ -3694,7 +3694,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                   <div className="text-xs text-gray-500">Up to 100 users</div>
                   <div className="text-sm font-semibold">$49.99/month</div>
                   <button 
-                    onClick={() => createSubscription('price_business_monthly')}
+                    onClick={() => createSubscription('business-monthly')}
                     disabled={billingLoading}
                     className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
                   >
