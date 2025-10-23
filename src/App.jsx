@@ -1,7 +1,8 @@
-              <div className="flex items-center space-x-3">
-                <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-10 w-auto" />
-                <span className="text-xl font-bold text-gray-900">Plan2Tasks</span>
-              </div>, Mail, Tag, Edit, User, ChevronDown, LogOut
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import {
+  Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
+  Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut
 } from "lucide-react";
 import { format } from "date-fns";
 
