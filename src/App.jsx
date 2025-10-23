@@ -131,9 +131,42 @@ function MainApp(){
   const validViews = new Set(["dashboard","users","plan","settings","profile","templates","user-dashboard"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
-  const plannerEmail = (urlPE || storedPE || "bartpaden@gmail.com");
+  const plannerEmail = (urlPE || storedPE);
   if (urlPE) { try { localStorage.setItem("plannerEmail", urlPE); } catch {} }
   const [view,setView]=useState(validViews.has(urlView) ? urlView : "dashboard");
+  
+  // Show landing page if no planner email
+  if (!plannerEmail) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-3 mb-8">
+              <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">P</span>
+              </div>
+              <span className="text-3xl font-bold text-gray-900">Plan2Tasks</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Coming Soon: The Easiest Way to Give People Things to Do
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
+              Plan2Tasks is a simple, AI-powered tool that helps you plan and deliver task lists to anyone — fast.
+            </p>
+            <div className="space-y-4">
+              <a href="mailto:bartpaden@gmail.com" 
+                 className="inline-block bg-purple-600 text-white py-3 px-8 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                Contact Us
+              </a>
+              <p className="text-sm text-gray-500">
+                📧 support@plan2tasks.com
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
@@ -388,8 +421,8 @@ function MainApp(){
                      <button 
                        onClick={()=>{
                          setProfileOpen(false);
-                         // Add logout functionality here
-                         console.log('Logout clicked');
+                         localStorage.removeItem("plannerEmail");
+                         window.location.href = "/";
                        }}
                        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-md flex items-center gap-2"
                      >
