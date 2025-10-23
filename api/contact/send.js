@@ -1,34 +1,4 @@
-// /api/contact/send.js
-import { supabaseAdmin } from '../../lib/supabase-admin.js';
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { name, email, message } = req.body;
-
-    if (!name || !email || !message) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Store contact form submission in database
-    const { error } = await supabaseAdmin
-      .from('contact_submissions')
-      .insert({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        message: message.trim(),
-        created_at: new Date().toISOString()
-      });
-
-    if (error) {
-      console.error('Database error:', error);
-      return res.status(500).json({ error: 'Failed to save contact form' });
-    }
-
-    // Send email notification to you
+    // Send email notification using Resend
     const emailBody = `
 New contact form submission from Plan2Tasks website:
 
@@ -39,9 +9,57 @@ Message: ${message}
 Submitted at: ${new Date().toLocaleString()}
     `.trim();
 
-    // You can add email sending logic here if you have an email service
-    // For now, we'll just log it
-    console.log('Contact form submission:', { name, email, message });
+    try {
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Plan2Tasks <noreply@plan2tasks.com>',
+          to: ['bartpaden@gmail.com'],
+          subject: 'New Contact Form Submission - Plan2Tasks',
+          text: emailBody
+        })
+      });
+
+      if (!resendResponse.ok) {
+        console.error('Resend email failed:', await resendResponse.text());
+      }
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+    } `
+New contact form submission from Plan2Tasks website:
+
+Name: ${name}
+Email: ${email}
+Message: ${message}
+
+Submitted at: ${new Date().toLocaleString()}
+    `.trim();
+
+    try {
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Plan2Tasks <noreply@plan2tasks.com>',
+          to: ['bartpaden@gmail.com'],
+          subject: 'New Contact Form Submission - Plan2Tasks',
+          text: emailBody
+        })
+      });
+
+      if (!resendResponse.ok) {
+        console.error('Resend email failed:', await resendResponse.text());
+      }
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+    }
 
     return res.json({ 
       ok: true, 
