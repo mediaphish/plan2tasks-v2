@@ -139,31 +139,189 @@ function MainApp(){
   if (!plannerEmail) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 py-16">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-8">
-              <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">P</span>
+        {/* Header */}
+        <header className="bg-white shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">P</span>
+                </div>
+                <span className="text-xl font-bold text-gray-900">Plan2Tasks</span>
               </div>
-              <span className="text-3xl font-bold text-gray-900">Plan2Tasks</span>
+              <a href="mailto:support@plan2tasks.com" className="text-purple-600 hover:text-purple-700 font-medium">
+                Contact
+              </a>
             </div>
+          </div>
+        </header>
+
+        {/* Hero Section */}
+        <main className="max-w-4xl mx-auto px-4 py-16">
+          <div className="text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Coming Soon: The Easiest Way to Give People Things to Do
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Plan2Tasks is a simple, AI-powered tool that helps you plan and deliver task lists to anyone — fast.
+              Trainers, contractors, lenders, and families can all use it to create and share to-dos without messy spreadsheets or complex project apps.
             </p>
-            <div className="space-y-4">
-              <a href="mailto:bartpaden@gmail.com" 
-                 className="inline-block bg-purple-600 text-white py-3 px-8 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                Contact Us
-              </a>
-              <p className="text-sm text-gray-500">
-                📧 support@plan2tasks.com
+          </div>
+
+          {/* What It Will Do */}
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">What It Will Do</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-purple-600 text-xl">📝</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Create a Plan</h3>
+                <p className="text-gray-600">Use natural language or AI to outline what needs to be done.</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-purple-600 text-xl">👥</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Assign Tasks</h3>
+                <p className="text-gray-600">Choose who receives them.</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-purple-600 text-xl">⚡</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Send Instantly</h3>
+                <p className="text-gray-600">Tasks appear right inside the recipient's Google Tasks list, or as an ICS file they can import into any calendar.</p>
+              </div>
+            </div>
+            <p className="text-center text-gray-600 mt-6">
+              No new app for them to learn — just the work, delivered clearly.
+            </p>
+          </section>
+
+          {/* Why We're Building It */}
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Why We're Building It</h2>
+            <div className="bg-white p-8 rounded-xl shadow-sm border">
+              <p className="text-lg text-gray-700 leading-relaxed">
+                Because planning shouldn't require a project-management degree.<br/>
+                Plan2Tasks focuses on one simple outcome: helping you get things out of your head and into the hands of the people who need to do them.
               </p>
             </div>
-          </div>
-        </div>
+          </section>
+
+          {/* Pricing */}
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Launch Pricing Preview</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Free</h3>
+                <p className="text-2xl font-bold text-gray-900 mb-2">1 User</p>
+                <p className="text-sm text-gray-600">Perfect for personal use</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Starter</h3>
+                <p className="text-2xl font-bold text-gray-900 mb-2">$9.99 / month</p>
+                <p className="text-sm text-gray-600">or $99 / year – up to 10 Users</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Pro</h3>
+                <p className="text-2xl font-bold text-gray-900 mb-2">$24.99 / month</p>
+                <p className="text-sm text-gray-600">or $249 / year – up to 50 Users</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Team</h3>
+                <p className="text-2xl font-bold text-gray-900 mb-2">$49.99 / month</p>
+                <p className="text-sm text-gray-600">or $499 / year – up to 100 Users</p>
+              </div>
+            </div>
+            <div className="text-center mt-6">
+              <div className="bg-purple-50 p-4 rounded-lg inline-block">
+                <p className="text-sm text-gray-700">
+                  <strong>Enterprise:</strong> up to 1,000 Users – contact us for custom pricing
+                </p>
+              </div>
+            </div>
+            <p className="text-center text-gray-600 mt-4">
+              All tiers include AI planning, unlimited plans, and Google Tasks integration.
+            </p>
+          </section>
+
+          {/* Waitlist Form */}
+          <section className="mb-16">
+            <div className="bg-white p-8 rounded-xl shadow-sm border">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Join the Waitlist</h2>
+              <p className="text-gray-600 text-center mb-8">
+                Be first to know when Plan2Tasks goes live — and lock in early-access pricing.
+              </p>
+              
+              <form id="waitlistForm" className="max-w-md mx-auto">
+                <div className="mb-4">
+                  <input type="email" id="email" name="email" required 
+                         placeholder="Enter your email address"
+                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"/>
+                </div>
+                <button type="submit" 
+                        className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                  Join the Waitlist →
+                </button>
+              </form>
+            </div>
+          </section>
+
+          {/* Contact Form */}
+          <section className="mb-16">
+            <div className="bg-white p-8 rounded-xl shadow-sm border">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Contact Us</h2>
+              <p className="text-gray-600 text-center mb-8">
+                Have questions? We'd love to hear from you.
+              </p>
+              
+              <form id="contactForm" className="max-w-2xl mx-auto">
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <input type="text" id="name" name="name" required 
+                           placeholder="Your name"
+                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"/>
+                  </div>
+                  <div>
+                    <input type="email" id="contactEmail" name="email" required 
+                           placeholder="Your email"
+                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"/>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <textarea id="message" name="message" required rows="4"
+                            placeholder="Your message"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
+                </div>
+                <button type="submit" 
+                        className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-semibold hover:bg-black transition-colors">
+                  Send Message
+                </button>
+              </form>
+            </div>
+          </section>
+
+          {/* About Us */}
+          <section className="mb-16">
+            <div className="bg-gray-100 p-8 rounded-xl">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">About Us</h2>
+              <p className="text-lg text-gray-700 text-center leading-relaxed">
+                Plan2Tasks is created by <strong>Archetype Labs LLC</strong>, based in Carthage, Missouri (USA).<br/>
+                We build straightforward, people-first software that helps real teams and individuals work better.
+              </p>
+            </div>
+          </section>
+
+          {/* Contact Info */}
+          <section className="text-center">
+            <div className="space-y-2">
+              <p className="text-gray-600">📧 <a href="mailto:support@plan2tasks.com" className="text-purple-600 hover:text-purple-700">support@plan2tasks.com</a></p>
+              <p className="text-gray-600">🌐 <a href="https://www.plan2tasks.com" className="text-purple-600 hover:text-purple-700">www.plan2tasks.com</a></p>
+            </div>
+          </section>
+        </main>
       </div>
     );
   }
