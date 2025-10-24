@@ -318,6 +318,15 @@ function MainApp(){
               <p className="text-gray-600">🌐 <a href="https://www.plan2tasks.com" className="text-purple-600 hover:text-purple-700">www.plan2tasks.com</a></p>
             </div>
           </section>
+
+          {/* Hidden Login Link */}
+          <footer className="mt-16 py-8 border-t border-gray-200">
+            <div className="text-center">
+              <a href="?plannerEmail=bartpaden@gmail.com" className="text-gray-300 hover:text-gray-400 text-xs">
+                admin
+              </a>
+            </div>
+          </footer>
         </main>
       </div>
     );
@@ -3876,23 +3885,23 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium">
-                  {billingStatus.subscription.plan_tier === 'free' ? 'Free Plan' : 
-                   billingStatus.subscription.plan_tier === 'starter' ? 'Starter Plan' :
-                   billingStatus.subscription.plan_tier === 'professional' ? 'Professional Plan' :
-                   billingStatus.subscription.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
+                  {billingStatus.subscription?.plan_tier === 'free' ? 'Free Plan' : 
+                   billingStatus.subscription?.plan_tier === 'starter' ? 'Starter Plan' :
+                   billingStatus.subscription?.plan_tier === 'professional' ? 'Professional Plan' :
+                   billingStatus.subscription?.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {billingStatus.userCount} / {billingStatus.userLimit} users
+                  {billingStatus.userCount || 0} / {billingStatus.userLimit || 1} users
                 </div>
               </div>
               <div className="text-xs text-gray-500">
-                Status: {billingStatus.subscription.status}
+                Status: {billingStatus.subscription?.status || 'Unknown'}
               </div>
             </div>
           </div>
 
           {/* Upgrade Options */}
-          {billingStatus.subscription.plan_tier === 'free' && (
+          {billingStatus.subscription?.plan_tier === 'free' && (
             <div className="space-y-3">
               <div className="text-sm font-medium">Upgrade your plan:</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -3937,7 +3946,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
           )}
 
           {/* Manage Billing */}
-          {billingStatus.subscription.plan_tier !== 'free' && (
+          {billingStatus.subscription?.plan_tier !== 'free' && (
             <div>
               <button 
                 onClick={openPortal}
