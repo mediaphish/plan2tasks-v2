@@ -1,8 +1,7 @@
-import { defineConfig } from 'cypress';
-
 export default defineConfig({
   e2e: {
-    baseUrl: 'https://plan2tasks.com',
+    baseUrl: 'http://localhost:5173',: {
+    baseUrl: 'http://localhost:5173',
     supportFile: 'cypress/support/e2e.js',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     viewportWidth: 1280,
