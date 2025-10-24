@@ -10,9 +10,17 @@ describe('Billing System Tests', () => {
     // Wait a bit more for the dashboard to fully render
     cy.wait(2000);
     
-    // Look for Settings text anywhere on the page
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    // Debug: Check what buttons are actually on the page
+    cy.get('button').then(($buttons) => {
+      console.log('Found buttons:', $buttons.length);
+      $buttons.each((i, btn) => {
+        console.log(`Button ${i}:`, btn.textContent);
+      });
+    });
+    
+    // Try to find the Settings button by its structure
+    cy.get('button').contains('Settings').should('be.visible');
+    cy.get('button').contains('Settings').click();
     cy.contains('Billing & Subscription').should('be.visible');
   });
 
