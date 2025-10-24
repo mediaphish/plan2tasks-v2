@@ -17,6 +17,10 @@ describe('Comprehensive Workflow Tests', () => {
   it('admin workflow - settings to billing', () => {
     // Navigate directly to settings view
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
+    
+    // Wait for billing status API call to complete
+    cy.wait('@billingStatusExact');
+    
     cy.contains('Billing & Subscription').should('be.visible');
     
     // Check billing functionality
@@ -95,6 +99,10 @@ describe('Comprehensive Workflow Tests', () => {
     
     // Navigate directly to settings view instead of clicking
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
+    
+    // Wait for billing status API call to complete
+    cy.wait('@billingStatusExact');
+    
     cy.contains('Billing & Subscription').should('be.visible');
     
     cy.contains('Inbox').click();

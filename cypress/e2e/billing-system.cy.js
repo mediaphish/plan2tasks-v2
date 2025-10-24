@@ -7,31 +7,31 @@ describe('Billing System Tests', () => {
   });
 
   it('displays billing section in settings', () => {
-    // Wait for dashboard to load
-    cy.wait(2000);
-    
-    // Take a screenshot to see what's actually on the page
-    cy.screenshot('dashboard-state');
-    
-    // Log the entire page HTML to understand the structure
-    cy.get('body').then(($body) => {
-      console.log('Page HTML:', $body.html());
-    });
-    
-    // Try to navigate to settings directly via URL instead of clicking
+    // Navigate directly to settings view
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
+    
+    // Wait for billing status API call to complete
+    cy.wait('@billingStatusExact');
+    
     cy.contains('Billing & Subscription').should('be.visible');
   });
 
   it('shows set up billing button for new users', () => {
     // Navigate directly to settings view
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
+    
+    // Wait for billing status API call to complete
+    cy.wait('@billingStatusExact');
+    
     cy.contains('Set Up Billing').should('be.visible');
   });
 
   it('creates customer successfully', () => {
     // Navigate directly to settings view
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
+    
+    // Wait for billing status API call to complete
+    cy.wait('@billingStatusExact');
     
     // Mock the API response
     cy.intercept('POST', '/api/billing/create-customer', {
@@ -47,18 +47,8 @@ describe('Billing System Tests', () => {
     // Navigate directly to settings view
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
-    // Mock billing status response
-    cy.intercept('GET', '/api/billing/status*', {
-      statusCode: 200,
-      body: {
-        ok: true,
-        subscription: { plan_tier: 'free', status: 'active' },
-        userCount: 0,
-        userLimit: 1
-      }
-    }).as('billingStatus');
-    
-    cy.wait('@billingStatus');
+    // Wait for billing status API call to complete
+    cy.wait('@billingStatusExact');
     cy.contains('Upgrade your plan').should('be.visible');
     cy.contains('Starter').should('be.visible');
     cy.contains('Professional').should('be.visible');
@@ -68,6 +58,9 @@ describe('Billing System Tests', () => {
   it('handles subscription creation', () => {
     // Navigate directly to settings view
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
+    
+    // Wait for billing status API call to complete
+    cy.wait('@billingStatusExact');
     
     // Mock subscription creation
     cy.intercept('POST', '/api/billing/create-subscription', {
