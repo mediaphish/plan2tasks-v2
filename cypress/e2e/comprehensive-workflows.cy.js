@@ -1,4 +1,8 @@
 describe('Comprehensive Workflow Tests', () => {
+  beforeEach(() => {
+    cy.setupApiMocks();
+  });
+
   it('complete user journey - landing to admin dashboard', () => {
     // Start at landing page
     cy.visit('/');

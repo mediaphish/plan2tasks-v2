@@ -1,5 +1,6 @@
 describe('Billing System Tests', () => {
   beforeEach(() => {
+    cy.setupApiMocks();
     cy.visit('/?plannerEmail=bartpaden@gmail.com');
   });
 

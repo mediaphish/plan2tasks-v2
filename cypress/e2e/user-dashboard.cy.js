@@ -1,5 +1,6 @@
 describe('User Dashboard Tests', () => {
   beforeEach(() => {
+    cy.setupApiMocks();
     cy.visit('/?plannerEmail=bartpaden@gmail.com&user=testuser@example.com');
   });
 

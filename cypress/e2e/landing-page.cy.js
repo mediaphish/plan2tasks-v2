@@ -1,5 +1,6 @@
 describe('Landing Page Tests', () => {
   beforeEach(() => {
+    cy.setupApiMocks();
     cy.visit('/');
   });
 
