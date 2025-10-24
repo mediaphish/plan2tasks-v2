@@ -24,16 +24,27 @@ const setupApiMocks = () => {
     body: { ok: true, message: 'Mocked DELETE response' }
   }).as('catchAllDelete');
 
-  // Billing API endpoints - must be more specific to override catch-all
-  cy.intercept('GET', '/api/billing/status*', {
-    statusCode: 200,
-    body: {
-      ok: true,
-      subscription: { plan_tier: 'free', status: 'active' },
-      userCount: 0,
-      userLimit: 1
-    }
-  }).as('billingStatus');
+        // Billing API endpoints - must be more specific to override catch-all
+        cy.intercept('GET', '/api/billing/status*', {
+          statusCode: 200,
+          body: {
+            ok: true,
+            subscription: { plan_tier: 'free', status: 'active' },
+            userCount: 0,
+            userLimit: 1
+          }
+        }).as('billingStatus');
+        
+        // Ensure billing status is called when settings view loads
+        cy.intercept('GET', '/api/billing/status', {
+          statusCode: 200,
+          body: {
+            ok: true,
+            subscription: { plan_tier: 'free', status: 'active' },
+            userCount: 0,
+            userLimit: 1
+          }
+        }).as('billingStatusExact');
 
   cy.intercept('POST', '/api/billing/create-customer', {
     statusCode: 200,
