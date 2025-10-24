@@ -773,6 +773,11 @@ function MainApp(){
           <span>•</span>
           <span>© 2025 Plan2Tasks</span>
         </div>
+        <div className="mt-2">
+          <a href="?plannerEmail=bartpaden@gmail.com" className="text-gray-300 hover:text-gray-400 text-xs">
+            admin
+          </a>
+        </div>
       </footer>
     </div>
   );
