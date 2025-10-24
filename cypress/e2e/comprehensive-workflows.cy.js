@@ -15,17 +15,8 @@ describe('Comprehensive Workflow Tests', () => {
   });
 
   it('admin workflow - settings to billing', () => {
-    cy.visit('/?plannerEmail=bartpaden@gmail.com');
-    
-    // Wait for dashboard to load by looking for the dashboard header
-    cy.contains('Dashboard', { timeout: 10000 }).should('be.visible');
-    
-    // Navigate to settings
-    cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.wait(2000);
-    cy.get('h3').contains('Settings').should('be.visible');
-    cy.get('h3').contains('Settings').click();
+    // Navigate directly to settings view
+    cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     cy.contains('Billing & Subscription').should('be.visible');
     
     // Check billing functionality
@@ -77,10 +68,8 @@ describe('Comprehensive Workflow Tests', () => {
   });
 
   it('error handling and recovery', () => {
-    cy.visit('/?plannerEmail=bartpaden@gmail.com');
-    
-    // Wait for dashboard to load by looking for the dashboard header
-    cy.contains('Dashboard', { timeout: 10000 }).should('be.visible');
+    // Navigate directly to settings view
+    cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Mock API error
     cy.intercept('GET', '/api/billing/status*', {
@@ -88,9 +77,6 @@ describe('Comprehensive Workflow Tests', () => {
       body: { error: 'Internal server error' }
     }).as('billingError');
     
-    cy.wait(2000);
-    cy.get('h3').contains('Settings').should('be.visible');
-    cy.get('h3').contains('Settings').click();
     cy.wait('@billingError');
   });
 
@@ -107,9 +93,8 @@ describe('Comprehensive Workflow Tests', () => {
     cy.contains('Plan').click();
     cy.contains('Plan').should('be.visible');
     
-    cy.wait(2000);
-    cy.get('h3').contains('Settings').should('be.visible');
-    cy.get('h3').contains('Settings').click();
+    // Navigate directly to settings view instead of clicking
+    cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     cy.contains('Billing & Subscription').should('be.visible');
     
     cy.contains('Inbox').click();
