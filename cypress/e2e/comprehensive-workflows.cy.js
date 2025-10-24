@@ -21,6 +21,10 @@ describe('Comprehensive Workflow Tests', () => {
     cy.contains('Dashboard', { timeout: 10000 }).should('be.visible');
     
     // Navigate to settings
+    cy.wait(2000);
+    cy.contains('Settings').should('be.visible');
+    cy.wait(2000);
+    cy.contains('Settings').should('be.visible');
     cy.contains('Settings').click();
     cy.contains('Billing & Subscription').should('be.visible');
     
@@ -84,6 +88,8 @@ describe('Comprehensive Workflow Tests', () => {
       body: { error: 'Internal server error' }
     }).as('billingError');
     
+    cy.wait(2000);
+    cy.contains('Settings').should('be.visible');
     cy.contains('Settings').click();
     cy.wait('@billingError');
   });
@@ -101,6 +107,8 @@ describe('Comprehensive Workflow Tests', () => {
     cy.contains('Plan').click();
     cy.contains('Plan').should('be.visible');
     
+    cy.wait(2000);
+    cy.contains('Settings').should('be.visible');
     cy.contains('Settings').click();
     cy.contains('Billing & Subscription').should('be.visible');
     
