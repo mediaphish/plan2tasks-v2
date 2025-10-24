@@ -24,8 +24,8 @@ describe('Comprehensive Workflow Tests', () => {
     cy.wait(2000);
     cy.contains('Settings').should('be.visible');
     cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     cy.contains('Billing & Subscription').should('be.visible');
     
     // Check billing functionality
@@ -89,8 +89,8 @@ describe('Comprehensive Workflow Tests', () => {
     }).as('billingError');
     
     cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     cy.wait('@billingError');
   });
 
@@ -108,8 +108,8 @@ describe('Comprehensive Workflow Tests', () => {
     cy.contains('Plan').should('be.visible');
     
     cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     cy.contains('Billing & Subscription').should('be.visible');
     
     cy.contains('Inbox').click();

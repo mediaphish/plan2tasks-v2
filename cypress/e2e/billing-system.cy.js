@@ -18,23 +18,23 @@ describe('Billing System Tests', () => {
       });
     });
     
-    // Try to find the Settings button by its structure
-    cy.get('button').contains('Settings').should('be.visible');
-    cy.get('button').contains('Settings').click();
+    // Try to find the Settings button by looking for the h3 element
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     cy.contains('Billing & Subscription').should('be.visible');
   });
 
   it('shows set up billing button for new users', () => {
     cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     cy.contains('Set Up Billing').should('be.visible');
   });
 
   it('creates customer successfully', () => {
     cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     
     // Mock the API response
     cy.intercept('POST', '/api/billing/create-customer', {
@@ -48,8 +48,8 @@ describe('Billing System Tests', () => {
 
   it('shows subscription options for free users', () => {
     cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     
     // Mock billing status response
     cy.intercept('GET', '/api/billing/status*', {
@@ -71,8 +71,8 @@ describe('Billing System Tests', () => {
 
   it('handles subscription creation', () => {
     cy.wait(2000);
-    cy.contains('Settings').should('be.visible');
-    cy.contains('Settings').click();
+    cy.get('h3').contains('Settings').should('be.visible');
+    cy.get('h3').contains('Settings').click();
     
     // Mock subscription creation
     cy.intercept('POST', '/api/billing/create-subscription', {
