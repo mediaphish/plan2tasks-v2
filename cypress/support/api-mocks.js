@@ -50,11 +50,17 @@ const setupApiMocks = () => {
     body: { ok: true, url: 'https://billing.stripe.com/test' }
   }).as('openPortal');
 
-  // User management endpoints
-  cy.intercept('GET', '/api/users/list*', {
-    statusCode: 200,
-    body: { ok: true, users: [] }
-  }).as('getUsers');
+        // User management endpoints
+        cy.intercept('GET', '/api/users/list*', {
+          statusCode: 200,
+          body: { ok: true, users: [] }
+        }).as('getUsers');
+
+        // Dashboard users endpoint
+        cy.intercept('GET', '/api/users*', {
+          statusCode: 200,
+          body: { ok: true, users: [] }
+        }).as('getDashboardUsers');
 
   cy.intercept('POST', '/api/invite/send', {
     statusCode: 200,
@@ -87,11 +93,23 @@ const setupApiMocks = () => {
     body: { ok: true, message: 'Thank you for your message' }
   }).as('sendContact');
 
-  // Profile/Settings endpoints
-  cy.intercept('GET', '/api/profile/get*', {
-    statusCode: 200,
-    body: { ok: true, prefs: {} }
-  }).as('getProfile');
+        // Profile/Settings endpoints
+        cy.intercept('GET', '/api/profile/get*', {
+          statusCode: 200,
+          body: { ok: true, prefs: {} }
+        }).as('getProfile');
+
+        // Prefs endpoint for dashboard
+        cy.intercept('GET', '/api/prefs/get*', {
+          statusCode: 200,
+          body: { ok: true, prefs: { default_view: 'dashboard' } }
+        }).as('getPrefs');
+
+        // Planner profile endpoint
+        cy.intercept('GET', '/api/planner/profile*', {
+          statusCode: 200,
+          body: { ok: true, profile: { planner_name: 'Test Planner', company_name: 'Test Company' } }
+        }).as('getPlannerProfile');
 
   cy.intercept('POST', '/api/profile/save', {
     statusCode: 200,
