@@ -45,6 +45,17 @@ const setupApiMocks = () => {
             userLimit: 1
           }
         }).as('billingStatusExact');
+        
+        // Also intercept with query parameters
+        cy.intercept('GET', '/api/billing/status?plannerEmail=*', {
+          statusCode: 200,
+          body: {
+            ok: true,
+            subscription: { plan_tier: 'free', status: 'active' },
+            userCount: 0,
+            userLimit: 1
+          }
+        }).as('billingStatusWithEmail');
 
   cy.intercept('POST', '/api/billing/create-customer', {
     statusCode: 200,
