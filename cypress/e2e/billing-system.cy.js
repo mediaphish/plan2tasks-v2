@@ -2,6 +2,8 @@ describe('Billing System Tests', () => {
   beforeEach(() => {
     cy.setupApiMocks();
     cy.visit('/?plannerEmail=bartpaden@gmail.com');
+    // Wait for dashboard to load
+    cy.contains('Settings', { timeout: 10000 }).should('be.visible');
   });
 
   it('displays billing section in settings', () => {
