@@ -1,9 +1,29 @@
-// Comprehensive API mocks for all endpoints
-// This file provides default mocks for all API endpoints to prevent undefined responses
+  cy.intercept('POST', '/api/billing/create-subscription', {
+    statusCode: 200,
+    body: { ok: true, checkoutUrl: 'https://checkout.stripe.com/test' }
+  }).as('createSubscription');
 
-// Mock all possible API endpoints with default responses
-const setupApiMocks = () => {
-  // Billing API endpoints
+  cy.intercept('POST', '/api/billing/portal', {
+    statusCode: 200,
+    body: { ok: true, url: 'https://billing.stripe.com/test' }
+  }).as('openPortal'); { ok: true, message: 'Mocked GET response' }
+  }).as('catchAllGet');
+
+  cy.intercept('POST', '/api/**', {
+    statusCode: 200,
+    body: { ok: true, message: 'Mocked POST response' }
+  }).as('catchAllPost');
+
+  cy.intercept('PUT', '/api/**', {
+    statusCode: 200,
+    body: { ok: true, message: 'Mocked PUT response' }
+  }).as('catchAllPut');
+
+  cy.intercept('DELETE', '/api/**', {
+    statusCode: 200,
+    body: { ok: true, message: 'Mocked DELETE response' }
+  }).as('catchAllDelete');
+  // Billing API endpoints - must be more specific to override catch-all
   cy.intercept('GET', '/api/billing/status*', {
     statusCode: 200,
     body: {
@@ -26,7 +46,7 @@ const setupApiMocks = () => {
 
   cy.intercept('POST', '/api/billing/portal', {
     statusCode: 200,
-    body: { ok: true, portalUrl: 'https://billing.stripe.com/test' }
+    body: { ok: true, url: 'https://billing.stripe.com/test' }
   }).as('openPortal');
 
   // User management endpoints
