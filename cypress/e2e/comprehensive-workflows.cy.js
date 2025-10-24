@@ -17,8 +17,8 @@ describe('Comprehensive Workflow Tests', () => {
   it('admin workflow - settings to billing', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com');
     
-    // Wait for dashboard to load
-    cy.contains('Settings', { timeout: 10000 }).should('be.visible');
+    // Wait for dashboard to load by looking for the dashboard header
+    cy.contains('Dashboard', { timeout: 10000 }).should('be.visible');
     
     // Navigate to settings
     cy.contains('Settings').click();
@@ -44,8 +44,8 @@ describe('Comprehensive Workflow Tests', () => {
   it('billing integration workflow', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com');
     
-    // Wait for dashboard to load
-    cy.contains('Settings', { timeout: 10000 }).should('be.visible');
+    // Wait for dashboard to load by looking for the dashboard header
+    cy.contains('Dashboard', { timeout: 10000 }).should('be.visible');
     
     // Navigate to users
     cy.contains('Users').click();
@@ -75,8 +75,8 @@ describe('Comprehensive Workflow Tests', () => {
   it('error handling and recovery', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com');
     
-    // Wait for dashboard to load
-    cy.contains('Settings', { timeout: 10000 }).should('be.visible');
+    // Wait for dashboard to load by looking for the dashboard header
+    cy.contains('Dashboard', { timeout: 10000 }).should('be.visible');
     
     // Mock API error
     cy.intercept('GET', '/api/billing/status*', {
@@ -91,8 +91,8 @@ describe('Comprehensive Workflow Tests', () => {
   it('navigation between all sections', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com');
     
-    // Wait for dashboard to load
-    cy.contains('Settings', { timeout: 10000 }).should('be.visible');
+    // Wait for dashboard to load by looking for the dashboard header
+    cy.contains('Dashboard', { timeout: 10000 }).should('be.visible');
     
     // Test all navigation
     cy.contains('Users').click();
