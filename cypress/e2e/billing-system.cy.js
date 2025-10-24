@@ -11,7 +11,7 @@ describe('Billing System Tests', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Wait for billing status API call to complete
-    cy.wait('@billingStatusExact');
+    cy.wait('@billingStatusWithEmail');
     
     cy.contains('Billing & Subscription').should('be.visible');
   });
@@ -21,7 +21,7 @@ describe('Billing System Tests', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Wait for billing status API call to complete
-    cy.wait('@billingStatusExact');
+    cy.wait('@billingStatusWithEmail');
     
     cy.contains('Set Up Billing').should('be.visible');
   });
@@ -31,7 +31,7 @@ describe('Billing System Tests', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Wait for billing status API call to complete
-    cy.wait('@billingStatusExact');
+    cy.wait('@billingStatusWithEmail');
     
     // Mock the API response
     cy.intercept('POST', '/api/billing/create-customer', {
@@ -48,7 +48,7 @@ describe('Billing System Tests', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Wait for billing status API call to complete
-    cy.wait('@billingStatusExact');
+    cy.wait('@billingStatusWithEmail');
     cy.contains('Upgrade your plan').should('be.visible');
     cy.contains('Starter').should('be.visible');
     cy.contains('Professional').should('be.visible');
@@ -60,7 +60,7 @@ describe('Billing System Tests', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Wait for billing status API call to complete
-    cy.wait('@billingStatusExact');
+    cy.wait('@billingStatusWithEmail');
     
     // Mock subscription creation
     cy.intercept('POST', '/api/billing/create-subscription', {

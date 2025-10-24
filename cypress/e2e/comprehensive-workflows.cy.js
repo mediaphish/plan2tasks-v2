@@ -19,7 +19,7 @@ describe('Comprehensive Workflow Tests', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Wait for billing status API call to complete
-    cy.wait('@billingStatusExact');
+    cy.wait('@billingStatusWithEmail');
     
     cy.contains('Billing & Subscription').should('be.visible');
     
@@ -101,7 +101,7 @@ describe('Comprehensive Workflow Tests', () => {
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
     // Wait for billing status API call to complete
-    cy.wait('@billingStatusExact');
+    cy.wait('@billingStatusWithEmail');
     
     cy.contains('Billing & Subscription').should('be.visible');
     
