@@ -614,7 +614,7 @@ function MainApp(){
           </div>
 
      {/* Right: Actions & Profile */}
-     <div className="flex items-center gap-1">
+     <div className="flex items-center gap-0">
             {/* Primary Action */}
             <button 
               onClick={()=>setInviteOpen(true)} 
