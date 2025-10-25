@@ -14,25 +14,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing plannerEmail' });
     }
 
-    // Get recent plans from the last 60 days
-    const sixtyDaysAgo = new Date();
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-    
-    const { data: plans, error } = await supabaseAdmin
-      .from('plans')
+    // Get templates sorted by last used date (no date restriction)
+    const { data: templates, error } = await supabaseAdmin
+      .from('templates')
       .select(`
         id,
-        plan_name,
-        user_email,
-        status,
+        template_name,
         created_at,
         updated_at,
-        tasks:plan_tasks(count)
+        last_used_at,
+        tasks:template_tasks(count)
       `)
       .eq('planner_email', plannerEmail.toLowerCase())
-      .gte('created_at', sixtyDaysAgo.toISOString())
-      .order('updated_at', { ascending: false })
-      .limit(20);
+      .order('last_used_at', { ascending: false, nullsLast: true })
+      .limit(10);
 
     if (error) {
       console.error('Database error:', error);
@@ -40,17 +35,16 @@ export default async function handler(req, res) {
     }
 
     // Format the response
-    const formattedPlans = plans.map(plan => ({
-      id: plan.id,
-      name: plan.plan_name,
-      user: plan.user_email,
-      tasks: plan.tasks?.[0]?.count || 0,
-      status: plan.status,
-      created_at: plan.created_at,
-      updated_at: plan.updated_at
+    const formattedTemplates = templates.map(template => ({
+      id: template.id,
+      name: template.template_name,
+      tasks: template.tasks?.[0]?.count || 0,
+      last_used: template.last_used_at ? new Date(template.last_used_at).toLocaleDateString() : null,
+      created_at: template.created_at,
+      updated_at: template.updated_at
     }));
 
-    return res.json({ ok: true, plans: formattedPlans });
+    return res.json({ ok: true, plans: formattedTemplates });
 
   } catch (error) {
     console.error('Recent plans error:', error);
