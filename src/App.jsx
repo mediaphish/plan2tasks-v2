@@ -628,6 +628,7 @@ function MainApp(){
             <button 
               onClick={()=>{ setView("billing"); updateQueryView("billing"); }}
               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
+              title="Billing & Subscription"
             >
               <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
                 <CreditCard className="h-4 w-4 text-gray-600" />
@@ -647,6 +648,7 @@ function MainApp(){
                 }
               }}
               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
+              title={plannerEmail ? "Logout" : "Login"}
             >
               <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
                 <LogOut className="h-4 w-4 text-gray-600" />
@@ -3089,18 +3091,30 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                         <div>
                           <p className="font-medium text-gray-900">{user.email}</p>
                           <p className="text-sm text-gray-500">{user.status || 'Active'}</p>
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            {(user.groups || []).slice(0, 2).map(category => (
+                              <span key={category} className="inline-flex max-w-[100px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs" title={category}>
+                                <span className="truncate">{category}</span>
+                              </span>
+                            ))}
+                            {(user.groups || []).length > 2 && (
+                              <span className="text-xs text-gray-500">+{(user.groups || []).length - 2} more</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => onNavigate("plan", user.email)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded hover:bg-blue-50"
+                          title="Create Plan"
                         >
-                          Plan
+                          <Calendar className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => onNavigate("users", user.email)}
-                          className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+                          className="text-gray-600 hover:text-gray-800 text-sm font-medium p-1 rounded hover:bg-gray-100"
+                          title="Archive User"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
