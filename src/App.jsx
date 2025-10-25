@@ -2976,11 +2976,11 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           setUsers(usersData.users || []);
         }
 
-        // Load recent plans
-        const plansResponse = await fetch(`/api/plans/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-        if (plansResponse.ok) {
-          const plansData = await plansResponse.json();
-          setRecentPlans(plansData.plans || []);
+        // Load recent templates
+        const templatesResponse = await fetch(`/api/plans/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+        if (templatesResponse.ok) {
+          const templatesData = await templatesResponse.json();
+          setRecentPlans(templatesData.plans || []);
         }
 
         // Load user activity
@@ -3019,21 +3019,8 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         <p className="text-gray-600 mt-1">Overview of your planning activities</p>
       </div>
 
-      {/* Primary Actions - User-First Design */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <button
-          onClick={() => onNavigate("users", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3">
-            <Users className="h-8 w-8 text-blue-600" />
-            <div>
-              <h3 className="font-semibold text-gray-900">Manage Users</h3>
-              <p className="text-sm text-gray-600">Invite and organize your users</p>
-            </div>
-          </div>
-        </button>
-
+      {/* Primary Actions - Template-Focused Design */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <button
           onClick={() => onNavigate("templates", null)}
           className="p-6 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition-all text-left"
@@ -3041,21 +3028,21 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           <div className="flex items-center gap-3">
             <Calendar className="h-8 w-8 text-green-600" />
             <div>
-              <h3 className="font-semibold text-gray-900">Templates</h3>
-              <p className="text-sm text-gray-600">Create and manage plan templates</p>
+              <h3 className="font-semibold text-gray-900">Create Template</h3>
+              <p className="text-sm text-gray-600">Build and save reusable plan templates</p>
             </div>
           </div>
         </button>
 
         <button
-          onClick={() => onNavigate("settings", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all text-left"
+          onClick={() => onNavigate("templates", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
         >
           <div className="flex items-center gap-3">
-            <SettingsIcon className="h-8 w-8 text-purple-600" />
+            <Search className="h-8 w-8 text-blue-600" />
             <div>
-              <h3 className="font-semibold text-gray-900">Settings</h3>
-              <p className="text-sm text-gray-600">Configure your preferences</p>
+              <h3 className="font-semibold text-gray-900">Browse Templates</h3>
+              <p className="text-sm text-gray-600">View and manage your saved templates</p>
             </div>
           </div>
         </button>
