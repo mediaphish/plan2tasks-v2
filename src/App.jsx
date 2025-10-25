@@ -630,7 +630,7 @@ function MainApp(){
               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
             >
               <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <i className="fa fa-credit-card text-gray-600 text-sm"></i>
+                <i className="fa fa-credit-card text-gray-700 text-sm"></i>
               </div>
             </button>
 
@@ -649,7 +649,7 @@ function MainApp(){
               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
             >
               <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <i className="fa fa-sign-out text-gray-600 text-sm"></i>
+                <i className="fa fa-sign-out text-gray-700 text-sm"></i>
               </div>
             </button>
 
