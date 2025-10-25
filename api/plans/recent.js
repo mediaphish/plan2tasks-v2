@@ -14,7 +14,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing plannerEmail' });
     }
 
-    // Get recent plans from the database
+    // Get recent plans from the last 60 days
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    
     const { data: plans, error } = await supabaseAdmin
       .from('plans')
       .select(`
@@ -27,8 +30,9 @@ export default async function handler(req, res) {
         tasks:plan_tasks(count)
       `)
       .eq('planner_email', plannerEmail.toLowerCase())
+      .gte('created_at', sixtyDaysAgo.toISOString())
       .order('updated_at', { ascending: false })
-      .limit(10);
+      .limit(20);
 
     if (error) {
       console.error('Database error:', error);
