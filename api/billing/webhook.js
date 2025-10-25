@@ -59,11 +59,17 @@ async function handleSubscriptionUpdate(subscription) {
     const customerId = subscription.customer;
     const priceId = subscription.items.data[0].price.id;
     
-    // Map price ID to plan tier (using actual Stripe price IDs)
+    // Map price ID to plan tier (using Live Stripe price IDs)
     const planTiers = {
-      'price_1SLQSTRylwiLTngtgqjry3CU': { tier: 'starter', limit: 10 }, // Starter monthly
-      'price_1SLQSvRylwiLTngtLsgS057g': { tier: 'professional', limit: 50 }, // Professional monthly  
-      'price_1SLQTKRylwiLTngtuQSZGvmY': { tier: 'business', limit: 100 } // Business monthly
+      // Monthly plans (Live)
+      'price_1SMB0YRrdy2mHmt7K7MpLqdu': { tier: 'starter', limit: 10 }, // Starter monthly
+      'price_1SMB0bRrdy2mHmt7VfkArBWA': { tier: 'professional', limit: 50 }, // Professional monthly  
+      'price_1SMB0eRrdy2mHmt7f6z6N03c': { tier: 'business', limit: 100 }, // Business monthly
+      
+      // Annual plans (Live)
+      'price_1SMB0gRrdy2mHmt7xz6rri80': { tier: 'starter', limit: 10 }, // Starter annual
+      'price_1SMB0iRrdy2mHmt70LGyqjVl': { tier: 'professional', limit: 50 }, // Professional annual
+      'price_1SMB0kRrdy2mHmt7kr46r7d0': { tier: 'business', limit: 100 } // Business annual
     };
 
     const planInfo = planTiers[priceId] || { tier: 'free', limit: 1 };

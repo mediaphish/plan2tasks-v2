@@ -6,15 +6,27 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Stripe price IDs from your Stripe dashboard
 const PRICE_IDS = {
-  'starter-monthly': 'price_1SLQSTRylwiLTngtgqjry3CU', // $9.99/month
-  'professional-monthly': 'price_1SLQSvRylwiLTngtLsgS057g', // $24.99/month
-  'business-monthly': 'price_1SLQTKRylwiLTngtuQSZGvmY' // $49.99/month
+  // Monthly plans (Live)
+  'starter-monthly': 'price_1SMB0YRrdy2mHmt7K7MpLqdu', // $9.99/month
+  'professional-monthly': 'price_1SMB0bRrdy2mHmt7VfkArBWA', // $24.99/month
+  'business-monthly': 'price_1SMB0eRrdy2mHmt7f6z6N03c', // $49.99/month
+  
+  // Annual plans (Live)
+  'starter-annual': 'price_1SMB0gRrdy2mHmt7xz6rri80', // $99.99/year
+  'professional-annual': 'price_1SMB0iRrdy2mHmt70LGyqjVl', // $249.99/year
+  'business-annual': 'price_1SMB0kRrdy2mHmt7kr46r7d0' // $499.99/year
 };
 
 const PLAN_TIERS = {
+  // Monthly plans
   'starter-monthly': { tier: 'starter', limit: 10 },
   'professional-monthly': { tier: 'professional', limit: 50 },
-  'business-monthly': { tier: 'business', limit: 100 }
+  'business-monthly': { tier: 'business', limit: 100 },
+  
+  // Annual plans
+  'starter-annual': { tier: 'starter', limit: 10 },
+  'professional-annual': { tier: 'professional', limit: 50 },
+  'business-annual': { tier: 'business', limit: 100 }
 };
 
 export default async function handler(req, res) {
