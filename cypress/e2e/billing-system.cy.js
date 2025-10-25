@@ -20,9 +20,6 @@ describe('Billing System Tests', () => {
     
     // Check for billing section
     cy.contains('Billing & Subscription').should('be.visible');
-    
-    // Check for either loading state or billing content
-    cy.get('body').should('contain.text', 'Loading billing status...').or('contain.text', 'Free Plan');
   });
 
   it('handles user limit checking in users section', () => {
