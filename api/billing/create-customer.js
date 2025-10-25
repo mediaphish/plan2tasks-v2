@@ -32,12 +32,18 @@ export default async function handler(req, res) {
     }
 
     // Create Stripe customer
-    const customer = await stripe.customers.create({
-      email: plannerEmail,
-      metadata: {
-        planner_email: plannerEmail
-      }
-    });
+    let customer;
+    try {
+      customer = await stripe.customers.create({
+        email: plannerEmail,
+        metadata: {
+          planner_email: plannerEmail
+        }
+      });
+    } catch (stripeError) {
+      console.error('Stripe customer creation failed:', stripeError);
+      return res.status(500).json({ error: 'Failed to create Stripe customer' });
+    }
 
     // Store customer ID in database
     const { error } = await supabaseAdmin
@@ -56,6 +62,12 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('Database error:', error);
+      // If database fails, try to clean up the Stripe customer
+      try {
+        await stripe.customers.del(customer.id);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup Stripe customer:', cleanupError);
+      }
       return res.status(500).json({ error: 'Failed to store customer' });
     }
 

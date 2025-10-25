@@ -59,14 +59,11 @@ async function handleSubscriptionUpdate(subscription) {
     const customerId = subscription.customer;
     const priceId = subscription.items.data[0].price.id;
     
-    // Map price ID to plan tier
+    // Map price ID to plan tier (using actual Stripe price IDs)
     const planTiers = {
-      'price_starter_monthly': { tier: 'starter', limit: 10 },
-      'price_starter_yearly': { tier: 'starter', limit: 10 },
-      'price_professional_monthly': { tier: 'professional', limit: 50 },
-      'price_professional_yearly': { tier: 'professional', limit: 50 },
-      'price_business_monthly': { tier: 'business', limit: 100 },
-      'price_business_yearly': { tier: 'business', limit: 100 }
+      'price_1SLQSTRylwiLTngtgqjry3CU': { tier: 'starter', limit: 10 }, // Starter monthly
+      'price_1SLQSvRylwiLTngtLsgS057g': { tier: 'professional', limit: 50 }, // Professional monthly  
+      'price_1SLQTKRylwiLTngtuQSZGvmY': { tier: 'business', limit: 100 } // Business monthly
     };
 
     const planInfo = planTiers[priceId] || { tier: 'free', limit: 1 };

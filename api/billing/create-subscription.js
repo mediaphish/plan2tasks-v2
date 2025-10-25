@@ -29,6 +29,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing plannerEmail or priceId' });
     }
 
+    // Validate priceId
+    if (!PRICE_IDS[priceId]) {
+      return res.status(400).json({ error: 'Invalid priceId' });
+    }
+
     // Get customer ID
     const { data: subscription } = await supabaseAdmin
       .from('planner_subscriptions')
@@ -50,13 +55,19 @@ export default async function handler(req, res) {
     }
 
     // Create new subscription
-    const stripeSubscription = await stripe.subscriptions.create({
-      customer: subscription.stripe_customer_id,
-      items: [{ price: priceId }],
-      payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' },
-      expand: ['latest_invoice.payment_intent']
-    });
+    let stripeSubscription;
+    try {
+      stripeSubscription = await stripe.subscriptions.create({
+        customer: subscription.stripe_customer_id,
+        items: [{ price: priceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent']
+      });
+    } catch (stripeError) {
+      console.error('Stripe subscription creation failed:', stripeError);
+      return res.status(500).json({ error: 'Failed to create Stripe subscription' });
+    }
 
     // Update database
     const planInfo = PLAN_TIERS[priceId];
@@ -81,7 +92,7 @@ export default async function handler(req, res) {
     return res.json({ 
       ok: true, 
       subscriptionId: stripeSubscription.id,
-      clientSecret: stripeSubscription.latest_invoice.payment_intent.client_secret
+      checkoutUrl: stripeSubscription.latest_invoice.payment_intent.client_secret
     });
 
   } catch (error) {
