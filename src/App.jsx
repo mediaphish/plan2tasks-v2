@@ -3019,26 +3019,38 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         <p className="text-gray-600 mt-1">Manage your users and their planning activities</p>
       </div>
 
-      {/* Users List */}
+      {/* Users Table */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">All Users</h2>
         </div>
-        <div className="p-6">
-          {users.length > 0 ? (
-            <div className="space-y-3">
-              {users.map((user) => (
-                <div key={user.email} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 text-sm font-medium">
-                        {user.email.charAt(0).toUpperCase()}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr className="text-left text-gray-500">
+                <th className="py-3 px-4">Email</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Categories</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.length > 0 ? (
+                users.map((user) => (
+                  <tr key={user.email} className="border-t">
+                    <td className="py-3 px-4 font-medium text-gray-900">{user.email}</td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs border ${
+                        user.status === 'deleted' ? 'border-red-300 text-red-700 bg-red-50' :
+                        user.status === 'archived' ? 'border-gray-300 text-gray-600 bg-gray-50' :
+                        user.status === 'connected' ? 'border-emerald-300 text-emerald-800 bg-emerald-50' : 
+                        'border-gray-300 text-gray-700 bg-white'
+                      }`}>
+                        {user.status || 'Active'}
                       </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{user.email}</p>
-                      <p className="text-sm text-gray-500">{user.status || 'Active'}</p>
-                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap items-center gap-1">
                         {(user.groups || []).slice(0, 2).map(category => (
                           <span key={category} className="inline-flex max-w-[100px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs" title={category}>
                             <span className="truncate">{category}</span>
@@ -3058,39 +3070,43 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                           <span className="text-xs text-gray-500">+{(user.groups || []).length - 2} more</span>
                         )}
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => onNavigate("plan", user.email)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded hover:bg-blue-50"
+                          title="Create Plan for this user"
+                        >
+                          <Calendar className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => onNavigate("users", user.email)}
+                          className="text-gray-600 hover:text-gray-800 text-sm font-medium p-1 rounded hover:bg-gray-100"
+                          title="Archive this user"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="text-center py-8 text-gray-500">
+                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No users yet</p>
                     <button
-                      onClick={() => onNavigate("plan", user.email)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded hover:bg-blue-50"
-                      title="Create Plan"
+                      onClick={() => onNavigate("users", null)}
+                      className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
                     >
-                      <Calendar className="h-4 w-4" />
+                      Invite your first user
                     </button>
-                    <button
-                      onClick={() => onNavigate("users", user.email)}
-                      className="text-gray-600 hover:text-gray-800 text-sm font-medium p-1 rounded hover:bg-gray-100"
-                      title="Archive User"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No users yet</p>
-              <button
-                onClick={() => onNavigate("users", null)}
-                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Invite your first user
-              </button>
-            </div>
-          )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
