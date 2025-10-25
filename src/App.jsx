@@ -3059,151 +3059,134 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         </button>
       </div>
 
-      {/* Recent Plans */}
-      <div className="bg-white rounded-lg border border-gray-200 mb-8">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Plans</h2>
-        </div>
-        <div className="p-6">
-          {recentPlans.length > 0 ? (
-            <div className="space-y-4">
-              {recentPlans.map((plan) => (
-                <div key={plan.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{plan.name}</h3>
-                    <p className="text-sm text-gray-600">{plan.user} • {plan.tasks} tasks</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {plan.status}
-                    </span>
-                    <button
-                      onClick={() => onNavigate("plan", plan.user)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View
-                    </button>
-                  </div>
-                </div>
-              ))}
+      {/* Main Dashboard Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left 75% - Users List */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Users</h2>
+                <button
+                  onClick={() => onNavigate("users", null)}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Manage All Users
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No recent plans</p>
-              <button
-                onClick={() => onNavigate("plan", null)}
-                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Create your first plan
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* User Activity */}
-      <div className="bg-white rounded-lg border border-gray-200 mb-8">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-        </div>
-        <div className="p-6">
-          {userActivity.length > 0 ? (
-            <div className="space-y-3">
-              {userActivity.map((activity, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">{activity.user}</span> {activity.action} "{activity.task}"
-                    </p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No recent activity</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Users List - Enhanced Dashboard View */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Users</h2>
-            <button
-              onClick={() => onNavigate("users", null)}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              Manage All Users
-            </button>
-          </div>
-        </div>
-        <div className="p-6">
-          {users.length > 0 ? (
-            <div className="space-y-3">
-              {users.slice(0, 5).map((user) => (
-                <div key={user.email} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 text-sm font-medium">
-                        {user.email.charAt(0).toUpperCase()}
-                      </span>
+            <div className="p-6">
+              {users.length > 0 ? (
+                <div className="space-y-3">
+                  {users.map((user) => (
+                    <div key={user.email} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-blue-600 text-sm font-medium">
+                            {user.email.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{user.email}</p>
+                          <p className="text-sm text-gray-500">{user.status || 'Active'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => onNavigate("plan", user.email)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          Plan
+                        </button>
+                        <button
+                          onClick={() => onNavigate("users", user.email)}
+                          className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{user.email}</p>
-                      <p className="text-sm text-gray-600">
-                        {user.status === 'active' ? 'Active' : 
-                         user.status === 'archived' ? 'Archived' : 'Deleted'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onNavigate("plan", user.email)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      Create Plan
-                    </button>
-                    <button
-                      onClick={() => onNavigate("user-dashboard", user.email)}
-                      className="text-green-600 hover:text-green-800 text-sm font-medium"
-                    >
-                      View Dashboard
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-              {users.length > 5 && (
-                <div className="text-center py-4">
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No users yet</p>
                   <button
                     onClick={() => onNavigate("users", null)}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
                   >
-                    View all {users.length} users
+                    Invite your first user
                   </button>
                 </div>
               )}
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No users yet</p>
-              <button
-                onClick={() => onNavigate("users", null)}
-                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Invite your first user
-              </button>
+          </div>
+        </div>
+
+        {/* Right 25% - Recent Plans & Activity */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Recent Plans - Compact */}
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="px-4 py-3 border-b border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900">Recent Plans</h3>
             </div>
-          )}
+            <div className="p-4">
+              {recentPlans.length > 0 ? (
+                <div className="space-y-3">
+                  {recentPlans.slice(0, 3).map((plan) => (
+                    <div key={plan.id} className="p-3 bg-gray-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">{plan.name}</h4>
+                      <p className="text-xs text-gray-600 truncate">{plan.user}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {plan.status}
+                        </span>
+                        <span className="text-xs text-gray-500">{plan.tasks} tasks</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-xs">No recent plans</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Activity - Compact */}
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="px-4 py-3 border-b border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900">Recent Activity</h3>
+            </div>
+            <div className="p-4">
+              {userActivity.length > 0 ? (
+                <div className="space-y-2">
+                  {userActivity.slice(0, 4).map((activity, index) => (
+                    <div key={index} className="flex items-start gap-2 p-2 bg-gray-50 rounded">
+                      <div className="h-2 w-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-900 truncate">
+                          <span className="font-medium">{activity.user}</span> {activity.action}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">"{activity.task}"</p>
+                        <p className="text-xs text-gray-400">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-xs">No recent activity</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
