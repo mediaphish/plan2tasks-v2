@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const dbStart = Date.now();
     const { error: dbError } = await supabaseAdmin
       .from('planner_subscriptions')
-      .select('id')
+      .select('planner_email')
       .limit(1);
     
     health.checks.database = {
