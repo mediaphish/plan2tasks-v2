@@ -4033,6 +4033,17 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
             Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
           </div>
         </div>
+      ) : (
+        <div>
+          <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
+          <button 
+            onClick={createCustomer}
+            disabled={billingLoading}
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            Set Up Billing
+          </button>
+        </div>
       )}
     </div>
     </>
