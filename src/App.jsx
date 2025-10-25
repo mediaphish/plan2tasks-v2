@@ -714,23 +714,16 @@ function MainApp(){
         </div>
 
         {view==="dashboard" && (
-          <UsersView
+          <DashboardView
             plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
-            onManage={(email)=>{ 
-              setSelectedUserEmail(email);
-              setView("plan"); 
-              updateQueryView("plan");
-              updateQueryUser(email);
-            }}
-            onViewDashboard={(email) => {
-              console.log('[onViewDashboard] Called with email:', email);
-              setSelectedUserEmail(email);
-              setView("plan");
-              console.log('[onViewDashboard] Calling updateQueryView("plan")');
-              updateQueryView("plan");
-              updateQueryUser(email);
-              console.log('[onViewDashboard] URL should now be:', window.location.href);
+            onNavigate={(newView, userEmail) => {
+              if (userEmail) {
+                setSelectedUserEmail(userEmail);
+                updateQueryUser(userEmail);
+              }
+              setView(newView);
+              updateQueryView(newView);
             }}
           />
         )}
@@ -2981,17 +2974,19 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           setUsers(usersData.users || []);
         }
 
-        // Load recent plans (placeholder - would need API endpoint)
-        setRecentPlans([
-          { id: 1, name: "Q1 Marketing Campaign", user: "john@company.com", tasks: 12, status: "active" },
-          { id: 2, name: "Product Launch", user: "sarah@company.com", tasks: 8, status: "completed" }
-        ]);
+        // Load recent plans
+        const plansResponse = await fetch(`/api/plans/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+        if (plansResponse.ok) {
+          const plansData = await plansResponse.json();
+          setRecentPlans(plansData.plans || []);
+        }
 
-        // Load user activity (placeholder - would need API endpoint)
-        setUserActivity([
-          { user: "john@company.com", action: "completed task", task: "Create social media content", time: "2 hours ago" },
-          { user: "sarah@company.com", action: "started task", task: "Write blog post", time: "1 day ago" }
-        ]);
+        // Load user activity
+        const activityResponse = await fetch(`/api/activity/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+        if (activityResponse.ok) {
+          const activityData = await activityResponse.json();
+          setUserActivity(activityData.activities || []);
+        }
 
       } catch (error) {
         console.error('Dashboard data load error:', error);
