@@ -18,12 +18,11 @@ describe('Comprehensive Workflow Tests', () => {
     // Navigate directly to settings view
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
-    // No API wait - just check what's visible
-    
+    // Check billing section is visible
     cy.contains('Billing & Subscription').should('be.visible');
     
-    // Check billing functionality
-    cy.contains('Loading billing status...').should('be.visible');
+    // Check for actual billing content that should load
+    cy.contains('Free Plan').should('be.visible');
   });
 
   it('user workflow - task management', () => {
@@ -64,10 +63,9 @@ describe('Comprehensive Workflow Tests', () => {
     cy.contains('Invite User').click();
     cy.get('input[type="email"]').type('testuser@example.com');
     cy.contains('Send Invite').click();
-    // No API wait
     
-    // Check for loading state
-    cy.contains('Loading billing status...').should('be.visible');
+    // Check for user limit error message
+    cy.contains('User limit reached').should('be.visible');
   });
 
   it('error handling and recovery', () => {
@@ -80,7 +78,8 @@ describe('Comprehensive Workflow Tests', () => {
       body: { error: 'Internal server error' }
     }).as('billingError');
     
-    // No API wait
+    // Check that the page still loads even with API errors
+    cy.contains('Billing & Subscription').should('be.visible');
   });
 
   it('navigation between all sections', () => {
@@ -99,11 +98,10 @@ describe('Comprehensive Workflow Tests', () => {
     // Navigate directly to settings view instead of clicking
     cy.visit('/?plannerEmail=bartpaden@gmail.com&view=settings');
     
-    // No API wait - just check what's visible
-    
+    // Check billing section is visible
     cy.contains('Billing & Subscription').should('be.visible');
     
-    // Just verify the settings view loaded properly
-    cy.contains('Billing & Subscription').should('be.visible');
+    // Check for actual billing content
+    cy.contains('Free Plan').should('be.visible');
   });
 });
