@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CreditCard
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -630,7 +630,7 @@ function MainApp(){
               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
             >
               <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <i className="fa fa-credit-card text-gray-700 text-sm"></i>
+                <CreditCard className="h-4 w-4 text-gray-600" />
               </div>
             </button>
 
@@ -649,7 +649,7 @@ function MainApp(){
               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
             >
               <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <i className="fa fa-sign-out text-gray-700 text-sm"></i>
+                <LogOut className="h-4 w-4 text-gray-600" />
               </div>
             </button>
 
