@@ -96,16 +96,50 @@ function TimeSelect({ value, onChange }){
 class ErrorBoundary extends React.Component{
   constructor(p){ super(p); this.state={error:null}; }
   static getDerivedStateFromError(e){ return {error:e}; }
-  componentDidCatch(e, info){ console.error("UI crash:", e, info); }
+  
+  async componentDidCatch(error, info){
+    console.error("UI crash:", error, info);
+    
+    // Send error to monitoring endpoint
+    try {
+      await fetch('/api/monitoring/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error: error.message,
+          stack: error.stack,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          componentStack: info.componentStack
+        })
+      });
+    } catch (trackingError) {
+      console.error('Failed to send error to monitoring:', trackingError);
+    }
+  }
+  
   render(){
     if (this.state.error) {
       return (
         <div className="min-h-screen bg-red-50 p-4 sm:p-6">
           <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-4">
             <div className="text-red-700 font-bold mb-2">Something went wrong in the UI</div>
-            <pre className="bg-red-100 p-3 text-xs text-red-900 overflow-auto rounded">
-              {String(this.state.error?.message || this.state.error)}
-            </pre>
+            <div className="text-sm text-gray-600 mb-4">
+              We've been notified of this error and are working to fix it.
+            </div>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Reload Page
+            </button>
+            <details className="mt-4">
+              <summary className="cursor-pointer text-sm text-gray-500">Technical Details</summary>
+              <pre className="bg-red-100 p-3 text-xs text-red-900 overflow-auto rounded mt-2">
+                {String(this.state.error?.message || this.state.error)}
+              </pre>
+            </details>
           </div>
         </div>
       );
