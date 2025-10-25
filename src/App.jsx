@@ -609,6 +609,16 @@ function MainApp(){
               >
                 Users
               </button>
+              <button 
+                onClick={()=>{ setView("plan"); updateQueryView("plan"); }}
+                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
+                  view === "plan" 
+                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
+                Plan
+              </button>
               {/* Hidden: Plan navigation - Plan creation now accessed via User Dashboard */}
               <button 
                 onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
@@ -1252,6 +1262,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [planningMode,setPlanningMode]=useState(prefs?.default_planning_mode || "full-ai"); // "full-ai", "ai-assisted", "manual", "templates"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
+  const [billingStatus, setBillingStatus] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState('monthly');
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -1352,6 +1365,87 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       loadNewBundleCount(); 
     }
   },[activeTab]);
+
+  // Load billing status
+  useEffect(() => {
+    loadBillingStatus();
+  }, [plannerEmail]);
+
+  async function loadBillingStatus() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch(`/api/billing/status?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      if (data.ok) {
+        setBillingStatus(data);
+      }
+    } catch (error) {
+      console.error('Failed to load billing status:', error);
+    }
+    setBillingLoading(false);
+  }
+
+  async function createCustomer() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        onToast?.("ok", "Customer created successfully");
+        loadBillingStatus();
+      } else {
+        throw new Error(data.error || 'Failed to create customer');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function createSubscription(priceId) {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, priceId })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error(data.error || 'Failed to create subscription');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function openPortal() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to open portal');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
 
   async function markBundleAsReviewed(inboxId){
     try{
@@ -1874,6 +1968,167 @@ History
           </div>
         </div>
       )}
+
+      {/* Billing Section */}
+      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="mb-3 text-sm font-semibold">Billing & Subscription</div>
+        
+        {billingLoading ? (
+          <div className="text-sm text-gray-500">Loading billing status...</div>
+        ) : billingStatus ? (
+          <div className="space-y-4">
+            {/* Current Plan */}
+            <div className="rounded-lg border border-gray-200 p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">
+                    {billingStatus.subscription?.plan_tier === 'free' ? 'Free Plan' : 
+                     billingStatus.subscription?.plan_tier === 'starter' ? 'Starter Plan' :
+                     billingStatus.subscription?.plan_tier === 'professional' ? 'Professional Plan' :
+                     billingStatus.subscription?.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {billingStatus.userCount || 0} / {billingStatus.userLimit || 1} users
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Status: {billingStatus.subscription?.status || 'Unknown'}
+                </div>
+              </div>
+            </div>
+
+            {/* Set Up Billing - Show when no customer exists */}
+            {!billingStatus.subscription && (
+              <div>
+                <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
+                <button 
+                  onClick={createCustomer}
+                  disabled={billingLoading}
+                  className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Set Up Billing
+                </button>
+              </div>
+            )}
+
+            {/* Upgrade Options - Show when on free plan */}
+            {billingStatus.subscription?.plan_tier === 'free' && (
+              <div className="space-y-3">
+                <div className="text-sm font-medium">Upgrade your plan:</div>
+                
+                {/* Billing Toggle */}
+                <div className="flex items-center justify-center">
+                  <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                    <button 
+                      onClick={() => setBillingPeriod('monthly')}
+                      className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                        billingPeriod === 'monthly' 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                    <button 
+                      onClick={() => setBillingPeriod('annual')}
+                      className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                        billingPeriod === 'annual' 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      Annual
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <div className="text-sm font-medium">Starter</div>
+                    <div className="text-xs text-gray-500">Up to 10 users</div>
+                    <div className="text-sm font-semibold">
+                      {billingPeriod === 'monthly' ? '$9.99/month' : '$99.99/year'}
+                    </div>
+                    {billingPeriod === 'annual' && (
+                      <div className="text-xs text-green-600">Save $20/year</div>
+                    )}
+                    <button 
+                      onClick={() => createSubscription(billingPeriod === 'monthly' ? 'starter-monthly' : 'starter-annual')}
+                      disabled={billingLoading}
+                      className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Subscribe
+                    </button>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <div className="text-sm font-medium">Professional</div>
+                    <div className="text-xs text-gray-500">Up to 50 users</div>
+                    <div className="text-sm font-semibold">
+                      {billingPeriod === 'monthly' ? '$24.99/month' : '$249.99/year'}
+                    </div>
+                    {billingPeriod === 'annual' && (
+                      <div className="text-xs text-green-600">Save $50/year</div>
+                    )}
+                    <button 
+                      onClick={() => createSubscription(billingPeriod === 'monthly' ? 'professional-monthly' : 'professional-annual')}
+                      disabled={billingLoading}
+                      className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Subscribe
+                    </button>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <div className="text-sm font-medium">Business</div>
+                    <div className="text-xs text-gray-500">Up to 100 users</div>
+                    <div className="text-sm font-semibold">
+                      {billingPeriod === 'monthly' ? '$49.99/month' : '$499.99/year'}
+                    </div>
+                    {billingPeriod === 'annual' && (
+                      <div className="text-xs text-green-600">Save $100/year</div>
+                    )}
+                    <button 
+                      onClick={() => createSubscription(billingPeriod === 'monthly' ? 'business-monthly' : 'business-annual')}
+                      disabled={billingLoading}
+                      className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Subscribe
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Manage Billing - Show when on paid plan */}
+            {billingStatus.subscription?.plan_tier && billingStatus.subscription.plan_tier !== 'free' && (
+              <div>
+                <button 
+                  onClick={openPortal}
+                  disabled={billingLoading}
+                  className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
+                >
+                  Manage Billing
+                </button>
+              </div>
+            )}
+
+            {/* Enterprise Contact */}
+            <div className="text-xs text-gray-500">
+              Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
+            <button 
+              onClick={createCustomer}
+              disabled={billingLoading}
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              Set Up Billing
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -3084,7 +3339,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
       </div>
 
       {/* User Activity */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white rounded-lg border border-gray-200 mb-8">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
         </div>
@@ -3107,6 +3362,80 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
             <div className="text-center py-8 text-gray-500">
               <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>No recent activity</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Users List - Enhanced Dashboard View */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Users</h2>
+            <button
+              onClick={() => onNavigate("users", null)}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              Manage All Users
+            </button>
+          </div>
+        </div>
+        <div className="p-6">
+          {users.length > 0 ? (
+            <div className="space-y-3">
+              {users.slice(0, 5).map((user) => (
+                <div key={user.email} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-medium">
+                        {user.email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{user.email}</p>
+                      <p className="text-sm text-gray-600">
+                        {user.status === 'active' ? 'Active' : 
+                         user.status === 'archived' ? 'Archived' : 'Deleted'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onNavigate("plan", user.email)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      Create Plan
+                    </button>
+                    <button
+                      onClick={() => onNavigate("user-dashboard", user.email)}
+                      className="text-green-600 hover:text-green-800 text-sm font-medium"
+                    >
+                      View Dashboard
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {users.length > 5 && (
+                <div className="text-center py-4">
+                  <button
+                    onClick={() => onNavigate("users", null)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    View all {users.length} users
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No users yet</p>
+              <button
+                onClick={() => onNavigate("users", null)}
+                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Invite your first user
+              </button>
             </div>
           )}
         </div>
@@ -3763,8 +4092,6 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     };
   });
   const [saving,setSaving]=useState(false);
-  const [billingStatus, setBillingStatus] = useState(null);
-  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(()=>{ setLocal({
     default_view: prefs.default_view || "users",
@@ -3775,86 +4102,6 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     show_inbox_badge: !!prefs.show_inbox_badge,
   }); },[prefs]);
 
-  // Load billing status
-  useEffect(() => {
-    loadBillingStatus();
-  }, [plannerEmail]);
-
-  async function loadBillingStatus() {
-    setBillingLoading(true);
-    try {
-      const response = await fetch(`/api/billing/status?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-      const data = await response.json();
-      if (data.ok) {
-        setBillingStatus(data);
-      }
-    } catch (error) {
-      console.error('Failed to load billing status:', error);
-    }
-    setBillingLoading(false);
-  }
-
-  async function createCustomer() {
-    setBillingLoading(true);
-    try {
-      const response = await fetch('/api/billing/create-customer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail })
-      });
-      const data = await response.json();
-      if (data.ok) {
-        onToast?.("ok", "Customer created successfully");
-        loadBillingStatus();
-      } else {
-        throw new Error(data.error || 'Failed to create customer');
-      }
-    } catch (error) {
-      onToast?.("error", String(error.message || error));
-    }
-    setBillingLoading(false);
-  }
-
-  async function createSubscription(priceId) {
-    setBillingLoading(true);
-    try {
-      const response = await fetch('/api/billing/create-subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail, priceId })
-      });
-      const data = await response.json();
-      if (data.ok) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.checkoutUrl;
-      } else {
-        throw new Error(data.error || 'Failed to create subscription');
-      }
-    } catch (error) {
-      onToast?.("error", String(error.message || error));
-    }
-    setBillingLoading(false);
-  }
-
-  async function openPortal() {
-    setBillingLoading(true);
-    try {
-      const response = await fetch('/api/billing/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail })
-      });
-      const data = await response.json();
-      if (data.ok) {
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || 'Failed to open portal');
-      }
-    } catch (error) {
-      onToast?.("error", String(error.message || error));
-    }
-    setBillingLoading(false);
-  }
 
   async function save(){
     setSaving(true);
@@ -3928,124 +4175,6 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
       </div>
     </div>
 
-    {/* Billing Section */}
-    <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-      <div className="mb-3 text-sm font-semibold">Billing & Subscription</div>
-      
-      {billingLoading ? (
-        <div className="text-sm text-gray-500">Loading billing status...</div>
-      ) : billingStatus ? (
-        <div className="space-y-4">
-          {/* Current Plan */}
-          <div className="rounded-lg border border-gray-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium">
-                  {billingStatus.subscription?.plan_tier === 'free' ? 'Free Plan' : 
-                   billingStatus.subscription?.plan_tier === 'starter' ? 'Starter Plan' :
-                   billingStatus.subscription?.plan_tier === 'professional' ? 'Professional Plan' :
-                   billingStatus.subscription?.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {billingStatus.userCount || 0} / {billingStatus.userLimit || 1} users
-                </div>
-              </div>
-              <div className="text-xs text-gray-500">
-                Status: {billingStatus.subscription?.status || 'Unknown'}
-              </div>
-            </div>
-          </div>
-
-          {/* Set Up Billing - Show when no customer exists */}
-          {!billingStatus.subscription && (
-            <div>
-              <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
-              <button 
-                onClick={createCustomer}
-                disabled={billingLoading}
-                className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                Set Up Billing
-              </button>
-            </div>
-          )}
-
-          {/* Upgrade Options - Show when on free plan */}
-          {billingStatus.subscription?.plan_tier === 'free' && (
-            <div className="space-y-3">
-              <div className="text-sm font-medium">Upgrade your plan:</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="rounded-lg border border-gray-200 p-3">
-                  <div className="text-sm font-medium">Starter</div>
-                  <div className="text-xs text-gray-500">Up to 10 users</div>
-                  <div className="text-sm font-semibold">$9.99/month</div>
-                  <button 
-                    onClick={() => createSubscription('starter-monthly')}
-                    disabled={billingLoading}
-                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Subscribe
-                  </button>
-                </div>
-                <div className="rounded-lg border border-gray-200 p-3">
-                  <div className="text-sm font-medium">Professional</div>
-                  <div className="text-xs text-gray-500">Up to 50 users</div>
-                  <div className="text-sm font-semibold">$24.99/month</div>
-                  <button 
-                    onClick={() => createSubscription('professional-monthly')}
-                    disabled={billingLoading}
-                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Subscribe
-                  </button>
-                </div>
-                <div className="rounded-lg border border-gray-200 p-3">
-                  <div className="text-sm font-medium">Business</div>
-                  <div className="text-xs text-gray-500">Up to 100 users</div>
-                  <div className="text-sm font-semibold">$49.99/month</div>
-                  <button 
-                    onClick={() => createSubscription('business-monthly')}
-                    disabled={billingLoading}
-                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Subscribe
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Manage Billing - Show when on paid plan */}
-          {billingStatus.subscription?.plan_tier && billingStatus.subscription.plan_tier !== 'free' && (
-            <div>
-              <button 
-                onClick={openPortal}
-                disabled={billingLoading}
-                className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
-              >
-                Manage Billing
-              </button>
-            </div>
-          )}
-
-          {/* Enterprise Contact */}
-          <div className="text-xs text-gray-500">
-            Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
-          <button 
-            onClick={createCustomer}
-            disabled={billingLoading}
-            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            Set Up Billing
-          </button>
-        </div>
-      )}
-    </div>
     </>
   );
 }
