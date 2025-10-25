@@ -353,18 +353,40 @@ function MainApp(){
       // Contact form handler
       const contactForm = document.getElementById('contactForm');
       if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
+        contactForm.addEventListener('submit', async function(e) {
           e.preventDefault();
           const name = document.getElementById('name').value;
           const email = document.getElementById('contactEmail').value;
           const message = document.getElementById('message').value;
           
-          const subject = encodeURIComponent('Contact from Plan2Tasks Website');
-          const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
-          const mailtoLink = `mailto:bartpaden@gmail.com?subject=${subject}&body=${body}`;
+          // Show loading state
+          const submitBtn = contactForm.querySelector('button[type="submit"]');
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = 'Sending...';
+          submitBtn.disabled = true;
           
-          window.location.href = mailtoLink;
-          alert('Opening your email client. Please send the message to complete your contact request.');
+          try {
+            const response = await fetch('/api/contact/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, email, message })
+            });
+            
+            const data = await response.json();
+            
+            if (data.ok) {
+              alert('Thank you for your message! We\'ll get back to you soon.');
+              contactForm.reset();
+            } else {
+              throw new Error(data.error || 'Failed to send message');
+            }
+          } catch (error) {
+            console.error('Contact form error:', error);
+            alert('Sorry, there was an error sending your message. Please try again or email us directly.');
+          } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
         });
       }
     }
