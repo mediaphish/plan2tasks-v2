@@ -597,7 +597,7 @@ function MainApp(){
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
-                Dashboard
+                Users
               </button>
               {/* Hidden: Plan navigation - Plan creation now accessed via User Dashboard */}
               <button 
@@ -3013,198 +3013,84 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      {/* Dashboard Header */}
+      {/* Users Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Overview of your planning activities</p>
+        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+        <p className="text-gray-600 mt-1">Manage your users and their planning activities</p>
       </div>
 
-      {/* Primary Actions - Template-Focused Design */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <button
-          onClick={() => onNavigate("templates", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3">
-            <Calendar className="h-8 w-8 text-green-600" />
-            <div>
-              <h3 className="font-semibold text-gray-900">Create Template</h3>
-              <p className="text-sm text-gray-600">Build and save reusable plan templates</p>
-            </div>
-          </div>
-        </button>
-
-        <button
-          onClick={() => onNavigate("templates", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3">
-            <Search className="h-8 w-8 text-blue-600" />
-            <div>
-              <h3 className="font-semibold text-gray-900">Browse Templates</h3>
-              <p className="text-sm text-gray-600">View and manage your saved templates</p>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* Main Dashboard Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left 75% - Users List */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Users</h2>
-            </div>
-            <div className="p-6">
-              {users.length > 0 ? (
-                <div className="space-y-3">
-                  {users.map((user) => (
-                    <div key={user.email} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 text-sm font-medium">
-                            {user.email.charAt(0).toUpperCase()}
+      {/* Users List */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">All Users</h2>
+        </div>
+        <div className="p-6">
+          {users.length > 0 ? (
+            <div className="space-y-3">
+              {users.map((user) => (
+                <div key={user.email} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-medium">
+                        {user.email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{user.email}</p>
+                      <p className="text-sm text-gray-500">{user.status || 'Active'}</p>
+                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                        {(user.groups || []).slice(0, 2).map(category => (
+                          <span key={category} className="inline-flex max-w-[100px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs" title={category}>
+                            <span className="truncate">{category}</span>
                           </span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{user.email}</p>
-                          <p className="text-sm text-gray-500">{user.status || 'Active'}</p>
-                          <div className="flex flex-wrap items-center gap-1 mt-1">
-                            {(user.groups || []).slice(0, 2).map(category => (
-                              <span key={category} className="inline-flex max-w-[100px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs" title={category}>
-                                <span className="truncate">{category}</span>
-                              </span>
-                            ))}
-                            <button
-                              onClick={() => onNavigate("users", user.email)}
-                              className="relative inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs hover:bg-gray-50"
-                              title="Manage Categories"
-                            >
-                              <Tag className="h-3 w-3" />
-                              {(user.groups || []).length === 0 && (
-                                <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-white text-[10px] font-bold">+</span>
-                              )}
-                            </button>
-                            {(user.groups || []).length > 2 && (
-                              <span className="text-xs text-gray-500">+{(user.groups || []).length - 2} more</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => onNavigate("plan", user.email)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded hover:bg-blue-50"
-                          title="Create Plan"
-                        >
-                          <Calendar className="h-4 w-4" />
-                        </button>
+                        ))}
                         <button
                           onClick={() => onNavigate("users", user.email)}
-                          className="text-gray-600 hover:text-gray-800 text-sm font-medium p-1 rounded hover:bg-gray-100"
-                          title="Archive User"
+                          className="relative inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs hover:bg-gray-50"
+                          title="Manage Categories"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Tag className="h-3 w-3" />
+                          {(user.groups || []).length === 0 && (
+                            <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-white text-[10px] font-bold">+</span>
+                          )}
                         </button>
+                        {(user.groups || []).length > 2 && (
+                          <span className="text-xs text-gray-500">+{(user.groups || []).length - 2} more</span>
+                        )}
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onNavigate("plan", user.email)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded hover:bg-blue-50"
+                      title="Create Plan"
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onNavigate("users", user.email)}
+                      className="text-gray-600 hover:text-gray-800 text-sm font-medium p-1 rounded hover:bg-gray-100"
+                      title="Archive User"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No users yet</p>
-                  <button
-                    onClick={() => onNavigate("users", null)}
-                    className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Invite your first user
-                  </button>
-                </div>
-              )}
+              ))}
             </div>
-          </div>
-        </div>
-
-        {/* Right 25% - Recent Templates & Activity */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Recent Templates - Compact */}
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">Recent Templates</h3>
-                <button
-                  onClick={() => onNavigate("templates", null)}
-                  className="text-xs text-blue-600 hover:text-blue-800"
-                >
-                  View All
-                </button>
-              </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No users yet</p>
+              <button
+                onClick={() => onNavigate("users", null)}
+                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Invite your first user
+              </button>
             </div>
-            <div className="p-4">
-              {recentPlans.length > 0 ? (
-                <div className="space-y-3">
-                  {recentPlans.slice(0, 3).map((template) => (
-                    <div key={template.id} className="p-3 bg-gray-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">{template.name}</h4>
-                      <p className="text-xs text-gray-600 truncate">Last used: {template.last_used || 'Never'}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-gray-500">{template.tasks} tasks</span>
-                        <button
-                          onClick={() => onNavigate("templates", template.id)}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          Use
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                  <p className="text-xs">No templates yet</p>
-                  <button
-                    onClick={() => onNavigate("templates", null)}
-                    className="mt-2 text-xs text-blue-600 hover:text-blue-800"
-                  >
-                    Create your first template
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Activity - Compact */}
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Recent Activity</h3>
-            </div>
-            <div className="p-4">
-              {userActivity.length > 0 ? (
-                <div className="space-y-2">
-                  {userActivity.slice(0, 4).map((activity, index) => (
-                    <div key={index} className="flex items-start gap-2 p-2 bg-gray-50 rounded">
-                      <div className="h-2 w-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-900 truncate">
-                          <span className="font-medium">{activity.user}</span> {activity.action}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">"{activity.task}"</p>
-                        <p className="text-xs text-gray-400">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                  <p className="text-xs">No recent activity</p>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
