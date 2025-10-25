@@ -3019,43 +3019,30 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         <p className="text-gray-600 mt-1">Overview of your planning activities</p>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Primary Actions - User-Centered Design */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <button
-          onClick={() => onNavigate("users", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3">
-            <Users className="h-8 w-8 text-blue-600" />
-            <div>
-              <h3 className="font-semibold text-gray-900">Manage Users</h3>
-              <p className="text-sm text-gray-600">Invite and manage your users</p>
-            </div>
-          </div>
-        </button>
-
-        <button
-          onClick={() => onNavigate("plan", null)}
+          onClick={() => onNavigate("templates", null)}
           className="p-6 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition-all text-left"
         >
           <div className="flex items-center gap-3">
             <Calendar className="h-8 w-8 text-green-600" />
             <div>
-              <h3 className="font-semibold text-gray-900">Create Plan</h3>
-              <p className="text-sm text-gray-600">Start a new plan for a user</p>
+              <h3 className="font-semibold text-gray-900">Create Template</h3>
+              <p className="text-sm text-gray-600">Build and save reusable plan templates</p>
             </div>
           </div>
         </button>
 
         <button
-          onClick={() => onNavigate("settings", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all text-left"
+          onClick={() => onNavigate("templates", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
         >
           <div className="flex items-center gap-3">
-            <SettingsIcon className="h-8 w-8 text-purple-600" />
+            <Search className="h-8 w-8 text-blue-600" />
             <div>
-              <h3 className="font-semibold text-gray-900">Settings</h3>
-              <p className="text-sm text-gray-600">Configure your preferences</p>
+              <h3 className="font-semibold text-gray-900">Browse Templates</h3>
+              <p className="text-sm text-gray-600">View and manage your saved templates</p>
             </div>
           </div>
         </button>
@@ -3067,15 +3054,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         <div className="lg:col-span-3">
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Users</h2>
-                <button
-                  onClick={() => onNavigate("users", null)}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
-                  Manage All Users
-                </button>
-              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Users</h2>
             </div>
             <div className="p-6">
               {users.length > 0 ? (
@@ -3097,6 +3076,16 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                                 <span className="truncate">{category}</span>
                               </span>
                             ))}
+                            <button
+                              onClick={() => onNavigate("users", user.email)}
+                              className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs hover:bg-gray-50"
+                              title="Manage Categories"
+                            >
+                              <Tag className="h-3 w-3" />
+                              {(user.groups || []).length === 0 && (
+                                <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-white text-[10px] font-bold">+</span>
+                              )}
+                            </button>
                             {(user.groups || []).length > 2 && (
                               <span className="text-xs text-gray-500">+{(user.groups || []).length - 2} more</span>
                             )}
@@ -3138,27 +3127,36 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           </div>
         </div>
 
-        {/* Right 25% - Recent Plans & Activity */}
+        {/* Right 25% - Recent Templates & Activity */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Recent Plans - Compact */}
+          {/* Recent Templates - Compact */}
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="px-4 py-3 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">Recent Plans</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Recent Templates</h3>
+                <button
+                  onClick={() => onNavigate("templates", null)}
+                  className="text-xs text-blue-600 hover:text-blue-800"
+                >
+                  View All
+                </button>
+              </div>
             </div>
             <div className="p-4">
               {recentPlans.length > 0 ? (
                 <div className="space-y-3">
-                  {recentPlans.slice(0, 3).map((plan) => (
-                    <div key={plan.id} className="p-3 bg-gray-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">{plan.name}</h4>
-                      <p className="text-xs text-gray-600 truncate">{plan.user}</p>
+                  {recentPlans.slice(0, 3).map((template) => (
+                    <div key={template.id} className="p-3 bg-gray-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">{template.name}</h4>
+                      <p className="text-xs text-gray-600 truncate">Last used: {template.last_used || 'Never'}</p>
                       <div className="flex items-center justify-between mt-2">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {plan.status}
-                        </span>
-                        <span className="text-xs text-gray-500">{plan.tasks} tasks</span>
+                        <span className="text-xs text-gray-500">{template.tasks} tasks</span>
+                        <button
+                          onClick={() => onNavigate("templates", template.id)}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Use
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -3166,7 +3164,13 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
               ) : (
                 <div className="text-center py-4 text-gray-500">
                   <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                  <p className="text-xs">No recent plans</p>
+                  <p className="text-xs">No templates yet</p>
+                  <button
+                    onClick={() => onNavigate("templates", null)}
+                    className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Create your first template
+                  </button>
                 </div>
               )}
             </div>
