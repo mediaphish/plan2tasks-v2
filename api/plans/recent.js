@@ -14,19 +14,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing plannerEmail' });
     }
 
-    // Get templates sorted by last used date (no date restriction)
+    // Get templates from the actual plan_templates table
     const { data: templates, error } = await supabaseAdmin
-      .from('templates')
+      .from('plan_templates')
       .select(`
         id,
-        template_name,
+        name,
         created_at,
-        updated_at,
-        last_used_at,
-        tasks:template_tasks(count)
+        updated_at
       `)
       .eq('planner_email', plannerEmail.toLowerCase())
-      .order('last_used_at', { ascending: false, nullsLast: true })
+      .order('created_at', { ascending: false })
       .limit(10);
 
     if (error) {
@@ -37,11 +35,10 @@ export default async function handler(req, res) {
     // Format the response
     const formattedTemplates = templates.map(template => ({
       id: template.id,
-      name: template.template_name,
-      tasks: template.tasks?.[0]?.count || 0,
-      last_used: template.last_used_at ? new Date(template.last_used_at).toLocaleDateString() : null,
+      name: template.name,
+      tasks: Array.isArray(template.tasks) ? template.tasks.length : 0,
       created_at: template.created_at,
-      updated_at: template.updated_at
+      updated_at: template.created_at
     }));
 
     return res.json({ ok: true, plans: formattedTemplates });
