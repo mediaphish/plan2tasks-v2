@@ -2983,12 +2983,14 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           setRecentPlans(templatesData.plans || []);
         }
 
-        // Load user activity
-        const activityResponse = await fetch(`/api/activity/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-        if (activityResponse.ok) {
-          const activityData = await activityResponse.json();
-          setUserActivity(activityData.activities || []);
-        }
+        // Load user activity (DISABLED - feature incomplete, causes database errors)
+        // TODO: Re-enable when database schema is properly set up
+        // const activityResponse = await fetch(`/api/activity/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+        // if (activityResponse.ok) {
+        //   const activityData = await activityResponse.json();
+        //   setUserActivity(activityData.activities || []);
+        // }
+        setUserActivity([]); // Set empty array to prevent UI errors
 
       } catch (error) {
         console.error('Dashboard data load error:', error);
@@ -3248,6 +3250,25 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
     }
   }
 
+  // NEW: Send re-authorization email to user
+  async function doSendReauthEmail(email){
+    try{
+      const r = await fetch("/api/connections/send-reauth-email",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || j.message || "Failed to send email");
+      if (j.ok) {
+        onToast?.("ok", `Re-authorization email sent to ${email}`);
+      } else {
+        onToast?.("warn", j.error || "Email not sent (may be rate limited)");
+      }
+    } catch (e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
   // Permanent purge; allowed only in "deleted" tab
   async function doPurge(email){
     if (!confirm(`Permanently delete ${email}? This cannot be undone.`)) return;
@@ -3391,6 +3412,16 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                             title="View comprehensive dashboard for this user"
                           >
                             User Dashboard
+                          </button>
+
+                          {/* NEW: Send Reconnect Email button */}
+                          <button
+                            onClick={()=>doSendReauthEmail(r.email)}
+                            className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700 hover:bg-amber-100 flex items-center gap-1"
+                            title="Send re-authorization email to user (24-hour rate limit)"
+                          >
+                            <Mail className="h-3.5 w-3.5" />
+                            Reconnect
                           </button>
 
                           {/* NEW: Cancel invite for pending invite-only rows */}
