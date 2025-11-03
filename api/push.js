@@ -24,6 +24,7 @@
 
 import { supabaseAdmin } from "../lib/supabase-admin.js";
 import { getAccessTokenForUser, ensureTaskList, insertTask } from "../lib/google-tasks.js";
+import { sendReauthEmail } from "../lib/email-utils.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -57,6 +58,12 @@ export default async function handler(req, res) {
     try {
       accessToken = await getAccessTokenForUser(userEmail);
     } catch (e) {
+      // Connection failed - send re-authorization email to user
+      // Do this asynchronously so we don't delay the error response
+      sendReauthEmail(userEmail, plannerEmail, false).catch(err => {
+        console.error('Failed to send re-auth email after push failure:', err);
+      });
+      
       return res.status(400).json({ error: "User not connected to Google Tasks." });
     }
 
