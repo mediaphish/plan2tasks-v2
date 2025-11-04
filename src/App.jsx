@@ -2930,8 +2930,16 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
       setLoading(true);
       setError(null);
       
+      console.log('[DASHBOARD] Fetching metrics for:', plannerEmail);
       const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}`);
       const data = await response.json();
+      
+      console.log('[DASHBOARD] Response status:', response.status, 'Data:', {
+        ok: data.ok,
+        hasMetrics: !!data.metrics,
+        userCount: data.metrics?.userEngagement?.length || 0,
+        aggregate: data.metrics?.aggregate
+      });
       
       if (!response.ok || !data.ok) {
         throw new Error(data.error || 'Failed to load dashboard metrics');
