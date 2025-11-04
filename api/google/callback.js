@@ -62,8 +62,59 @@ export default async function handler(req, res) {
     const expUnix      = Math.floor(Date.now() / 1000) + expiresIn;
     const expiresAtIso = new Date(expUnix * 1000).toISOString();
 
+    // Log the received scope for debugging
+    console.log(`[GOOGLE_OAUTH] Token exchange successful for ${userEmail}`);
+    console.log(`[GOOGLE_OAUTH] Received scopes: ${scope}`);
+
     if (!scope.includes("https://www.googleapis.com/auth/tasks")) {
-      return res.status(400).json({ ok: false, error: "missing_tasks_scope", detail: scope });
+      console.error(`[GOOGLE_OAUTH] Missing Tasks scope for ${userEmail}`);
+      console.error(`[GOOGLE_OAUTH] Received scopes: ${scope}`);
+      
+      // Return user-friendly error page instead of JSON
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Authorization Error</title>
+            <style>
+              body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+              .error { background: #fee; border: 1px solid #fcc; padding: 15px; border-radius: 5px; }
+              .info { background: #eef; border: 1px solid #ccf; padding: 15px; border-radius: 5px; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <h1>Authorization Incomplete</h1>
+            <div class="error">
+              <p><strong>Error:</strong> Google Tasks permission was not granted.</p>
+              <p>You need to grant access to Google Tasks for Plan2Tasks to work.</p>
+            </div>
+            <div class="info">
+              <p><strong>What happened:</strong></p>
+              <p>Google only granted these permissions: ${scope || 'none'}</p>
+              <p>Plan2Tasks requires access to Google Tasks to create and manage your tasks.</p>
+              <p><strong>Next steps:</strong></p>
+              <ol>
+                <li>Close this window</li>
+                <li>Try the authorization again</li>
+                <li>Make sure you check the box for "Google Tasks" when prompted</li>
+              </ol>
+            </div>
+            <script>
+              if (window.opener) {
+                setTimeout(() => {
+                  window.close();
+                  window.opener.location.href = 'https://www.plan2tasks.com/?view=users';
+                }, 5000);
+              } else {
+                setTimeout(() => {
+                  window.location.href = 'https://www.plan2tasks.com/?view=users';
+                }, 5000);
+              }
+            </script>
+          </body>
+        </html>
+      `);
     }
 
     const { data: existing } = await supabaseAdmin

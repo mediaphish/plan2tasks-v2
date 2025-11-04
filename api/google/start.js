@@ -53,6 +53,11 @@ export default async function handler(req, res) {
     authUrl.searchParams.set('access_type', 'offline');
     authUrl.searchParams.set('include_granted_scopes', 'true');
     authUrl.searchParams.set('prompt', 'consent');
+    
+    // Log the OAuth URL for debugging (without sensitive state)
+    console.log(`[GOOGLE_OAUTH] Starting OAuth for ${userEmail}`);
+    console.log(`[GOOGLE_OAUTH] Requested scopes: ${scopes}`);
+    console.log(`[GOOGLE_OAUTH] Redirect URI: ${redirectUri}`);
 
     // Return HTML that opens OAuth in popup and replaces current page
     res.setHeader('Content-Type', 'text/html');
