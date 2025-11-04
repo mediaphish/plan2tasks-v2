@@ -99,41 +99,53 @@ export default async function handler(req, res) {
       });
     }
 
-    // Step 4: Get tasks from first list
-    const firstList = listsData.items[0];
-    console.log(`[TEST] Fetching tasks from list: ${firstList.title} (${firstList.id})`);
+    // Step 4: Get tasks from ALL lists (not just first one)
+    const allLists = listsData.items;
+    const allTasks = [];
+    const allCompletedTasks = [];
+    const listDetails = [];
 
-    const tasksResponse = await fetch(
-      `https://www.googleapis.com/tasks/v1/lists/${firstList.id}/tasks?maxResults=10`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+    for (const list of allLists) {
+      console.log(`[TEST] Fetching tasks from list: ${list.title} (${list.id})`);
+      
+      const tasksResponse = await fetch(
+        `https://www.googleapis.com/tasks/v1/lists/${list.id}/tasks?maxResults=100&showCompleted=true`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
+      );
 
-    if (!tasksResponse.ok) {
-      const errorText = await tasksResponse.text();
-      console.error('[TEST] Tasks API error:', errorText);
-      return res.status(200).json({
-        ok: false,
-        test: 'fetch_tasks',
-        error: 'Failed to fetch tasks',
-        status: tasksResponse.status,
-        details: errorText.substring(0, 500),
-        listsFound: listsData.items.length,
-        firstListId: firstList.id
-      });
+      if (tasksResponse.ok) {
+        const tasksData = await tasksResponse.json();
+        const tasks = tasksData.items || [];
+        const completed = tasks.filter(t => t.status === 'completed' && t.completed);
+        
+        allTasks.push(...tasks);
+        allCompletedTasks.push(...completed);
+        listDetails.push({
+          id: list.id,
+          title: list.title,
+          totalTasks: tasks.length,
+          completedTasks: completed.length
+        });
+        
+        console.log(`[TEST] ✓ List "${list.title}": ${tasks.length} tasks, ${completed.length} completed`);
+      } else {
+        const errorText = await tasksResponse.text();
+        console.error(`[TEST] Error fetching tasks from ${list.title}:`, errorText.substring(0, 200));
+        listDetails.push({
+          id: list.id,
+          title: list.title,
+          error: `Failed to fetch: ${tasksResponse.status}`
+        });
+      }
     }
 
-    const tasksData = await tasksResponse.json();
-    const tasks = tasksData.items || [];
-    console.log('[TEST] ✓ Tasks fetched:', tasks.length, 'tasks');
-
-    // Step 5: Find completed tasks
-    const completedTasks = tasks.filter(t => t.status === 'completed' && t.completed);
-    console.log('[TEST] ✓ Completed tasks found:', completedTasks.length);
+    console.log('[TEST] ✓ Total tasks across all lists:', allTasks.length);
+    console.log('[TEST] ✓ Total completed tasks:', allCompletedTasks.length);
 
     // Return comprehensive test results
     return res.status(200).json({
@@ -144,24 +156,23 @@ export default async function handler(req, res) {
         connectionFound: true,
         tokenValid: true,
         listsCount: listsData.items.length,
-        tasksCount: tasks.length,
-        completedTasksCount: completedTasks.length,
-        firstList: {
-          id: firstList.id,
-          title: firstList.title
-        },
-        sampleTasks: tasks.slice(0, 3).map(t => ({
+        totalTasksAcrossAllLists: allTasks.length,
+        totalCompletedTasksAcrossAllLists: allCompletedTasks.length,
+        listDetails: listDetails,
+        sampleTasks: allTasks.slice(0, 5).map(t => ({
           id: t.id,
           title: t.title,
           status: t.status,
           completed: t.completed || null,
-          updated: t.updated || null
+          updated: t.updated || null,
+          listId: t.listId || 'unknown'
         })),
-        completedTasksSample: completedTasks.slice(0, 3).map(t => ({
+        completedTasksSample: allCompletedTasks.slice(0, 10).map(t => ({
           id: t.id,
           title: t.title,
           completed: t.completed,
-          updated: t.updated
+          updated: t.updated,
+          listId: t.listId || 'unknown'
         }))
       }
     });
