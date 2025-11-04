@@ -9,6 +9,11 @@ import { supabaseAdmin } from '../../lib/supabase-admin.js';
 import { getAccessTokenForUser } from '../../lib/google-tasks.js';
 
 export default async function handler(req, res) {
+  // Prevent caching
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   if (req.method !== 'GET') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
@@ -18,10 +23,13 @@ export default async function handler(req, res) {
     const plannerEmail = url.searchParams.get('plannerEmail');
 
     if (!plannerEmail) {
+      console.error('[DASHBOARD] Missing plannerEmail parameter');
       return res.status(400).json({ ok: false, error: 'Missing plannerEmail' });
     }
 
-    console.log(`[DASHBOARD] Starting metrics fetch for ${plannerEmail}`);
+    console.log(`[DASHBOARD] ===== STARTING METRICS FETCH =====`);
+    console.log(`[DASHBOARD] Planner: ${plannerEmail}`);
+    console.log(`[DASHBOARD] Timestamp: ${new Date().toISOString()}`);
 
     // Get all users for this planner (from user_connections and invites)
     const userEmails = new Set();
@@ -77,13 +85,14 @@ export default async function handler(req, res) {
       });
     }
     
-    // Get all assigned bundles for these users
+    // Get all assigned bundles for these users (only non-archived, non-deleted)
     const { data: bundles, error: bundlesError } = await supabaseAdmin
       .from('inbox_bundles')
       .select('id, assigned_user_email, title, start_date, created_at, archived_at')
       .eq('planner_email', plannerEmail.toLowerCase().trim())
       .in('assigned_user_email', userEmailsArray)
-      .is('deleted_at', null);
+      .is('deleted_at', null)
+      .is('archived_at', null); // Only count non-archived bundles as "active"
 
     if (bundlesError) {
       console.error('[DASHBOARD] Error fetching bundles:', bundlesError);
@@ -92,6 +101,41 @@ export default async function handler(req, res) {
 
     console.log(`[DASHBOARD] Found ${(bundles || []).length} bundles`);
     const bundleIds = (bundles || []).map(b => b.id);
+
+    // If no bundles, still return user metrics (users with zero tasks)
+    if (bundleIds.length === 0) {
+      console.log(`[DASHBOARD] No bundles found, returning users with zero metrics`);
+      
+      // Build user metrics for users with no tasks
+      const userMetricsNoTasks = [];
+      for (const userEmail of userEmailsArray) {
+        const connection = userConnections.get(userEmail);
+        userMetricsNoTasks.push({
+          userEmail,
+          isConnected: !!connection,
+          today: 0,
+          thisWeek: 0,
+          completionRate: 0,
+          activePlans: 0,
+          lastActivity: null
+        });
+      }
+
+      return res.status(200).json({
+        ok: true,
+        metrics: {
+          aggregate: {
+            completedToday: 0,
+            completedThisWeek: 0,
+            averageCompletionRate: 0,
+            mostActiveUser: null,
+            trends: { today: 0, week: 0 }
+          },
+          userEngagement: userMetricsNoTasks,
+          activityFeed: []
+        }
+      });
+    }
 
     // Get all tasks for these bundles
     const { data: tasks, error: tasksError } = await supabaseAdmin
@@ -124,16 +168,22 @@ export default async function handler(req, res) {
       userConnections.set(conn.user_email.toLowerCase(), conn);
     });
 
-    // Build bundle lookup map
+    // Build bundle lookup map - only include non-archived bundles
     const bundleMap = new Map();
     (bundles || []).forEach(bundle => {
-      bundleMap.set(bundle.id, bundle);
+      // Only include bundles that are not archived
+      if (!bundle.archived_at) {
+        bundleMap.set(bundle.id, bundle);
+      }
     });
 
-    // Group tasks by user
+    console.log(`[DASHBOARD] Bundle map has ${bundleMap.size} active (non-archived) bundles out of ${(bundles || []).length} total`);
+
+    // Group tasks by user - only tasks from active bundles
     const tasksByUser = new Map();
     (tasks || []).forEach(task => {
       const bundle = bundleMap.get(task.bundle_id);
+      // Only include tasks from active (non-archived) bundles
       if (!bundle || !bundle.assigned_user_email) return;
       
       const userEmail = bundle.assigned_user_email.toLowerCase();
@@ -143,7 +193,8 @@ export default async function handler(req, res) {
       tasksByUser.get(userEmail).push({
         ...task,
         bundleTitle: bundle.title,
-        bundleCreatedAt: bundle.created_at
+        bundleCreatedAt: bundle.created_at,
+        bundleId: bundle.id
       });
     });
 
@@ -386,6 +437,9 @@ export default async function handler(req, res) {
         .filter(t => t.completed && t.completedAt)
         .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))[0];
 
+      // Count unique bundle IDs from active tasks (only non-archived bundles)
+      const activeBundleIds = new Set(tasksWithStatus.map(t => t.bundleId || t.bundle_id).filter(Boolean));
+      
       userMetrics.push({
         userEmail,
         isConnected: true,
@@ -396,9 +450,11 @@ export default async function handler(req, res) {
         completionRate,
         totalTasks: tasksWithStatus.length,
         completedTasks: completedTasks.length,
-        activePlans: new Set([...tasksWithStatus.map(t => t.bundle_id)]).size,
+        activePlans: activeBundleIds.size,
         lastActivity: lastActivity?.completedAt || null
       });
+      
+      console.log(`[DASHBOARD] User ${userEmail} has ${activeBundleIds.size} active plans`);
 
       // Add to recent completions (for activity feed)
       completedThisWeek.forEach(task => {
@@ -453,7 +509,7 @@ export default async function handler(req, res) {
       ? Math.round(((totalCompletedThisWeek - totalCompletedLastWeek) / totalCompletedLastWeek) * 100)
       : (totalCompletedThisWeek > 0 ? 100 : 0);
 
-    return res.status(200).json({
+    const response = {
       ok: true,
       metrics: {
         aggregate: {
@@ -472,7 +528,25 @@ export default async function handler(req, res) {
         userEngagement: userMetrics,
         activityFeed
       }
-    });
+    };
+
+    console.log(`[DASHBOARD] ===== METRICS CALCULATED =====`);
+    console.log(`[DASHBOARD] Aggregate:`, JSON.stringify(response.metrics.aggregate, null, 2));
+    console.log(`[DASHBOARD] User Engagement: ${response.metrics.userEngagement.length} users`);
+    console.log(`[DASHBOARD] Activity Feed: ${response.metrics.activityFeed.length} items`);
+    if (response.metrics.userEngagement.length > 0) {
+      console.log(`[DASHBOARD] User details:`, response.metrics.userEngagement.map(u => ({
+        email: u.userEmail,
+        today: u.today,
+        thisWeek: u.thisWeek,
+        completionRate: u.completionRate,
+        activePlans: u.activePlans,
+        isConnected: u.isConnected
+      })));
+    }
+    console.log(`[DASHBOARD] ===== END METRICS FETCH =====`);
+
+    return res.status(200).json(response);
 
   } catch (error) {
     console.error('[DASHBOARD] Error:', error);
