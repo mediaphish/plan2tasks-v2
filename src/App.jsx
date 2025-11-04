@@ -4,7 +4,7 @@ import {
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CreditCard
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 
 const APP_VERSION = "2025-09-02 · C4";
@@ -428,6 +428,8 @@ function MainApp(){
   const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
+  const [createDropdownOpen,setCreateDropdownOpen]=useState(false);
+  const createDropdownRef = useRef(null);
   const [toasts,setToasts]=useState([]);
   const [profileOpen,setProfileOpen]=useState(false);
   const [plannerProfile,setPlannerProfile]=useState(null);
@@ -489,6 +491,9 @@ function MainApp(){
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
+      }
+      if (createDropdownRef.current && !createDropdownRef.current.contains(event.target)) {
+        setCreateDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -597,9 +602,28 @@ function MainApp(){
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
+                Dashboard
+              </button>
+              <button 
+                onClick={()=>{ 
+                  // Clear user parameter first
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete("user");
+                  url.searchParams.set("view", "users");
+                  window.history.pushState({}, "", url.toString());
+                  
+                  // Update state
+                  setView("users"); 
+                  setSelectedUserEmail("");
+                }}
+                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
+                  view === "users" 
+                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
                 Users
               </button>
-              {/* Hidden: Plan navigation - Plan creation now accessed via User Dashboard */}
               <button 
                 onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
                 className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
@@ -615,14 +639,58 @@ function MainApp(){
 
      {/* Right: Actions & Profile */}
      <div className="flex items-center gap-0">
-            {/* Primary Action */}
-            <button 
-              onClick={()=>setInviteOpen(true)} 
-              className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-            >
-              <Mail className="h-4 w-4" />
-              Invite User
-            </button>
+            {/* Create Dropdown */}
+            <div className="relative hidden sm:block" ref={createDropdownRef}>
+              <button 
+                onClick={()=>setCreateDropdownOpen(!createDropdownOpen)} 
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Create
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              
+              {createDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
+                  <div className="p-2">
+                    <button 
+                      onClick={()=>{
+                        setCreateDropdownOpen(false);
+                        setInviteOpen(true);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Invite User
+                    </button>
+                    <button 
+                      onClick={()=>{
+                        setCreateDropdownOpen(false);
+                        // Navigate to Users view to select a user, then to Plan view
+                        setView("users");
+                        updateQueryView("users");
+                        // User will select a user from Users view, then click to create plan
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Plan for User
+                    </button>
+                    <button 
+                      onClick={()=>{
+                        setCreateDropdownOpen(false);
+                        setView("templates");
+                        updateQueryView("templates");
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create Template
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Billing Icon */}
             <button 
@@ -2847,180 +2915,318 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
 
 /* ───────── Dashboard view ───────── */
 function DashboardView({ plannerEmail, onToast, onNavigate }){
-  const [users, setUsers] = useState([]);
-  const [recentPlans, setRecentPlans] = useState([]);
-  const [userActivity, setUserActivity] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState('completionRate'); // completionRate, today, thisWeek, lastActivity
 
-  // Load dashboard data
+  // Load dashboard metrics
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        // Load users
-        const usersResponse = await fetch(`/api/users?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-        if (usersResponse.ok) {
-          const usersData = await usersResponse.json();
-          setUsers(usersData.users || []);
-        }
+    loadMetrics();
+  }, [plannerEmail]);
 
-        // Load recent templates
-        const templatesResponse = await fetch(`/api/plans/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-        if (templatesResponse.ok) {
-          const templatesData = await templatesResponse.json();
-          setRecentPlans(templatesData.plans || []);
-        }
-
-        // Load user activity (DISABLED - feature incomplete, causes database errors)
-        // TODO: Re-enable when database schema is properly set up
-        // const activityResponse = await fetch(`/api/activity/recent?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-        // if (activityResponse.ok) {
-        //   const activityData = await activityResponse.json();
-        //   setUserActivity(activityData.activities || []);
-        // }
-        setUserActivity([]); // Set empty array to prevent UI errors
-
-      } catch (error) {
-        console.error('Dashboard data load error:', error);
-        onToast("error", "Failed to load dashboard data");
-      } finally {
-        setLoading(false);
+  async function loadMetrics() {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Failed to load dashboard metrics');
       }
-    };
+      
+      setMetrics(data.metrics);
+    } catch (err) {
+      console.error('[DASHBOARD] Error loading metrics:', err);
+      setError(err.message);
+      onToast?.("error", "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    loadDashboardData();
-  }, [plannerEmail, onToast]);
+  // Sort user engagement data
+  const sortedUsers = metrics?.userEngagement ? [...metrics.userEngagement].sort((a, b) => {
+    switch (sortBy) {
+      case 'today':
+        return b.today - a.today;
+      case 'thisWeek':
+        return b.thisWeek - a.thisWeek;
+      case 'lastActivity':
+        if (!a.lastActivity && !b.lastActivity) return 0;
+        if (!a.lastActivity) return 1;
+        if (!b.lastActivity) return -1;
+        return new Date(b.lastActivity) - new Date(a.lastActivity);
+      case 'completionRate':
+      default:
+        return b.completionRate - a.completionRate;
+    }
+  }) : [];
+
+  // Get user avatar initial
+  function getUserInitial(email) {
+    return email ? email.charAt(0).toUpperCase() : '?';
+  }
+
+  // Format relative time
+  function formatRelativeTime(dateString) {
+    if (!dateString) return 'Never';
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch {
+      return 'Unknown';
+    }
+  }
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading dashboard...</div>
+      <div className="bg-cream-100 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-charcoal-600">Loading dashboard...</div>
+          </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      {/* Users Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <p className="text-gray-600 mt-1">Manage your users and their planning activities</p>
-      </div>
-
-      {/* Users Table */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">All Users</h2>
+  if (error) {
+    return (
+      <div className="bg-cream-100 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="bg-white rounded-lg border border-stone-200 p-6">
+            <div className="text-red-600 mb-2">Error loading dashboard</div>
+            <div className="text-sm text-charcoal-600 mb-4">{error}</div>
+            <button
+              onClick={loadMetrics}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr className="text-left text-gray-500">
-                <th className="py-3 px-4">Email</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Categories</th>
-                <th className="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length > 0 ? (
-                users.map((user) => (
-                  <tr key={user.email} className="border-t">
-                    <td className="py-3 px-4 font-medium text-gray-900">{user.email}</td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs border ${
-                        user.status === 'deleted' ? 'border-red-300 text-red-700 bg-red-50' :
-                        user.status === 'archived' ? 'border-gray-300 text-gray-600 bg-gray-50' :
-                        user.status === 'connected' ? 'border-emerald-300 text-emerald-800 bg-emerald-50' : 
-                        'border-gray-300 text-gray-700 bg-white'
-                      }`}>
-                        {user.status || 'Active'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap items-center gap-1">
-                        {(user.groups || []).slice(0, 2).map(category => (
-                          <span key={category} className="inline-flex max-w-[100px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs" title={category}>
-                            <span className="truncate">{category}</span>
-                          </span>
-                        ))}
-                        <button
-                          onClick={() => onNavigate("users", user.email)}
-                          className="relative inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs hover:bg-gray-50"
-                          title="Manage Categories"
-                        >
-                          <Tag className="h-3 w-3" />
-                          {(user.groups || []).length === 0 && (
-                            <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-white text-[10px] font-bold">+</span>
-                          )}
-                        </button>
-                        {(user.groups || []).length > 2 && (
-                          <span className="text-xs text-gray-500">+{(user.groups || []).length - 2} more</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => onNavigate("plan", user.email)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded hover:bg-blue-50"
-                          title="Create Plan for this user"
-                        >
-                          <Calendar className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={async () => {
-                            try {
-                              const r = await fetch("/api/connections/send-reauth-email", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ plannerEmail, userEmail: user.email })
-                              });
-                              const j = await r.json();
-                              if (r.ok && j.ok) {
-                                onToast("ok", `Re-authorization email sent to ${user.email}`);
-                              } else {
-                                onToast("warn", j.error || "Email not sent (may be rate limited)");
-                              }
-                            } catch (e) {
-                              onToast("error", `Failed to send email: ${e.message}`);
-                            }
-                          }}
-                          className="text-amber-600 hover:text-amber-800 text-sm font-medium p-1 rounded hover:bg-amber-50"
-                          title="Send re-authorization email to user"
-                        >
-                          <Mail className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onNavigate("users", user.email)}
-                          className="text-gray-600 hover:text-gray-800 text-sm font-medium p-1 rounded hover:bg-gray-100"
-                          title="Archive this user"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+      </div>
+    );
+  }
+
+  const aggregate = metrics?.aggregate || {};
+  const activityFeed = metrics?.activityFeed || [];
+
+  return (
+    <div className="bg-cream-100 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-charcoal-800">Dashboard</h1>
+          <p className="text-charcoal-600 mt-1">System performance and user engagement overview</p>
+        </div>
+
+        {/* Aggregate Metrics - 4 Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Tasks Completed Today */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-charcoal-600">Tasks Completed Today</div>
+              {aggregate.trends?.today !== undefined && (
+                <span className={`text-xs font-medium ${
+                  aggregate.trends.today >= 0 ? 'text-emerald-600' : 'text-red-600'
+                }`}>
+                  {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}%
+                </span>
+              )}
+            </div>
+            <div className="text-3xl font-bold text-charcoal-800">{aggregate.completedToday || 0}</div>
+            {aggregate.trends?.today !== undefined && (
+              <div className="text-xs text-charcoal-500 mt-1">
+                vs yesterday
+              </div>
+            )}
+          </div>
+
+          {/* Tasks Completed This Week */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-charcoal-600">Tasks Completed This Week</div>
+              {aggregate.trends?.week !== undefined && (
+                <span className={`text-xs font-medium ${
+                  aggregate.trends.week >= 0 ? 'text-emerald-600' : 'text-red-600'
+                }`}>
+                  {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}%
+                </span>
+              )}
+            </div>
+            <div className="text-3xl font-bold text-charcoal-800">{aggregate.completedThisWeek || 0}</div>
+            {aggregate.trends?.week !== undefined && (
+              <div className="text-xs text-charcoal-500 mt-1">
+                vs last week
+              </div>
+            )}
+          </div>
+
+          {/* Average Completion Rate */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
+            <div className="text-sm font-medium text-charcoal-600 mb-2">Average Completion Rate</div>
+            <div className="text-3xl font-bold text-emerald-600">{aggregate.averageCompletionRate || 0}%</div>
+            <div className="text-xs text-charcoal-500 mt-1">across all users</div>
+          </div>
+
+          {/* Most Active User */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
+            <div className="text-sm font-medium text-charcoal-600 mb-2">Most Active User</div>
+            {aggregate.mostActiveUser ? (
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {getUserInitial(aggregate.mostActiveUser.email)}
+                  </div>
+                  <div className="text-sm font-semibold text-charcoal-800 truncate">
+                    {aggregate.mostActiveUser.email.split('@')[0]}
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-emerald-600">{aggregate.mostActiveUser.completions || 0}</div>
+                <div className="text-xs text-charcoal-500 mt-1">completions today</div>
+              </>
+            ) : (
+              <div className="text-sm text-charcoal-500">No activity yet</div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* User Engagement Table - Takes 2 columns */}
+          <div className="lg:col-span-2 bg-white rounded-lg border border-stone-200 shadow-sm">
+            <div className="px-6 py-4 border-b border-stone-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-charcoal-800">User Engagement</h2>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-xs border border-stone-300 rounded px-2 py-1 text-charcoal-600"
+                >
+                  <option value="completionRate">Sort by Completion Rate</option>
+                  <option value="today">Sort by Today</option>
+                  <option value="thisWeek">Sort by This Week</option>
+                  <option value="lastActivity">Sort by Last Activity</option>
+                </select>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-cream-50">
+                  <tr className="text-left text-charcoal-600">
+                    <th className="py-3 px-4 font-medium">User</th>
+                    <th className="py-3 px-4 font-medium text-center">Today</th>
+                    <th className="py-3 px-4 font-medium text-center">This Week</th>
+                    <th className="py-3 px-4 font-medium">Completion Rate</th>
+                    <th className="py-3 px-4 font-medium text-center">Active Plans</th>
+                    <th className="py-3 px-4 font-medium">Last Activity</th>
                   </tr>
+                </thead>
+                <tbody>
+                  {sortedUsers.length > 0 ? (
+                    sortedUsers.map((user) => (
+                      <tr
+                        key={user.userEmail}
+                        onClick={() => onNavigate?.("plan", user.userEmail)}
+                        className="border-t border-stone-200 hover:bg-cream-50 cursor-pointer transition-colors"
+                      >
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                              {getUserInitial(user.userEmail)}
+                            </div>
+                            <div>
+                              <div className="font-medium text-charcoal-800">{user.userEmail.split('@')[0]}</div>
+                              <div className="text-xs text-charcoal-500 truncate max-w-[150px]">{user.userEmail}</div>
+                            </div>
+                            {!user.isConnected && (
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                                Not Connected
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="font-semibold text-charcoal-800">{user.today || 0}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="font-semibold text-charcoal-800">{user.thisWeek || 0}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-cream-100 rounded-full h-2 overflow-hidden">
+                              <div
+                                className="h-full bg-emerald-500 transition-all"
+                                style={{ width: `${user.completionRate || 0}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-charcoal-600 w-10 text-right">
+                              {user.completionRate || 0}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="text-charcoal-600">{user.activePlans || 0}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-xs text-charcoal-500">
+                            {formatRelativeTime(user.lastActivity)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center py-8 text-charcoal-500">
+                        <Users className="h-12 w-12 mx-auto mb-4 text-charcoal-300" />
+                        <p>No users with activity yet</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Activity Feed - Takes 1 column */}
+          <div className="bg-white rounded-lg border border-stone-200 shadow-sm">
+            <div className="px-6 py-4 border-b border-stone-200">
+              <h2 className="text-lg font-semibold text-charcoal-800">Recent Activity</h2>
+            </div>
+            <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+              {activityFeed.length > 0 ? (
+                activityFeed.map((activity, index) => (
+                  <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-cream-50 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {getUserInitial(activity.userEmail)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div className="text-sm font-medium text-charcoal-800 truncate">{activity.taskTitle}</div>
+                      </div>
+                      <div className="text-xs text-charcoal-500 truncate">{activity.bundleTitle}</div>
+                      <div className="text-xs text-charcoal-400 mt-1">
+                        {formatRelativeTime(activity.completedAt)}
+                      </div>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="4" className="text-center py-8 text-gray-500">
-                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No users yet</p>
-                    <button
-                      onClick={() => onNavigate("users", null)}
-                      className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      Invite your first user
-                    </button>
-                  </td>
-                </tr>
+                <div className="text-center py-8 text-charcoal-500">
+                  <div className="text-4xl mb-2">📋</div>
+                  <div className="text-sm">No completions yet</div>
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
