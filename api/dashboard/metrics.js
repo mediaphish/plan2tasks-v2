@@ -23,17 +23,17 @@ export default async function handler(req, res) {
     // Get all users for this planner (from user_connections and invites)
     const userEmails = new Set();
     
-    // Get connected users
-    const { data: connections, error: connectionsError } = await supabaseAdmin
+    // Get connected users (for email list only)
+    const { data: userConnectionsForEmail, error: userConnectionsError } = await supabaseAdmin
       .from('user_connections')
       .select('user_email')
       .eq('planner_email', plannerEmail.toLowerCase().trim())
       .in('status', ['connected', 'active']);
     
-    if (connectionsError) {
-      console.error('[DASHBOARD] Error fetching connections:', connectionsError);
+    if (userConnectionsError) {
+      console.error('[DASHBOARD] Error fetching user connections:', userConnectionsError);
     } else {
-      (connections || []).forEach(c => {
+      (userConnectionsForEmail || []).forEach(c => {
         if (c.user_email) userEmails.add(c.user_email.toLowerCase().trim());
       });
     }
@@ -90,7 +90,7 @@ export default async function handler(req, res) {
       .in('user_email', userEmailsArray);
 
     if (connectionsError) {
-      console.error('[DASHBOARD] Error fetching connections:', connectionsError);
+      console.error('[DASHBOARD] Error fetching connections for API access:', connectionsError);
     }
 
     // Build user lookup map
