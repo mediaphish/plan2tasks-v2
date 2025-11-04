@@ -104,37 +104,48 @@ export default async function handler(req, res) {
     }
     
     // DIAGNOSTIC: First, let's see ALL plans (including archived) to understand the data
+    // This will help us see if archiving is working
     const { data: allPlansDiagnostic, error: diagnosticError } = await supabaseAdmin
       .from('history_plans')
-      .select('id, user_email, title, archived_at')
+      .select('id, user_email, title, archived_at, pushed_at')
       .eq('planner_email', plannerEmailLower)
-      .in('user_email', userEmailsArray);
+      .in('user_email', userEmailsArray)
+      .order('pushed_at', { ascending: false });
     
     if (!diagnosticError && allPlansDiagnostic) {
       const totalPlans = allPlansDiagnostic.length;
       const archivedPlans = allPlansDiagnostic.filter(p => {
         const archived = p.archived_at !== null && p.archived_at !== undefined && p.archived_at !== '';
         return archived;
-      }).length;
+      });
       const activePlans = allPlansDiagnostic.filter(p => {
         const active = p.archived_at === null || p.archived_at === undefined || p.archived_at === '';
         return active;
-      }).length;
+      });
       
-      // Show plans with non-null archived_at
-      const actuallyArchived = allPlansDiagnostic.filter(p => p.archived_at !== null && p.archived_at !== undefined && p.archived_at !== '');
+      console.log(`[DASHBOARD] ===== DIAGNOSTIC =====`);
+      console.log(`[DASHBOARD] Total plans: ${totalPlans}`);
+      console.log(`[DASHBOARD] Active plans (archived_at IS NULL): ${activePlans.length}`);
+      console.log(`[DASHBOARD] Archived plans (archived_at IS NOT NULL): ${archivedPlans.length}`);
       
-      console.log(`[DASHBOARD] DIAGNOSTIC: Total plans: ${totalPlans}, Active: ${activePlans}, Archived: ${archivedPlans}`);
-      if (actuallyArchived.length > 0) {
-        console.log(`[DASHBOARD] DIAGNOSTIC: Found ${actuallyArchived.length} archived plans with non-null archived_at:`, 
-          actuallyArchived.slice(0, 3).map(p => ({ id: p.id, archived_at: p.archived_at, type: typeof p.archived_at }))
-        );
-      } else {
-        console.log(`[DASHBOARD] DIAGNOSTIC: NO archived plans found - all plans have archived_at as null/undefined/empty`);
+      if (archivedPlans.length > 0) {
+        console.log(`[DASHBOARD] Sample archived plans:`, archivedPlans.slice(0, 3).map(p => ({ 
+          id: p.id, 
+          title: p.title.substring(0, 40),
+          archived_at: p.archived_at,
+          user: p.user_email
+        })));
       }
-      console.log(`[DASHBOARD] DIAGNOSTIC: Sample archived_at values (first 10):`, 
-        allPlansDiagnostic.slice(0, 10).map(p => ({ id: p.id, title: p.title.substring(0, 30), archived_at: p.archived_at, type: typeof p.archived_at }))
-      );
+      
+      if (activePlans.length > 0) {
+        console.log(`[DASHBOARD] Sample active plans:`, activePlans.slice(0, 5).map(p => ({ 
+          id: p.id, 
+          title: p.title.substring(0, 40),
+          archived_at: p.archived_at,
+          user: p.user_email
+        })));
+      }
+      console.log(`[DASHBOARD] ===== END DIAGNOSTIC =====`);
     }
     
     // Get all ACTIVE plans from history_plans (archived plans should NOT appear in dashboard)
