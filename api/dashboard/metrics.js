@@ -105,11 +105,28 @@ export default async function handler(req, res) {
     
     if (!diagnosticError && allPlansDiagnostic) {
       const totalPlans = allPlansDiagnostic.length;
-      const archivedPlans = allPlansDiagnostic.filter(p => p.archived_at !== null && p.archived_at !== undefined).length;
-      const activePlans = allPlansDiagnostic.filter(p => p.archived_at === null || p.archived_at === undefined).length;
+      const archivedPlans = allPlansDiagnostic.filter(p => {
+        const archived = p.archived_at !== null && p.archived_at !== undefined && p.archived_at !== '';
+        return archived;
+      }).length;
+      const activePlans = allPlansDiagnostic.filter(p => {
+        const active = p.archived_at === null || p.archived_at === undefined || p.archived_at === '';
+        return active;
+      }).length;
+      
+      // Show plans with non-null archived_at
+      const actuallyArchived = allPlansDiagnostic.filter(p => p.archived_at !== null && p.archived_at !== undefined && p.archived_at !== '');
+      
       console.log(`[DASHBOARD] DIAGNOSTIC: Total plans: ${totalPlans}, Active: ${activePlans}, Archived: ${archivedPlans}`);
-      console.log(`[DASHBOARD] DIAGNOSTIC: Sample archived_at values:`, 
-        allPlansDiagnostic.slice(0, 5).map(p => ({ id: p.id, archived_at: p.archived_at, type: typeof p.archived_at }))
+      if (actuallyArchived.length > 0) {
+        console.log(`[DASHBOARD] DIAGNOSTIC: Found ${actuallyArchived.length} archived plans with non-null archived_at:`, 
+          actuallyArchived.slice(0, 3).map(p => ({ id: p.id, archived_at: p.archived_at, type: typeof p.archived_at }))
+        );
+      } else {
+        console.log(`[DASHBOARD] DIAGNOSTIC: NO archived plans found - all plans have archived_at as null/undefined/empty`);
+      }
+      console.log(`[DASHBOARD] DIAGNOSTIC: Sample archived_at values (first 10):`, 
+        allPlansDiagnostic.slice(0, 10).map(p => ({ id: p.id, title: p.title.substring(0, 30), archived_at: p.archived_at, type: typeof p.archived_at }))
       );
     }
     
@@ -118,6 +135,7 @@ export default async function handler(req, res) {
     // IMPORTANT: Only show non-archived plans in dashboard. Archived plans are visible in History tab.
     // 
     // Query with explicit filter for archived_at IS NULL
+    // Using the same pattern as api/history/list.js which correctly filters active plans
     const { data: historyPlans, error: historyError } = await supabaseAdmin
       .from('history_plans')
       .select('id, user_email, title, start_date, pushed_at, archived_at')
@@ -609,21 +627,18 @@ export default async function handler(req, res) {
         .filter(t => t.completed && t.completedAt)
         .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))[0];
 
-      // Count unique bundle IDs from active tasks (only non-archived bundles)
-      // Only count bundles that are NOT archived
+      // Count unique bundle IDs - ONLY count bundles that exist in our filtered active bundles
+      // This ensures we don't count archived bundles even if they have tasks
       const activeBundleIds = new Set();
       tasksWithStatus.forEach(task => {
         const bundleId = task.bundleId || task.bundle_id;
-        // Only count if bundle exists and is NOT archived
-        if (bundleId) {
-          const bundle = bundleMap.get(bundleId);
-          if (bundle && !bundle.archived_at) {
-            activeBundleIds.add(bundleId);
-          }
+        if (bundleId && bundleMap.has(bundleId)) {
+          // bundleMap only contains active bundles (already filtered), so if it exists, it's active
+          activeBundleIds.add(bundleId);
         }
       });
       
-      console.log(`[DASHBOARD] User ${userEmail}: ${tasksWithStatus.length} tasks, ${activeBundleIds.size} active bundles (from ${tasksWithStatus.length} tasks)`);
+      console.log(`[DASHBOARD] User ${userEmail}: ${tasksWithStatus.length} tasks, ${activeBundleIds.size} active bundles`);
       console.log(`[DASHBOARD] Active bundle IDs for ${userEmail}:`, Array.from(activeBundleIds));
       
       userMetrics.push({
