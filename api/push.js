@@ -60,9 +60,18 @@ export default async function handler(req, res) {
     } catch (e) {
       // Connection failed - send re-authorization email to user
       // Do this asynchronously so we don't delay the error response
-      sendReauthEmail(userEmail, plannerEmail, false).catch(err => {
-        console.error('Failed to send re-auth email after push failure:', err);
-      });
+      console.log(`[PUSH] Connection failed for ${userEmail}, sending re-auth email...`);
+      sendReauthEmail(userEmail, plannerEmail, false)
+        .then(result => {
+          if (result.sent) {
+            console.log(`[PUSH] Re-auth email sent successfully to ${userEmail}`);
+          } else {
+            console.log(`[PUSH] Re-auth email not sent to ${userEmail}: ${result.reason}`);
+          }
+        })
+        .catch(err => {
+          console.error(`[PUSH] Failed to send re-auth email to ${userEmail}:`, err);
+        });
       
       return res.status(400).json({ error: "User not connected to Google Tasks." });
     }
