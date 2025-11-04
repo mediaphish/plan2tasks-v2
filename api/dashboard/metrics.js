@@ -86,13 +86,25 @@ export default async function handler(req, res) {
     }
     
     // Get all assigned bundles for these users (only non-archived, non-deleted)
+    // IMPORTANT: We explicitly filter for archived_at IS NULL to only get active bundles
     const { data: bundles, error: bundlesError } = await supabaseAdmin
       .from('inbox_bundles')
-      .select('id, assigned_user_email, title, start_date, created_at, archived_at')
+      .select('id, assigned_user_email, title, start_date, created_at, archived_at, deleted_at')
       .eq('planner_email', plannerEmail.toLowerCase().trim())
       .in('assigned_user_email', userEmailsArray)
       .is('deleted_at', null)
       .is('archived_at', null); // Only count non-archived bundles as "active"
+    
+    console.log(`[DASHBOARD] Query returned ${(bundles || []).length} bundles (after filtering archived/deleted)`);
+    if ((bundles || []).length > 0) {
+      console.log(`[DASHBOARD] Bundle details:`, bundles.map(b => ({
+        id: b.id,
+        title: b.title,
+        assigned_user: b.assigned_user_email,
+        archived_at: b.archived_at,
+        deleted_at: b.deleted_at
+      })));
+    }
 
     if (bundlesError) {
       console.error('[DASHBOARD] Error fetching bundles:', bundlesError);
@@ -438,7 +450,18 @@ export default async function handler(req, res) {
         .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))[0];
 
       // Count unique bundle IDs from active tasks (only non-archived bundles)
-      const activeBundleIds = new Set(tasksWithStatus.map(t => t.bundleId || t.bundle_id).filter(Boolean));
+      // Double-check that each bundle is still in our active bundleMap
+      const activeBundleIds = new Set();
+      tasksWithStatus.forEach(task => {
+        const bundleId = task.bundleId || task.bundle_id;
+        if (bundleId && bundleMap.has(bundleId)) {
+          // Only count if bundle is still in our active bundle map
+          activeBundleIds.add(bundleId);
+        }
+      });
+      
+      console.log(`[DASHBOARD] User ${userEmail}: ${tasksWithStatus.length} tasks, ${activeBundleIds.size} active bundles (from ${tasksWithStatus.length} tasks)`);
+      console.log(`[DASHBOARD] Active bundle IDs for ${userEmail}:`, Array.from(activeBundleIds));
       
       userMetrics.push({
         userEmail,
@@ -453,8 +476,6 @@ export default async function handler(req, res) {
         activePlans: activeBundleIds.size,
         lastActivity: lastActivity?.completedAt || null
       });
-      
-      console.log(`[DASHBOARD] User ${userEmail} has ${activeBundleIds.size} active plans`);
 
       // Add to recent completions (for activity feed)
       completedThisWeek.forEach(task => {
