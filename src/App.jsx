@@ -1294,8 +1294,28 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   // Prevent auto-scroll when plan view first opens
   // Keep page at top when opening plan view, don't auto-scroll to AI Planning Assistant
   useEffect(() => {
-    // Only prevent scroll on initial mount, not on subsequent updates
-    window.scrollTo(0, 0);
+    // Aggressively scroll to top multiple times to override any auto-scrolls from component initialization
+    // This catches scrolls that happen at different render phases
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    };
+    
+    // Scroll immediately
+    scrollToTop();
+    
+    // Scroll at various intervals to catch late-scrolling components
+    const timeouts = [
+      setTimeout(scrollToTop, 10),
+      setTimeout(scrollToTop, 50),
+      setTimeout(scrollToTop, 100),
+      setTimeout(scrollToTop, 200),
+      setTimeout(scrollToTop, 300),
+      setTimeout(scrollToTop, 500),
+    ];
+    
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
   }, []); // Empty dependency array = only run on mount
 
   useEffect(()=>{ (async ()=>{
