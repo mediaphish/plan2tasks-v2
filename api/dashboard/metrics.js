@@ -9,12 +9,19 @@ import { supabaseAdmin } from '../../lib/supabase-admin.js';
 import { getAccessTokenForUser } from '../../lib/google-tasks.js';
 
 export default async function handler(req, res) {
+  // Log immediately when handler is called
+  console.log(`[DASHBOARD] ===== HANDLER CALLED =====`);
+  console.log(`[DASHBOARD] Method: ${req.method}`);
+  console.log(`[DASHBOARD] URL: ${req.url}`);
+  console.log(`[DASHBOARD] Timestamp: ${new Date().toISOString()}`);
+  
   // Prevent caching
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
   if (req.method !== 'GET') {
+    console.error(`[DASHBOARD] Wrong method: ${req.method}`);
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
 
@@ -748,8 +755,12 @@ export default async function handler(req, res) {
     return res.status(200).json(response);
 
   } catch (error) {
-    console.error('[DASHBOARD] Error:', error);
-    return res.status(500).json({ ok: false, error: 'Server error' });
+    console.error('[DASHBOARD] ===== ERROR CAUGHT =====');
+    console.error('[DASHBOARD] Error message:', error.message);
+    console.error('[DASHBOARD] Error stack:', error.stack);
+    console.error('[DASHBOARD] Error name:', error.name);
+    console.error('[DASHBOARD] Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    return res.status(500).json({ ok: false, error: error.message || 'Server error' });
   }
 }
 
