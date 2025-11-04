@@ -1291,6 +1291,13 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     }
   }, [prefs?.default_planning_mode]);
 
+  // Prevent auto-scroll when plan view first opens
+  // Keep page at top when opening plan view, don't auto-scroll to AI Planning Assistant
+  useEffect(() => {
+    // Only prevent scroll on initial mount, not on subsequent updates
+    window.scrollTo(0, 0);
+  }, []); // Empty dependency array = only run on mount
+
   useEffect(()=>{ (async ()=>{
     const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
     const r=await fetch(`/api/users?${qs.toString()}`); const j=await r.json();
@@ -1334,16 +1341,17 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       setPlanningMode("ai-assisted"); // Use normal planning mode, not templates mode
       clearAllToasts(); // Clear any existing toasts
       
-      // Auto-scroll to Plan Setup section
+      // Switch to Plan tab and scroll to delivery section for review
+      setActiveTab("plan");
       setTimeout(() => {
-        const planSetupSection = document.querySelector('[data-section="plan-setup"]');
-        if (planSetupSection) {
-          planSetupSection.scrollIntoView({
+        const deliverySection = document.querySelector('[data-section="delivery"]');
+        if (deliverySection) {
+          deliverySection.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
           });
         }
-      }, 100);
+      }, 200);
       
       // Don't clear template data immediately - let it persist for the user to see
     }
@@ -1396,6 +1404,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
   const applyPrefill = useCallback(({ plan: rp, tasks: rt, mode })=>{
     try{
+      // Switch to Plan tab
+      setActiveTab("plan");
+      
       setPlan(p=>({
         ...p,
         title: rp?.title ?? p.title,
@@ -1408,6 +1419,17 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         setMsg(`Restored ${rt.length} task(s) from history`);
         onToast?.("ok", `Restored ${rt.length} task(s)`);
       }
+      
+      // Scroll to delivery section after a brief delay to allow DOM update
+      setTimeout(() => {
+        const deliverySection = document.querySelector('[data-section="delivery"]');
+        if (deliverySection) {
+          deliverySection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 200);
     }catch(e){ console.error("applyPrefill error", e); }
   },[onToast]);
 
