@@ -2931,21 +2931,39 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
       setError(null);
       
       console.log('[DASHBOARD] Fetching metrics for:', plannerEmail);
-      const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const timestamp = Date.now();
+      const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}&_t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       const data = await response.json();
       
-      console.log('[DASHBOARD] Response status:', response.status, 'Data:', {
-        ok: data.ok,
-        hasMetrics: !!data.metrics,
-        userCount: data.metrics?.userEngagement?.length || 0,
-        aggregate: data.metrics?.aggregate
-      });
+      console.log('[DASHBOARD] ===== RESPONSE RECEIVED =====');
+      console.log('[DASHBOARD] Response status:', response.status);
+      console.log('[DASHBOARD] Response ok:', data.ok);
+      console.log('[DASHBOARD] Has metrics:', !!data.metrics);
+      if (data.metrics) {
+        console.log('[DASHBOARD] Aggregate metrics:', JSON.stringify(data.metrics.aggregate, null, 2));
+        console.log('[DASHBOARD] User engagement count:', data.metrics.userEngagement?.length || 0);
+        console.log('[DASHBOARD] User details:', data.metrics.userEngagement?.map(u => ({
+          email: u.userEmail,
+          today: u.today,
+          thisWeek: u.thisWeek,
+          activePlans: u.activePlans,
+          completionRate: u.completionRate
+        })));
+      }
+      console.log('[DASHBOARD] Full response:', data);
       
       if (!response.ok || !data.ok) {
         throw new Error(data.error || 'Failed to load dashboard metrics');
       }
       
+      console.log('[DASHBOARD] Setting metrics state...');
       setMetrics(data.metrics);
+      console.log('[DASHBOARD] Metrics state set');
     } catch (err) {
       console.error('[DASHBOARD] Error loading metrics:', err);
       setError(err.message);
