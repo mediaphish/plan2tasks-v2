@@ -32,20 +32,26 @@ export default async function handler(req, res) {
     console.log(`[DASHBOARD] Timestamp: ${new Date().toISOString()}`);
 
     // Get all users for this planner (from user_connections and invites)
+    // IMPORTANT: Exclude the planner email from the user list
+    const plannerEmailLower = plannerEmail.toLowerCase().trim();
     const userEmails = new Set();
     
     // Get connected users (for email list only)
     const { data: userConnectionsForEmail, error: userConnectionsError } = await supabaseAdmin
       .from('user_connections')
       .select('user_email')
-      .eq('planner_email', plannerEmail.toLowerCase().trim())
+      .eq('planner_email', plannerEmailLower)
       .in('status', ['connected', 'active']);
     
     if (userConnectionsError) {
       console.error('[DASHBOARD] Error fetching user connections:', userConnectionsError);
     } else {
       (userConnectionsForEmail || []).forEach(c => {
-        if (c.user_email) userEmails.add(c.user_email.toLowerCase().trim());
+        const email = c.user_email?.toLowerCase().trim();
+        // Exclude planner email from user list
+        if (email && email !== plannerEmailLower) {
+          userEmails.add(email);
+        }
       });
     }
     
@@ -53,18 +59,23 @@ export default async function handler(req, res) {
     const { data: invites, error: invitesError } = await supabaseAdmin
       .from('invites')
       .select('user_email')
-      .eq('planner_email', plannerEmail.toLowerCase().trim())
+      .eq('planner_email', plannerEmailLower)
       .is('used_at', null);
     
     if (invitesError) {
       console.error('[DASHBOARD] Error fetching invites:', invitesError);
     } else {
       (invites || []).forEach(inv => {
-        if (inv.user_email) userEmails.add(inv.user_email.toLowerCase().trim());
+        const email = inv.user_email?.toLowerCase().trim();
+        // Exclude planner email from user list
+        if (email && email !== plannerEmailLower) {
+          userEmails.add(email);
+        }
       });
     }
     
     const userEmailsArray = Array.from(userEmails);
+    console.log(`[DASHBOARD] Found ${userEmailsArray.length} users (excluding planner ${plannerEmailLower})`);
     console.log(`[DASHBOARD] Found ${userEmailsArray.length} users:`, userEmailsArray.slice(0, 5));
     
     if (userEmailsArray.length === 0) {
@@ -85,15 +96,16 @@ export default async function handler(req, res) {
       });
     }
     
-    // Get all assigned bundles for these users (only non-archived, non-deleted)
-    // IMPORTANT: We explicitly filter for archived_at IS NULL to only get active bundles
+    // Get all assigned bundles for these users
+    // Include both active (non-archived) AND archived bundles for historical completion tracking
+    // We'll filter archived bundles later when counting "active plans"
     const { data: bundles, error: bundlesError } = await supabaseAdmin
       .from('inbox_bundles')
       .select('id, assigned_user_email, title, start_date, created_at, archived_at, deleted_at')
-      .eq('planner_email', plannerEmail.toLowerCase().trim())
+      .eq('planner_email', plannerEmailLower)
       .in('assigned_user_email', userEmailsArray)
-      .is('deleted_at', null)
-      .is('archived_at', null); // Only count non-archived bundles as "active"
+      .is('deleted_at', null);
+      // Note: We're NOT filtering archived_at here - we want archived bundles too for completion tracking
     
     console.log(`[DASHBOARD] Query returned ${(bundles || []).length} bundles (after filtering archived/deleted)`);
     if ((bundles || []).length > 0) {
@@ -182,25 +194,26 @@ export default async function handler(req, res) {
 
     // Note: userConnections Map is already built above (before the early return check)
 
-    // Build bundle lookup map - only include non-archived bundles
+    // Build bundle lookup map - include ALL bundles for task lookup
+    // We'll filter archived bundles separately when counting "active plans"
     const bundleMap = new Map();
     (bundles || []).forEach(bundle => {
-      // Only include bundles that are not archived
-      if (!bundle.archived_at) {
-        bundleMap.set(bundle.id, bundle);
-      }
+      bundleMap.set(bundle.id, bundle);
     });
 
-    console.log(`[DASHBOARD] Bundle map has ${bundleMap.size} active (non-archived) bundles out of ${(bundles || []).length} total`);
+    const activeBundles = (bundles || []).filter(b => !b.archived_at);
+    console.log(`[DASHBOARD] Bundle map has ${bundleMap.size} total bundles (${activeBundles.length} active, ${bundleMap.size - activeBundles.length} archived)`);
 
-    // Group tasks by user - only tasks from active bundles
+    // Group tasks by user - include tasks from ALL bundles (active and archived) for completion tracking
     const tasksByUser = new Map();
     (tasks || []).forEach(task => {
       const bundle = bundleMap.get(task.bundle_id);
-      // Only include tasks from active (non-archived) bundles
       if (!bundle || !bundle.assigned_user_email) return;
       
       const userEmail = bundle.assigned_user_email.toLowerCase();
+      // Exclude planner email
+      if (userEmail === plannerEmailLower) return;
+      
       if (!tasksByUser.has(userEmail)) {
         tasksByUser.set(userEmail, []);
       }
@@ -208,7 +221,8 @@ export default async function handler(req, res) {
         ...task,
         bundleTitle: bundle.title,
         bundleCreatedAt: bundle.created_at,
-        bundleId: bundle.id
+        bundleId: bundle.id,
+        bundleArchived: !!bundle.archived_at // Track if bundle is archived
       });
     });
 
@@ -452,13 +466,16 @@ export default async function handler(req, res) {
         .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))[0];
 
       // Count unique bundle IDs from active tasks (only non-archived bundles)
-      // Double-check that each bundle is still in our active bundleMap
+      // Only count bundles that are NOT archived
       const activeBundleIds = new Set();
       tasksWithStatus.forEach(task => {
         const bundleId = task.bundleId || task.bundle_id;
-        if (bundleId && bundleMap.has(bundleId)) {
-          // Only count if bundle is still in our active bundle map
-          activeBundleIds.add(bundleId);
+        // Only count if bundle exists and is NOT archived
+        if (bundleId) {
+          const bundle = bundleMap.get(bundleId);
+          if (bundle && !bundle.archived_at) {
+            activeBundleIds.add(bundleId);
+          }
         }
       });
       
