@@ -2,7 +2,8 @@
 // Returns aggregate metrics, user engagement data, and recent activity for the dashboard
 // Uses Google task IDs for accurate completion tracking when available
 
-export const config = { runtime: 'nodejs' };
+// Use Node.js runtime for better performance with Google Tasks API calls
+export const config = { runtime: 'nodejs', maxDuration: 60 }; // 60 second timeout
 
 import { supabaseAdmin } from '../../lib/supabase-admin.js';
 import { getAccessTokenForUser } from '../../lib/google-tasks.js';
@@ -19,6 +20,8 @@ export default async function handler(req, res) {
     if (!plannerEmail) {
       return res.status(400).json({ ok: false, error: 'Missing plannerEmail' });
     }
+
+    console.log(`[DASHBOARD] Starting metrics fetch for ${plannerEmail}`);
 
     // Get all users for this planner (from user_connections and invites)
     const userEmails = new Set();
@@ -54,6 +57,25 @@ export default async function handler(req, res) {
     }
     
     const userEmailsArray = Array.from(userEmails);
+    console.log(`[DASHBOARD] Found ${userEmailsArray.length} users:`, userEmailsArray.slice(0, 5));
+    
+    if (userEmailsArray.length === 0) {
+      // Return empty metrics if no users
+      return res.status(200).json({
+        ok: true,
+        metrics: {
+          aggregate: {
+            completedToday: 0,
+            completedThisWeek: 0,
+            averageCompletionRate: 0,
+            mostActiveUser: null,
+            trends: { today: 0, week: 0 }
+          },
+          userEngagement: [],
+          activityFeed: []
+        }
+      });
+    }
     
     // Get all assigned bundles for these users
     const { data: bundles, error: bundlesError } = await supabaseAdmin
@@ -68,6 +90,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok: false, error: 'Failed to fetch bundles' });
     }
 
+    console.log(`[DASHBOARD] Found ${(bundles || []).length} bundles`);
     const bundleIds = (bundles || []).map(b => b.id);
 
     // Get all tasks for these bundles
@@ -80,6 +103,8 @@ export default async function handler(req, res) {
       console.error('[DASHBOARD] Error fetching tasks:', tasksError);
       return res.status(500).json({ ok: false, error: 'Failed to fetch tasks' });
     }
+
+    console.log(`[DASHBOARD] Found ${(tasks || []).length} tasks`);
 
     // Get user connections for Google Tasks API access
     const { data: connections, error: connectionsError } = await supabaseAdmin
@@ -139,12 +164,16 @@ export default async function handler(req, res) {
     let totalTasks = 0;
     let totalCompleted = 0;
 
+    console.log(`[DASHBOARD] Processing ${tasksByUser.size} users with tasks`);
+    
     // Process each user
     for (const [userEmail, userTasks] of tasksByUser.entries()) {
+      console.log(`[DASHBOARD] Processing user ${userEmail} with ${userTasks.length} tasks`);
       const connection = userConnections.get(userEmail);
       
       if (!connection) {
         // No connection - still add user with zero metrics
+        console.log(`[DASHBOARD] User ${userEmail} has no connection, adding with zero metrics`);
         userMetrics.push({
           userEmail,
           isConnected: false,
@@ -214,10 +243,28 @@ export default async function handler(req, res) {
           if (tasksResponse.ok) {
             const tasksData = await tasksResponse.json();
             (tasksData.items || []).forEach(gt => {
+              // Google Tasks returns completed date as ISO string (e.g., "2025-11-04T17:30:00.000Z")
+              let completedDate = null;
+              if (gt.completed) {
+                try {
+                  completedDate = new Date(gt.completed);
+                  // Validate the date is valid
+                  if (isNaN(completedDate.getTime())) {
+                    console.error(`[DASHBOARD] Invalid completed date for task ${gt.id}: ${gt.completed}`);
+                    completedDate = null;
+                  }
+                } catch (e) {
+                  console.error(`[DASHBOARD] Error parsing completed date for task ${gt.id}:`, e);
+                  completedDate = null;
+                }
+              }
+              
               allGoogleTasks.set(gt.id, {
                 status: gt.status,
-                completed: gt.completed ? new Date(gt.completed) : null,
-                title: gt.title
+                completed: completedDate,
+                title: gt.title,
+                // Store raw data for debugging
+                _raw: { status: gt.status, completed: gt.completed, title: gt.title }
               });
             });
           }
@@ -225,6 +272,9 @@ export default async function handler(req, res) {
           console.error(`[DASHBOARD] Error fetching tasks from list ${taskList.id}:`, error);
         }
       }
+
+      console.log(`[DASHBOARD] Fetched ${allGoogleTasks.size} tasks from Google Tasks for ${userEmail}`);
+      console.log(`[DASHBOARD] User has ${userTasks.length} tasks in database, ${userTasks.filter(t => t.google_task_id).length} have google_task_id`);
 
       // Check task completion status via Google Tasks API
       const tasksWithStatus = await Promise.all(
@@ -239,16 +289,41 @@ export default async function handler(req, res) {
               if (googleTask) {
                 completed = googleTask.status === 'completed';
                 completedAt = googleTask.completed;
+                if (completed) {
+                  console.log(`[DASHBOARD] Task ${task.id} (${task.title}) is completed via task ID`);
+                }
+              } else {
+                console.log(`[DASHBOARD] Task ${task.id} has google_task_id ${task.google_task_id} but not found in Google Tasks`);
               }
             } else {
               // Fallback: search by title (for older tasks without stored IDs)
-              // Match by title from our fetched tasks
-              const matchingTasks = Array.from(allGoogleTasks.entries())
-                .filter(([id, gt]) => gt.title === task.title && gt.status === 'completed');
+              // Match by title from our fetched tasks - try exact match first, then partial
+              const exactMatches = Array.from(allGoogleTasks.entries())
+                .filter(([id, gt]) => gt.title === task.title);
               
-              if (matchingTasks.length > 0) {
+              const completedMatches = exactMatches.filter(([id, gt]) => gt.status === 'completed');
+              
+              if (completedMatches.length > 0) {
                 completed = true;
-                completedAt = matchingTasks[0][1].completed;
+                completedAt = completedMatches[0][1].completed;
+                console.log(`[DASHBOARD] Task ${task.id} (${task.title}) is completed via title match`);
+              } else if (exactMatches.length > 0) {
+                // Task exists but not completed
+                console.log(`[DASHBOARD] Task ${task.id} (${task.title}) found in Google Tasks but not completed`);
+              } else {
+                // No match found - try partial match
+                const partialMatches = Array.from(allGoogleTasks.entries())
+                  .filter(([id, gt]) => gt.title.toLowerCase().includes(task.title.toLowerCase()) || 
+                                         task.title.toLowerCase().includes(gt.title.toLowerCase()));
+                
+                if (partialMatches.length > 0) {
+                  const completedPartial = partialMatches.filter(([id, gt]) => gt.status === 'completed');
+                  if (completedPartial.length > 0) {
+                    completed = true;
+                    completedAt = completedPartial[0][1].completed;
+                    console.log(`[DASHBOARD] Task ${task.id} (${task.title}) is completed via partial title match`);
+                  }
+                }
               }
             }
           } catch (error) {
@@ -266,16 +341,30 @@ export default async function handler(req, res) {
 
       // Calculate user metrics
       const completedTasks = tasksWithStatus.filter(t => t.completed);
+      console.log(`[DASHBOARD] User ${userEmail}: ${completedTasks.length} completed tasks out of ${tasksWithStatus.length} total`);
+      
       const completedToday = tasksWithStatus.filter(t => {
         if (!t.completed || !t.completedAt) return false;
-        const completedDate = new Date(t.completedAt);
-        return completedDate >= today;
+        // completedAt is already a Date object from our map
+        const completedDate = t.completedAt instanceof Date ? t.completedAt : new Date(t.completedAt);
+        if (isNaN(completedDate.getTime())) {
+          console.error(`[DASHBOARD] Invalid completedAt date for task ${t.id}: ${t.completedAt}`);
+          return false;
+        }
+        const isToday = completedDate >= today;
+        if (isToday) {
+          console.log(`[DASHBOARD] Task completed today: ${t.title} at ${completedDate.toISOString()}, today threshold: ${today.toISOString()}`);
+        }
+        return isToday;
       });
       const completedThisWeek = tasksWithStatus.filter(t => {
         if (!t.completed || !t.completedAt) return false;
-        const completedDate = new Date(t.completedAt);
+        const completedDate = t.completedAt instanceof Date ? t.completedAt : new Date(t.completedAt);
+        if (isNaN(completedDate.getTime())) return false;
         return completedDate >= weekAgo;
       });
+      
+      console.log(`[DASHBOARD] User ${userEmail}: ${completedToday.length} today, ${completedThisWeek.length} this week`);
       const completedYesterday = tasksWithStatus.filter(t => {
         if (!t.completed || !t.completedAt) return false;
         const completedDate = new Date(t.completedAt);
@@ -352,6 +441,8 @@ export default async function handler(req, res) {
     // Sort recent completions by date (most recent first) and limit to 15
     recentCompletions.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
     const activityFeed = recentCompletions.slice(0, 15);
+
+    console.log(`[DASHBOARD] Metrics calculated: ${userMetrics.length} users, ${totalCompletedToday} today, ${totalCompletedThisWeek} this week, ${activityFeed.length} recent completions`);
 
     // Calculate trends
     const todayTrend = totalCompletedYesterday > 0
