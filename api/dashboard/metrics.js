@@ -96,16 +96,31 @@ export default async function handler(req, res) {
       });
     }
     
-    // Get all assigned bundles for these users
-    // Include both active (non-archived) AND archived bundles for historical completion tracking
-    // We'll filter archived bundles later when counting "active plans"
-    const { data: bundles, error: bundlesError } = await supabaseAdmin
-      .from('inbox_bundles')
-      .select('id, assigned_user_email, title, start_date, created_at, archived_at, deleted_at')
+    // Get all plans from history_plans (all plans are created directly in Plan view)
+    // Note: inbox_bundles is no longer used - all plans go through history_plans
+    const { data: historyPlans, error: historyError } = await supabaseAdmin
+      .from('history_plans')
+      .select('id, user_email, title, start_date, pushed_at, archived_at')
       .eq('planner_email', plannerEmailLower)
-      .in('assigned_user_email', userEmailsArray)
-      .is('deleted_at', null);
-      // Note: We're NOT filtering archived_at here - we want archived bundles too for completion tracking
+      .in('user_email', userEmailsArray)
+      .is('archived_at', null); // Only active (non-archived) plans
+    
+    if (historyError) {
+      console.error('[DASHBOARD] Error fetching history_plans:', historyError);
+      return res.status(500).json({ ok: false, error: 'Failed to fetch plans' });
+    }
+    
+    // Map history_plans to match bundle structure for consistency
+    const bundles = (historyPlans || []).map(p => ({
+      id: p.id,
+      assigned_user_email: p.user_email,
+      title: p.title,
+      start_date: p.start_date,
+      created_at: p.pushed_at,
+      archived_at: p.archived_at,
+      deleted_at: null,
+      source: 'history'
+    }));
     
     console.log(`[DASHBOARD] Query returned ${(bundles || []).length} bundles (after filtering archived/deleted)`);
     if ((bundles || []).length > 0) {
@@ -118,10 +133,6 @@ export default async function handler(req, res) {
       })));
     }
 
-    if (bundlesError) {
-      console.error('[DASHBOARD] Error fetching bundles:', bundlesError);
-      return res.status(500).json({ ok: false, error: 'Failed to fetch bundles' });
-    }
 
     console.log(`[DASHBOARD] Found ${(bundles || []).length} bundles`);
     const bundleIds = (bundles || []).map(b => b.id);
@@ -179,15 +190,29 @@ export default async function handler(req, res) {
       });
     }
 
-    // Get all tasks for these bundles
-    const { data: tasks, error: tasksError } = await supabaseAdmin
-      .from('inbox_tasks')
-      .select('id, bundle_id, title, day_offset, google_task_id')
-      .in('bundle_id', bundleIds);
-
-    if (tasksError) {
-      console.error('[DASHBOARD] Error fetching tasks:', tasksError);
-      return res.status(500).json({ ok: false, error: 'Failed to fetch tasks' });
+    // Get all tasks from history_items (all plans use history_items)
+    const planIds = bundles.map(b => b.id);
+    
+    let tasks = [];
+    if (planIds.length > 0) {
+      const { data: historyItems, error: historyItemsError } = await supabaseAdmin
+        .from('history_items')
+        .select('id, plan_id, title, day_offset')
+        .in('plan_id', planIds);
+      
+      if (historyItemsError) {
+        console.error('[DASHBOARD] Error fetching history_items:', historyItemsError);
+        return res.status(500).json({ ok: false, error: 'Failed to fetch tasks' });
+      }
+      
+      // Map history_items to match expected structure
+      tasks = (historyItems || []).map(item => ({
+        id: item.id,
+        bundle_id: item.plan_id, // Use plan_id as bundle_id for grouping
+        title: item.title,
+        day_offset: item.day_offset || 0,
+        google_task_id: null // history_items don't store google_task_id (will match by title)
+      }));
     }
 
     console.log(`[DASHBOARD] Found ${(tasks || []).length} tasks`);
