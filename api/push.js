@@ -85,8 +85,10 @@ export default async function handler(req, res) {
       await clearTaskList(accessToken, listId);
     }
 
-    // Create tasks
+    // Create tasks and capture Google task IDs
     let created = 0;
+    const taskIdMappings = []; // Store { title, dayOffset, googleTaskId } for matching
+    
     for (const it of items) {
       const ymd = addDaysUTC(startDate, it.dayOffset || 0);
       const due = toUTCISO(ymd, it.time || null, timezone);
@@ -97,8 +99,51 @@ export default async function handler(req, res) {
         due,
         status: "needsAction",
       };
-      await insertTask(accessToken, listId, task);
+      const googleTask = await insertTask(accessToken, listId, task);
+      
+      // Store mapping for updating inbox_tasks later
+      if (googleTask.id) {
+        taskIdMappings.push({
+          title: it.title || "Untitled",
+          dayOffset: it.dayOffset || 0,
+          googleTaskId: googleTask.id
+        });
+      }
+      
       created++;
+    }
+    
+    // If we have an inboxId, update inbox_tasks with Google task IDs
+    // Match tasks by title and dayOffset to associate Google task IDs
+    if (inboxId && taskIdMappings.length > 0) {
+      try {
+        // Get all tasks for this bundle
+        const { data: inboxTasks, error: tasksError } = await supabaseAdmin
+          .from("inbox_tasks")
+          .select("id, title, day_offset")
+          .eq("bundle_id", inboxId);
+        
+        if (!tasksError && inboxTasks && inboxTasks.length > 0) {
+          // Match tasks and update with Google task IDs
+          for (const mapping of taskIdMappings) {
+            // Find matching inbox task by title and dayOffset
+            const matchingTask = inboxTasks.find(
+              t => t.title === mapping.title && (t.day_offset || 0) === mapping.dayOffset
+            );
+            
+            if (matchingTask) {
+              // Update this inbox task with the Google task ID
+              await supabaseAdmin
+                .from("inbox_tasks")
+                .update({ google_task_id: mapping.googleTaskId })
+                .eq("id", matchingTask.id);
+            }
+          }
+        }
+      } catch (updateError) {
+        // Log but don't fail the push if we can't update task IDs
+        console.error("[PUSH] Failed to update inbox_tasks with Google task IDs:", updateError);
+      }
     }
 
     // OPTIONAL: archive the bundle when push succeeds
