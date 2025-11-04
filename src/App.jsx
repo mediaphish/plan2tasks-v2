@@ -1865,26 +1865,6 @@ History
           />
         </div>
 
-        {/* Task Feedback Section */}
-        {selectedUserEmail && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">📊</div>
-                <div className="text-base sm:text-lg font-semibold">Task Completion Status</div>
-              </div>
-              <div className="text-sm text-gray-600 ml-8">Track task completion and user engagement for {selectedUserEmail}</div>
-            </div>
-            
-            <div className="ml-8">
-              <TaskFeedbackPanel 
-                plannerEmail={plannerEmail} 
-                userEmail={selectedUserEmail} 
-                onToast={onToast}
-              />
-            </div>
-          </div>
-        )}
       </div>
       )}
 
@@ -2730,142 +2710,6 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   );
 }
 
-/* ───────── Task Feedback Panel ───────── */
-function TaskFeedbackPanel({ plannerEmail, userEmail, onToast }){
-  const [feedback, setFeedback] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [bundles, setBundles] = useState([]);
-
-  useEffect(() => {
-    loadFeedback();
-  }, [plannerEmail, userEmail]);
-
-  async function loadFeedback() {
-    if (!userEmail) return;
-    
-    setLoading(true);
-    try {
-      // Get assigned bundles for this user
-      const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
-      const r = await fetch(`/api/inbox?${qs.toString()}`);
-      const j = await r.json();
-      
-      if (r.ok && j.bundles) {
-        const userBundles = j.bundles.filter(b => 
-          (b.assigned_user_email || b.assigned_user) === userEmail
-        );
-        setBundles(userBundles);
-        
-        // Get feedback for the most recent bundle
-        if (userBundles.length > 0) {
-          const latestBundle = userBundles[0];
-          await loadBundleFeedback(latestBundle.id);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load feedback:', e);
-      onToast?.("error", "Failed to load task feedback");
-    }
-    setLoading(false);
-  }
-
-  async function loadBundleFeedback(bundleId) {
-    try {
-      const qs = new URLSearchParams({ plannerEmail, bundleId });
-      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
-      const j = await r.json();
-      
-      if (r.ok && j.feedback) {
-        setFeedback(j.feedback);
-      }
-    } catch (e) {
-      console.error('Failed to load bundle feedback:', e);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="text-center py-4">
-        <div className="text-sm text-gray-500">Loading task feedback...</div>
-      </div>
-    );
-  }
-
-  if (!feedback) {
-    return (
-      <div className="text-center py-4">
-        <div className="text-sm text-gray-500">No feedback data available</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Connection Status */}
-      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-        <div className={`w-3 h-3 rounded-full ${feedback.hasConnection ? 'bg-green-500' : 'bg-red-500'}`}></div>
-        <div className="text-sm">
-          <span className="font-medium">Google Tasks Connection:</span>
-          <span className={`ml-2 ${feedback.hasConnection ? 'text-green-700' : 'text-red-700'}`}>
-            {feedback.hasConnection ? 'Connected' : 'Not Connected'}
-          </span>
-        </div>
-      </div>
-
-      {/* Task Completion Summary */}
-      {feedback.hasConnection && feedback.totalTasks > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{feedback.tasksCompleted}</div>
-            <div className="text-sm text-blue-700">Tasks Completed</div>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-600">{feedback.totalTasks - feedback.tasksCompleted}</div>
-            <div className="text-sm text-gray-700">Tasks Pending</div>
-          </div>
-          <div className="p-4 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">
-              {Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)}%
-            </div>
-            <div className="text-sm text-green-700">Completion Rate</div>
-          </div>
-        </div>
-      )}
-
-      {/* Task Details */}
-      {feedback.taskDetails && feedback.taskDetails.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-700 mb-2">Task Details:</div>
-          <div className="space-y-1">
-            {feedback.taskDetails.map((task, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                <div className={`w-2 h-2 rounded-full ${
-                  task.completed ? 'bg-green-500' : 
-                  task.found ? 'bg-yellow-500' : 'bg-red-500'
-                }`}></div>
-                <div className="flex-1 text-sm">
-                  <span className="font-medium">{task.title}</span>
-                  <span className={`ml-2 text-xs ${
-                    task.completed ? 'text-green-700' : 
-                    task.found ? 'text-yellow-700' : 'text-red-700'
-                  }`}>
-                    {task.completed ? 'Completed' : 
-                     task.found ? 'Found in Google Tasks' : 'Not Found'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Last Checked */}
-      <div className="text-xs text-gray-500">
-        Last checked: {new Date(feedback.lastChecked).toLocaleString()}
-      </div>
-    </div>
-  );
-}
 
 /* ───────── Assigned Bundles Panel ───────── */
 function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle }){
@@ -6077,7 +5921,6 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
   const [userData, setUserData] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState(null);
-  const [feedback, setFeedback] = useState(null);
   const [bundles, setBundles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -6127,12 +5970,6 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         // Sort by created_at descending to get most recent first
         userBundles.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setBundles(userBundles);
-        
-        // Get feedback for the most recent bundle
-        if (userBundles.length > 0 && connData.canCallTasks) {
-          const latestBundle = userBundles[0];
-          await loadBundleFeedback(latestBundle.id);
-        }
       }
 
       // Set basic user data
@@ -6159,19 +5996,6 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
     setLoading(false);
   }
 
-  async function loadBundleFeedback(bundleId) {
-    try {
-      const qs = new URLSearchParams({ plannerEmail, bundleId });
-      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
-      const j = await r.json();
-      
-      if (r.ok && j.feedback) {
-        setFeedback(j.feedback);
-      }
-    } catch (e) {
-      console.error('Failed to load bundle feedback:', e);
-    }
-  }
 
   if (!userEmail) {
     return (
@@ -6295,89 +6119,6 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         </div>
       </div>
 
-      {/* Task Completion Overview */}
-      {connectionStatus?.isConnected && feedback && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">📊 Task Completion Overview</h2>
-          
-          {/* Completion Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <div className="text-3xl font-bold text-blue-600">{feedback.tasksCompleted || 0}</div>
-              <div className="text-sm text-blue-700 mt-1">Tasks Completed</div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-3xl font-bold text-gray-600">
-                {(feedback.totalTasks || 0) - (feedback.tasksCompleted || 0)}
-              </div>
-              <div className="text-sm text-gray-700 mt-1">Tasks Pending</div>
-            </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <div className="text-3xl font-bold text-green-600">
-                {feedback.totalTasks > 0 
-                  ? Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)
-                  : 0}%
-              </div>
-              <div className="text-sm text-green-700 mt-1">Completion Rate</div>
-            </div>
-          </div>
-
-          {/* Task Details */}
-          {feedback.taskDetails && feedback.taskDetails.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700 mb-3">Task Details:</div>
-              <div className="space-y-2">
-                {feedback.taskDetails.map((task, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                      task.completed ? 'bg-green-500' : 
-                      task.found ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">{task.title}</div>
-                      <div className={`text-xs mt-0.5 ${
-                        task.completed ? 'text-green-700' : 
-                        task.found ? 'text-yellow-700' : 'text-red-700'
-                      }`}>
-                        {task.completed ? '✓ Completed' : 
-                         task.found ? '◷ Found in Google Tasks' : '○ Not Found'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Last Checked */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="text-xs text-gray-500">
-              Last checked: {new Date(feedback.lastChecked).toLocaleString()}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* No Feedback Available Message */}
-      {connectionStatus?.isConnected && !feedback && bundles.length > 0 && (
-        <div className="bg-blue-50 rounded-2xl border border-blue-200 p-6">
-          <h2 className="text-lg font-semibold text-blue-900 mb-2">📊 Task Completion Tracking</h2>
-          <p className="text-sm text-blue-700">
-            Task completion data will be available after the daily sync runs. 
-            The system checks Google Tasks status every night at 2 AM UTC.
-          </p>
-        </div>
-      )}
-
-      {/* No Connection Message */}
-      {!connectionStatus?.isConnected && bundles.length > 0 && (
-        <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6">
-          <h2 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Google Tasks Not Connected</h2>
-          <p className="text-sm text-yellow-700">
-            This user needs to authorize Google Tasks connection to enable task completion tracking.
-          </p>
-        </div>
-      )}
 
       {/* Hidden: Incomplete features - Planning workspace, quick actions, recent activity */}
       {/* These features will be restored when fully implemented */}
