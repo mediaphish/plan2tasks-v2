@@ -773,8 +773,10 @@ function MainApp(){
             onToast={(t,m)=>toast(t,m)}
             onNavigate={(view, user, template) => {
               setView(view);
-              updateQueryView(view);
-              if (user) {
+              updateQueryView(view); // This will clear user param for user-agnostic views
+              // Only set user parameter if navigating to a user-specific view (like "plan")
+              const userSpecificViews = new Set(["plan", "user-dashboard"]);
+              if (user && userSpecificViews.has(view)) {
                 updateQueryUser(user);
               }
               if (template) {
@@ -873,8 +875,9 @@ function updateQueryView(next){
     const url = new URL(window.location.href);
     url.searchParams.set("view", next);
     
-    // Clear user parameter when going to main dashboard
-    if (next === "dashboard") {
+    // Clear user parameter for user-agnostic views (these views don't need user context)
+    const userAgnosticViews = new Set(["dashboard", "templates", "billing", "profile", "settings"]);
+    if (userAgnosticViews.has(next)) {
       url.searchParams.delete("user");
     }
     
@@ -3081,6 +3084,29 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                           title="Create Plan for this user"
                         >
                           <Calendar className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const r = await fetch("/api/connections/send-reauth-email", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ plannerEmail, userEmail: user.email })
+                              });
+                              const j = await r.json();
+                              if (r.ok && j.ok) {
+                                onToast("ok", `Re-authorization email sent to ${user.email}`);
+                              } else {
+                                onToast("warn", j.error || "Email not sent (may be rate limited)");
+                              }
+                            } catch (e) {
+                              onToast("error", `Failed to send email: ${e.message}`);
+                            }
+                          }}
+                          className="text-amber-600 hover:text-amber-800 text-sm font-medium p-1 rounded hover:bg-amber-50"
+                          title="Send re-authorization email to user"
+                        >
+                          <Mail className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => onNavigate("users", user.email)}
