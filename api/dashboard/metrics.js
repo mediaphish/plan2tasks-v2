@@ -114,6 +114,24 @@ export default async function handler(req, res) {
     console.log(`[DASHBOARD] Found ${(bundles || []).length} bundles`);
     const bundleIds = (bundles || []).map(b => b.id);
 
+    // Get user connections for Google Tasks API access (needed for both early return and main flow)
+    const { data: connections, error: connectionsError } = await supabaseAdmin
+      .from('user_connections')
+      .select('user_email, google_access_token, google_refresh_token, status')
+      .eq('planner_email', plannerEmail.toLowerCase().trim())
+      .eq('status', 'connected')
+      .in('user_email', userEmailsArray);
+
+    if (connectionsError) {
+      console.error('[DASHBOARD] Error fetching connections for API access:', connectionsError);
+    }
+
+    // Build user lookup map
+    const userConnections = new Map();
+    (connections || []).forEach(conn => {
+      userConnections.set(conn.user_email.toLowerCase(), conn);
+    });
+
     // If no bundles, still return user metrics (users with zero tasks)
     if (bundleIds.length === 0) {
       console.log(`[DASHBOARD] No bundles found, returning users with zero metrics`);
@@ -162,23 +180,7 @@ export default async function handler(req, res) {
 
     console.log(`[DASHBOARD] Found ${(tasks || []).length} tasks`);
 
-    // Get user connections for Google Tasks API access
-    const { data: connections, error: connectionsError } = await supabaseAdmin
-      .from('user_connections')
-      .select('user_email, google_access_token, google_refresh_token, status')
-      .eq('planner_email', plannerEmail.toLowerCase().trim())
-      .eq('status', 'connected')
-      .in('user_email', userEmailsArray);
-
-    if (connectionsError) {
-      console.error('[DASHBOARD] Error fetching connections for API access:', connectionsError);
-    }
-
-    // Build user lookup map
-    const userConnections = new Map();
-    (connections || []).forEach(conn => {
-      userConnections.set(conn.user_email.toLowerCase(), conn);
-    });
+    // Note: userConnections Map is already built above (before the early return check)
 
     // Build bundle lookup map - only include non-archived bundles
     const bundleMap = new Map();
