@@ -306,47 +306,70 @@ export default async function handler(req, res) {
       // Build a map of all tasks across all lists (for lookup)
       const allGoogleTasks = new Map(); // Map<taskId, {status, completed, listId}>
       
-      // Fetch tasks from all lists
+      // Fetch tasks from all lists with pagination
       for (const taskList of allTaskLists) {
         try {
-          const tasksResponse = await fetch(
-            `https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(taskList.id)}/tasks?maxResults=100&showCompleted=true`,
-            {
+          let allTasksFromList = [];
+          let pageToken = null;
+          let fetchCount = 0;
+          const maxFetches = 10; // Safety limit to prevent infinite loops
+          
+          // Paginate through all tasks in this list
+          do {
+            const url = new URL(`https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(taskList.id)}/tasks`);
+            url.searchParams.set('maxResults', '100');
+            url.searchParams.set('showCompleted', 'true');
+            if (pageToken) {
+              url.searchParams.set('pageToken', pageToken);
+            }
+            
+            const tasksResponse = await fetch(url.toString(), {
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
               }
+            });
+            
+            if (tasksResponse.ok) {
+              const tasksData = await tasksResponse.json();
+              allTasksFromList = allTasksFromList.concat(tasksData.items || []);
+              pageToken = tasksData.nextPageToken || null;
+              fetchCount++;
+              console.log(`[DASHBOARD] Fetched ${tasksData.items?.length || 0} tasks from list "${taskList.title}" (page ${fetchCount}, hasMore: ${!!pageToken})`);
+            } else {
+              const errorText = await tasksResponse.text();
+              console.error(`[DASHBOARD] Error fetching tasks from list ${taskList.id}:`, errorText);
+              break;
             }
-          );
+          } while (pageToken && fetchCount < maxFetches);
           
-          if (tasksResponse.ok) {
-            const tasksData = await tasksResponse.json();
-            (tasksData.items || []).forEach(gt => {
-              // Google Tasks returns completed date as ISO string (e.g., "2025-11-04T17:30:00.000Z")
-              let completedDate = null;
-              if (gt.completed) {
-                try {
-                  completedDate = new Date(gt.completed);
-                  // Validate the date is valid
-                  if (isNaN(completedDate.getTime())) {
-                    console.error(`[DASHBOARD] Invalid completed date for task ${gt.id}: ${gt.completed}`);
-                    completedDate = null;
-                  }
-                } catch (e) {
-                  console.error(`[DASHBOARD] Error parsing completed date for task ${gt.id}:`, e);
+          console.log(`[DASHBOARD] Total fetched ${allTasksFromList.length} tasks from list "${taskList.title}"`);
+          
+          allTasksFromList.forEach(gt => {
+            // Google Tasks returns completed date as ISO string (e.g., "2025-11-04T17:30:00.000Z")
+            let completedDate = null;
+            if (gt.completed) {
+              try {
+                completedDate = new Date(gt.completed);
+                // Validate the date is valid
+                if (isNaN(completedDate.getTime())) {
+                  console.error(`[DASHBOARD] Invalid completed date for task ${gt.id}: ${gt.completed}`);
                   completedDate = null;
                 }
+              } catch (e) {
+                console.error(`[DASHBOARD] Error parsing completed date for task ${gt.id}:`, e);
+                completedDate = null;
               }
-              
-              allGoogleTasks.set(gt.id, {
-                status: gt.status,
-                completed: completedDate,
-                title: gt.title,
-                // Store raw data for debugging
-                _raw: { status: gt.status, completed: gt.completed, title: gt.title }
-              });
+            }
+            
+            allGoogleTasks.set(gt.id, {
+              status: gt.status,
+              completed: completedDate,
+              title: gt.title,
+              // Store raw data for debugging
+              _raw: { status: gt.status, completed: gt.completed, title: gt.title }
             });
-          }
+          });
         } catch (error) {
           console.error(`[DASHBOARD] Error fetching tasks from list ${taskList.id}:`, error);
         }
@@ -354,6 +377,27 @@ export default async function handler(req, res) {
 
       console.log(`[DASHBOARD] Fetched ${allGoogleTasks.size} tasks from Google Tasks for ${userEmail}`);
       console.log(`[DASHBOARD] User has ${userTasks.length} tasks in database, ${userTasks.filter(t => t.google_task_id).length} have google_task_id`);
+      
+      // Log sample of Google Tasks for debugging
+      if (allGoogleTasks.size > 0) {
+        const sampleTasks = Array.from(allGoogleTasks.entries()).slice(0, 5);
+        console.log(`[DASHBOARD] Sample Google Tasks for ${userEmail}:`, sampleTasks.map(([id, task]) => ({
+          id,
+          title: task.title,
+          status: task.status,
+          completed: task.completed?.toISOString()
+        })));
+      }
+      
+      // Log sample of database tasks for debugging
+      if (userTasks.length > 0) {
+        console.log(`[DASHBOARD] Sample database tasks for ${userEmail}:`, userTasks.slice(0, 5).map(t => ({
+          id: t.id,
+          title: t.title,
+          google_task_id: t.google_task_id,
+          bundleTitle: t.bundleTitle
+        })));
+      }
 
       // Check task completion status via Google Tasks API
       const tasksWithStatus = await Promise.all(
@@ -377,30 +421,49 @@ export default async function handler(req, res) {
             } else {
               // Fallback: search by title (for older tasks without stored IDs)
               // Match by title from our fetched tasks - try exact match first, then partial
+              console.log(`[DASHBOARD] Task ${task.id} (${task.title}) has no google_task_id, trying title match`);
+              
               const exactMatches = Array.from(allGoogleTasks.entries())
                 .filter(([id, gt]) => gt.title === task.title);
+              
+              console.log(`[DASHBOARD] Found ${exactMatches.length} exact title matches for "${task.title}"`);
               
               const completedMatches = exactMatches.filter(([id, gt]) => gt.status === 'completed');
               
               if (completedMatches.length > 0) {
                 completed = true;
                 completedAt = completedMatches[0][1].completed;
-                console.log(`[DASHBOARD] Task ${task.id} (${task.title}) is completed via title match`);
+                console.log(`[DASHBOARD] ✅ Task ${task.id} (${task.title}) is COMPLETED via exact title match at ${completedAt?.toISOString()}`);
               } else if (exactMatches.length > 0) {
                 // Task exists but not completed
-                console.log(`[DASHBOARD] Task ${task.id} (${task.title}) found in Google Tasks but not completed`);
+                console.log(`[DASHBOARD] ⚠️ Task ${task.id} (${task.title}) found in Google Tasks but status is: ${exactMatches[0][1].status}`);
               } else {
-                // No match found - try partial match
+                // No exact match found - try partial match
+                console.log(`[DASHBOARD] No exact match for "${task.title}", trying partial match...`);
                 const partialMatches = Array.from(allGoogleTasks.entries())
-                  .filter(([id, gt]) => gt.title.toLowerCase().includes(task.title.toLowerCase()) || 
-                                         task.title.toLowerCase().includes(gt.title.toLowerCase()));
+                  .filter(([id, gt]) => {
+                    const dbTitle = task.title.toLowerCase().trim();
+                    const gtTitle = gt.title.toLowerCase().trim();
+                    return gtTitle.includes(dbTitle) || dbTitle.includes(gtTitle);
+                  });
+                
+                console.log(`[DASHBOARD] Found ${partialMatches.length} partial title matches for "${task.title}"`);
                 
                 if (partialMatches.length > 0) {
                   const completedPartial = partialMatches.filter(([id, gt]) => gt.status === 'completed');
                   if (completedPartial.length > 0) {
                     completed = true;
                     completedAt = completedPartial[0][1].completed;
-                    console.log(`[DASHBOARD] Task ${task.id} (${task.title}) is completed via partial title match`);
+                    console.log(`[DASHBOARD] ✅ Task ${task.id} (${task.title}) is COMPLETED via partial title match at ${completedAt?.toISOString()}`);
+                  } else {
+                    console.log(`[DASHBOARD] ⚠️ Found partial matches but none are completed`);
+                  }
+                } else {
+                  console.log(`[DASHBOARD] ❌ No matches found for task "${task.title}" in Google Tasks`);
+                  // Log all Google task titles for debugging
+                  if (allGoogleTasks.size > 0 && allGoogleTasks.size < 50) {
+                    const allTitles = Array.from(allGoogleTasks.values()).map(t => t.title);
+                    console.log(`[DASHBOARD] Available Google Tasks titles:`, allTitles);
                   }
                 }
               }
@@ -430,9 +493,12 @@ export default async function handler(req, res) {
           console.error(`[DASHBOARD] Invalid completedAt date for task ${t.id}: ${t.completedAt}`);
           return false;
         }
-        const isToday = completedDate >= today;
+        // Compare dates at midnight (ignore time) - task is "today" if completed date >= today midnight
+        const completedDateOnly = new Date(completedDate.getFullYear(), completedDate.getMonth(), completedDate.getDate());
+        const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const isToday = completedDateOnly.getTime() === todayDateOnly.getTime();
         if (isToday) {
-          console.log(`[DASHBOARD] Task completed today: ${t.title} at ${completedDate.toISOString()}, today threshold: ${today.toISOString()}`);
+          console.log(`[DASHBOARD] ✅ Task completed TODAY: ${t.title} at ${completedDate.toISOString()}`);
         }
         return isToday;
       });
