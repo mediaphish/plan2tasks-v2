@@ -96,6 +96,23 @@ export default async function handler(req, res) {
       });
     }
     
+    // DIAGNOSTIC: First, let's see ALL plans (including archived) to understand the data
+    const { data: allPlansDiagnostic, error: diagnosticError } = await supabaseAdmin
+      .from('history_plans')
+      .select('id, user_email, title, archived_at')
+      .eq('planner_email', plannerEmailLower)
+      .in('user_email', userEmailsArray);
+    
+    if (!diagnosticError && allPlansDiagnostic) {
+      const totalPlans = allPlansDiagnostic.length;
+      const archivedPlans = allPlansDiagnostic.filter(p => p.archived_at !== null && p.archived_at !== undefined).length;
+      const activePlans = allPlansDiagnostic.filter(p => p.archived_at === null || p.archived_at === undefined).length;
+      console.log(`[DASHBOARD] DIAGNOSTIC: Total plans: ${totalPlans}, Active: ${activePlans}, Archived: ${archivedPlans}`);
+      console.log(`[DASHBOARD] DIAGNOSTIC: Sample archived_at values:`, 
+        allPlansDiagnostic.slice(0, 5).map(p => ({ id: p.id, archived_at: p.archived_at, type: typeof p.archived_at }))
+      );
+    }
+    
     // Get all ACTIVE plans from history_plans (archived plans should NOT appear in dashboard)
     // Note: inbox_bundles is no longer used - all plans go through history_plans
     // IMPORTANT: Only show non-archived plans in dashboard. Archived plans are visible in History tab.
@@ -112,13 +129,17 @@ export default async function handler(req, res) {
     console.log(`[DASHBOARD] Query returned ${(historyPlans || []).length} plans (filtered: archived_at IS NULL)`);
     
     // Defensive check: verify no archived plans slipped through the query filter
-    const plansWithArchived = (historyPlans || []).filter(p => p.archived_at !== null && p.archived_at !== undefined);
+    const plansWithArchived = (historyPlans || []).filter(p => {
+      const hasArchived = p.archived_at !== null && p.archived_at !== undefined && p.archived_at !== '';
+      return hasArchived;
+    });
     if (plansWithArchived.length > 0) {
       console.error(`[DASHBOARD] ERROR: Query returned ${plansWithArchived.length} plans with archived_at set!`);
       console.error(`[DASHBOARD] Sample archived plans:`, plansWithArchived.slice(0, 3).map(p => ({
         id: p.id,
         title: p.title,
-        archived_at: p.archived_at
+        archived_at: p.archived_at,
+        archived_at_type: typeof p.archived_at
       })));
     }
     
@@ -141,11 +162,19 @@ export default async function handler(req, res) {
     }));
     
     // Double-check: filter out any plans that somehow have archived_at set (defensive check)
+    // Handle null, undefined, and empty string cases
     const beforeFilterCount = bundles.length;
-    bundles = bundles.filter(b => !b.archived_at);
+    bundles = bundles.filter(b => {
+      const isArchived = b.archived_at !== null && b.archived_at !== undefined && b.archived_at !== '';
+      return !isArchived;
+    });
     if (bundles.length !== beforeFilterCount) {
       console.warn(`[DASHBOARD] WARNING: Filtered out ${beforeFilterCount - bundles.length} archived plans that shouldn't have been in query`);
+      console.warn(`[DASHBOARD] Filtered bundles had archived_at:`, 
+        bundles.slice(0, 3).map(b => ({ id: b.id, archived_at: b.archived_at }))
+      );
     }
+    console.log(`[DASHBOARD] After defensive filtering: ${bundles.length} active bundles`);
     
     console.log(`[DASHBOARD] Total active plans: ${bundles.length}`);
     if (bundles.length > 0) {
