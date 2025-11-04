@@ -16,8 +16,7 @@ export default async function handler(req, res) {
     }
 
     // Verify that the planner owns this user connection
-    const sb = supabaseAdmin();
-    const { data: connection, error: connError } = await sb
+    const { data: connection, error: connError } = await supabaseAdmin
       .from('user_connections')
       .select('planner_email, user_email')
       .eq('planner_email', plannerEmail.toLowerCase().trim())
