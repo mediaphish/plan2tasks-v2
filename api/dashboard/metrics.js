@@ -96,14 +96,31 @@ export default async function handler(req, res) {
       });
     }
     
-    // Get all plans from history_plans (all plans are created directly in Plan view)
+    // Get all ACTIVE plans from history_plans (archived plans should NOT appear in dashboard)
     // Note: inbox_bundles is no longer used - all plans go through history_plans
+    // IMPORTANT: Only show non-archived plans in dashboard. Archived plans are visible in History tab.
+    // 
+    // Query with explicit filter for archived_at IS NULL
     const { data: historyPlans, error: historyError } = await supabaseAdmin
       .from('history_plans')
       .select('id, user_email, title, start_date, pushed_at, archived_at')
       .eq('planner_email', plannerEmailLower)
       .in('user_email', userEmailsArray)
-      .is('archived_at', null); // Only active (non-archived) plans
+      .is('archived_at', null); // CRITICAL: Only active plans where archived_at IS NULL
+    
+    console.log(`[DASHBOARD] Querying history_plans for ${userEmailsArray.length} users (planner: ${plannerEmailLower})`);
+    console.log(`[DASHBOARD] Query returned ${(historyPlans || []).length} plans (filtered: archived_at IS NULL)`);
+    
+    // Defensive check: verify no archived plans slipped through the query filter
+    const plansWithArchived = (historyPlans || []).filter(p => p.archived_at !== null && p.archived_at !== undefined);
+    if (plansWithArchived.length > 0) {
+      console.error(`[DASHBOARD] ERROR: Query returned ${plansWithArchived.length} plans with archived_at set!`);
+      console.error(`[DASHBOARD] Sample archived plans:`, plansWithArchived.slice(0, 3).map(p => ({
+        id: p.id,
+        title: p.title,
+        archived_at: p.archived_at
+      })));
+    }
     
     if (historyError) {
       console.error('[DASHBOARD] Error fetching history_plans:', historyError);
@@ -111,7 +128,8 @@ export default async function handler(req, res) {
     }
     
     // Map history_plans to match bundle structure for consistency
-    const bundles = (historyPlans || []).map(p => ({
+    // CRITICAL: Only include plans where archived_at IS NULL (already filtered by query, but double-check)
+    let bundles = (historyPlans || []).map(p => ({
       id: p.id,
       assigned_user_email: p.user_email,
       title: p.title,
@@ -122,14 +140,20 @@ export default async function handler(req, res) {
       source: 'history'
     }));
     
-    console.log(`[DASHBOARD] Query returned ${(bundles || []).length} bundles (after filtering archived/deleted)`);
-    if ((bundles || []).length > 0) {
-      console.log(`[DASHBOARD] Bundle details:`, bundles.map(b => ({
+    // Double-check: filter out any plans that somehow have archived_at set (defensive check)
+    const beforeFilterCount = bundles.length;
+    bundles = bundles.filter(b => !b.archived_at);
+    if (bundles.length !== beforeFilterCount) {
+      console.warn(`[DASHBOARD] WARNING: Filtered out ${beforeFilterCount - bundles.length} archived plans that shouldn't have been in query`);
+    }
+    
+    console.log(`[DASHBOARD] Total active plans: ${bundles.length}`);
+    if (bundles.length > 0) {
+      console.log(`[DASHBOARD] Active plan details (first 5):`, bundles.slice(0, 5).map(b => ({
         id: b.id,
         title: b.title,
         assigned_user: b.assigned_user_email,
-        archived_at: b.archived_at,
-        deleted_at: b.deleted_at
+        archived_at: b.archived_at // Should be null for all active plans
       })));
     }
 
@@ -220,14 +244,14 @@ export default async function handler(req, res) {
     // Note: userConnections Map is already built above (before the early return check)
 
     // Build bundle lookup map - include ALL bundles for task lookup
-    // We'll filter archived bundles separately when counting "active plans"
+    // All bundles are already filtered to active only (archived_at IS NULL)
+    // So bundleMap only contains active bundles
     const bundleMap = new Map();
     (bundles || []).forEach(bundle => {
       bundleMap.set(bundle.id, bundle);
     });
 
-    const activeBundles = (bundles || []).filter(b => !b.archived_at);
-    console.log(`[DASHBOARD] Bundle map has ${bundleMap.size} total bundles (${activeBundles.length} active, ${bundleMap.size - activeBundles.length} archived)`);
+    console.log(`[DASHBOARD] Bundle map has ${bundleMap.size} active bundles (all non-archived)`);
 
     // Group tasks by user - include tasks from ALL bundles (active and archived) for completion tracking
     const tasksByUser = new Map();
