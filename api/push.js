@@ -114,8 +114,11 @@ export default async function handler(req, res) {
     }
     
     // If we have an inboxId, update inbox_tasks with Google task IDs
-    // Match tasks by title and dayOffset to associate Google task IDs
+    // Note: Plans pushed directly (without inboxId) are saved to history_plans/history_items
+    // via /api/history/snapshot, not here. The dashboard will query both tables.
     if (inboxId && taskIdMappings.length > 0) {
+      // If we have an inboxId, update inbox_tasks with Google task IDs
+      // Match tasks by title and dayOffset to associate Google task IDs
       try {
         // Get all tasks for this bundle
         const { data: inboxTasks, error: tasksError } = await supabaseAdmin
