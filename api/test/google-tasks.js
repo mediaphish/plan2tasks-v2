@@ -20,10 +20,10 @@ export default async function handler(req, res) {
 
     console.log(`[TEST] Testing for planner: ${plannerEmail}, user: ${userEmail}`);
 
-    // Step 1: Get user connection
+    // Step 1: Get user connection (using correct column names)
     const { data: connection, error: connError } = await supabaseAdmin
       .from('user_connections')
-      .select('user_email, access_token, refresh_token, token_expires_at')
+      .select('user_email, google_access_token, google_refresh_token, google_token_expiry, google_expires_at, status')
       .eq('planner_email', plannerEmail.toLowerCase())
       .eq('user_email', userEmail.toLowerCase())
       .single();
