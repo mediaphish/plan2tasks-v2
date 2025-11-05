@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CreditCard
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 
 
 const APP_VERSION = "2025-09-02 · C4";
@@ -96,50 +96,16 @@ function TimeSelect({ value, onChange }){
 class ErrorBoundary extends React.Component{
   constructor(p){ super(p); this.state={error:null}; }
   static getDerivedStateFromError(e){ return {error:e}; }
-  
-  async componentDidCatch(error, info){
-    console.error("UI crash:", error, info);
-    
-    // Send error to monitoring endpoint
-    try {
-      await fetch('/api/monitoring/errors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error: error.message,
-          stack: error.stack,
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString(),
-          componentStack: info.componentStack
-        })
-      });
-    } catch (trackingError) {
-      console.error('Failed to send error to monitoring:', trackingError);
-    }
-  }
-  
+  componentDidCatch(e, info){ console.error("UI crash:", e, info); }
   render(){
     if (this.state.error) {
       return (
         <div className="min-h-screen bg-red-50 p-4 sm:p-6">
           <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-4">
             <div className="text-red-700 font-bold mb-2">Something went wrong in the UI</div>
-            <div className="text-sm text-gray-600 mb-4">
-              We've been notified of this error and are working to fix it.
-            </div>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              Reload Page
-            </button>
-            <details className="mt-4">
-              <summary className="cursor-pointer text-sm text-gray-500">Technical Details</summary>
-              <pre className="bg-red-100 p-3 text-xs text-red-900 overflow-auto rounded mt-2">
-                {String(this.state.error?.message || this.state.error)}
-              </pre>
-            </details>
+            <pre className="bg-red-100 p-3 text-xs text-red-900 overflow-auto rounded">
+              {String(this.state.error?.message || this.state.error)}
+            </pre>
           </div>
         </div>
       );
@@ -162,7 +128,7 @@ function MainApp(){
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
   const urlUser = usp.get("user") || "";
-  const validViews = new Set(["dashboard","users","plan","settings","profile","templates","user-dashboard","billing"]);
+  const validViews = new Set(["dashboard","users","plan","settings","profile","templates","user-dashboard"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
   const plannerEmail = (urlPE || storedPE);
@@ -352,15 +318,6 @@ function MainApp(){
               <p className="text-gray-600">🌐 <a href="https://www.plan2tasks.com" className="text-purple-600 hover:text-purple-700">www.plan2tasks.com</a></p>
             </div>
           </section>
-
-          {/* Hidden Login Link */}
-          <footer className="mt-16 py-8 border-t border-gray-200">
-            <div className="text-center">
-              <a href="?plannerEmail=bartpaden@gmail.com" className="text-gray-300 hover:text-gray-400 text-xs">
-                admin
-              </a>
-            </div>
-          </footer>
         </main>
       </div>
     );
@@ -387,40 +344,18 @@ function MainApp(){
       // Contact form handler
       const contactForm = document.getElementById('contactForm');
       if (contactForm) {
-        contactForm.addEventListener('submit', async function(e) {
+        contactForm.addEventListener('submit', function(e) {
           e.preventDefault();
           const name = document.getElementById('name').value;
           const email = document.getElementById('contactEmail').value;
           const message = document.getElementById('message').value;
           
-          // Show loading state
-          const submitBtn = contactForm.querySelector('button[type="submit"]');
-          const originalText = submitBtn.textContent;
-          submitBtn.textContent = 'Sending...';
-          submitBtn.disabled = true;
+          const subject = encodeURIComponent('Contact from Plan2Tasks Website');
+          const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+          const mailtoLink = `mailto:bartpaden@gmail.com?subject=${subject}&body=${body}`;
           
-          try {
-            const response = await fetch('/api/contact/send', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name, email, message })
-            });
-            
-            const data = await response.json();
-            
-            if (data.ok) {
-              alert('Thank you for your message! We\'ll get back to you soon.');
-              contactForm.reset();
-            } else {
-              throw new Error(data.error || 'Failed to send message');
-            }
-          } catch (error) {
-            console.error('Contact form error:', error);
-            alert('Sorry, there was an error sending your message. Please try again or email us directly.');
-          } finally {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-          }
+          window.location.href = mailtoLink;
+          alert('Opening your email client. Please send the message to complete your contact request.');
         });
       }
     }
@@ -428,8 +363,6 @@ function MainApp(){
   const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
-  const [createDropdownOpen,setCreateDropdownOpen]=useState(false);
-  const createDropdownRef = useRef(null);
   const [toasts,setToasts]=useState([]);
   const [profileOpen,setProfileOpen]=useState(false);
   const [plannerProfile,setPlannerProfile]=useState(null);
@@ -491,9 +424,6 @@ function MainApp(){
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
-      }
-      if (createDropdownRef.current && !createDropdownRef.current.contains(event.target)) {
-        setCreateDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -605,17 +535,7 @@ function MainApp(){
                 Dashboard
               </button>
               <button 
-                onClick={()=>{ 
-                  // Clear user parameter first
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete("user");
-                  url.searchParams.set("view", "users");
-                  window.history.pushState({}, "", url.toString());
-                  
-                  // Update state
-                  setView("users"); 
-                  setSelectedUserEmail("");
-                }}
+                onClick={()=>{ setView("users"); updateQueryView("users"); }}
                 className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
                   view === "users" 
                     ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
@@ -624,6 +544,7 @@ function MainApp(){
               >
                 Users
               </button>
+              {/* Hidden: Plan navigation - Plan creation now accessed via User Dashboard */}
               <button 
                 onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
                 className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
@@ -637,91 +558,17 @@ function MainApp(){
             </nav>
           </div>
 
-     {/* Right: Actions & Profile */}
-     <div className="flex items-center gap-0">
-            {/* Create Dropdown */}
-            <div className="relative hidden sm:block" ref={createDropdownRef}>
-              <button 
-                onClick={()=>setCreateDropdownOpen(!createDropdownOpen)} 
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-                Create
-                <ChevronDown className="h-4 w-4" />
-              </button>
-              
-              {createDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
-                  <div className="p-2">
-                    <button 
-                      onClick={()=>{
-                        setCreateDropdownOpen(false);
-                        setInviteOpen(true);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                    >
-                      <Mail className="h-4 w-4" />
-                      Invite User
-                    </button>
-                    <button 
-                      onClick={()=>{
-                        setCreateDropdownOpen(false);
-                        // Navigate to Users view to select a user, then to Plan view
-                        setView("users");
-                        updateQueryView("users");
-                        // User will select a user from Users view, then click to create plan
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                    >
-                      <Calendar className="h-4 w-4" />
-                      Plan for User
-                    </button>
-                    <button 
-                      onClick={()=>{
-                        setCreateDropdownOpen(false);
-                        setView("templates");
-                        updateQueryView("templates");
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Template
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Billing Icon */}
+          {/* Right: Actions & Profile */}
+          <div className="flex items-center gap-3">
+            {/* Primary Action */}
             <button 
-              onClick={()=>{ setView("billing"); updateQueryView("billing"); }}
-              className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
-              title="Billing & Subscription"
+              onClick={()=>setInviteOpen(true)} 
+              className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
             >
-              <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <CreditCard className="h-4 w-4 text-gray-600" />
-              </div>
+              <Mail className="h-4 w-4" />
+              Invite User
             </button>
 
-            {/* Login/Logout Icon */}
-            <button 
-              onClick={()=>{
-                if (plannerEmail) {
-                  // Logout
-                  localStorage.removeItem("plannerEmail");
-                  window.location.href = "/";
-                } else {
-                  // Login - redirect to admin login
-                  window.location.href = "/?plannerEmail=bartpaden@gmail.com";
-                }
-              }}
-              className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
-              title={plannerEmail ? "Logout" : "Login"}
-            >
-              <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <LogOut className="h-4 w-4 text-gray-600" />
-              </div>
-            </button>
 
            {/* Profile Avatar - Top Right Corner */}
            <div className="relative" ref={profileRef}>
@@ -784,16 +631,23 @@ function MainApp(){
         </div>
 
         {view==="dashboard" && (
-          <DashboardView
+          <UsersView
             plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
-            onNavigate={(newView, userEmail) => {
-              if (userEmail) {
-                setSelectedUserEmail(userEmail);
-                updateQueryUser(userEmail);
-              }
-              setView(newView);
-              updateQueryView(newView);
+            onManage={(email)=>{ 
+              setSelectedUserEmail(email);
+              setView("plan"); 
+              updateQueryView("plan");
+              updateQueryUser(email);
+            }}
+            onViewDashboard={(email) => {
+              console.log('[onViewDashboard] Called with email:', email);
+              setSelectedUserEmail(email);
+              setView("plan");
+              console.log('[onViewDashboard] Calling updateQueryView("plan")');
+              updateQueryView("plan");
+              updateQueryUser(email);
+              console.log('[onViewDashboard] URL should now be:', window.location.href);
             }}
           />
         )}
@@ -841,10 +695,8 @@ function MainApp(){
             onToast={(t,m)=>toast(t,m)}
             onNavigate={(view, user, template) => {
               setView(view);
-              updateQueryView(view); // This will clear user param for user-agnostic views
-              // Only set user parameter if navigating to a user-specific view (like "plan")
-              const userSpecificViews = new Set(["plan", "user-dashboard"]);
-              if (user && userSpecificViews.has(view)) {
+              updateQueryView(view);
+              if (user) {
                 updateQueryUser(user);
               }
               if (template) {
@@ -872,13 +724,6 @@ function MainApp(){
             plannerEmail={plannerEmail}
             prefs={prefs}
             onChange={(p)=>setPrefs(p)}
-            onToast={(t,m)=>toast(t,m)}
-          />
-        )}
-
-        {view==="billing" && (
-          <BillingView
-            plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
           />
         )}
@@ -928,11 +773,6 @@ function MainApp(){
           <span>•</span>
           <span>© 2025 Plan2Tasks</span>
         </div>
-        <div className="mt-2">
-          <a href="?plannerEmail=bartpaden@gmail.com" className="text-gray-300 hover:text-gray-400 text-xs">
-            admin
-          </a>
-        </div>
       </footer>
     </div>
   );
@@ -943,9 +783,8 @@ function updateQueryView(next){
     const url = new URL(window.location.href);
     url.searchParams.set("view", next);
     
-    // Clear user parameter for user-agnostic views (these views don't need user context)
-    const userAgnosticViews = new Set(["dashboard", "templates", "billing", "profile", "settings"]);
-    if (userAgnosticViews.has(next)) {
+    // Clear user parameter when going to main dashboard
+    if (next === "dashboard") {
       url.searchParams.delete("user");
     }
     
@@ -1343,6 +1182,9 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [planningMode,setPlanningMode]=useState(prefs?.default_planning_mode || "full-ai"); // "full-ai", "ai-assisted", "manual", "templates"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
+  
+  // Track if we're in template review mode (template applied, ready to review and deliver)
+  const isTemplateMode = !!templateData;
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -1358,36 +1200,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       setPlanningMode(prefs.default_planning_mode);
     }
   }, [prefs?.default_planning_mode]);
-
-  // Prevent auto-scroll when plan view first opens (but NOT when template is being applied)
-  // Keep page at top when opening plan view, don't auto-scroll to AI Planning Assistant
-  useEffect(() => {
-    // Don't prevent scroll if templateData is being applied (let that scroll happen once)
-    if (templateData) return;
-    
-    // Aggressively scroll to top multiple times to override any auto-scrolls from component initialization
-    // This catches scrolls that happen at different render phases
-    const scrollToTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    };
-    
-    // Scroll immediately
-    scrollToTop();
-    
-    // Scroll at various intervals to catch late-scrolling components
-    const timeouts = [
-      setTimeout(scrollToTop, 10),
-      setTimeout(scrollToTop, 50),
-      setTimeout(scrollToTop, 100),
-      setTimeout(scrollToTop, 200),
-      setTimeout(scrollToTop, 300),
-      setTimeout(scrollToTop, 500),
-    ];
-    
-    return () => {
-      timeouts.forEach(timeout => clearTimeout(timeout));
-    };
-  }, [templateData]); // Run when templateData changes - skip if template is being applied
 
   useEffect(()=>{ (async ()=>{
     const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
@@ -1420,31 +1232,22 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   useEffect(() => {
     if (templateData) {
       console.log("Applying template data:", templateData);
-      // Map template structure - handle both {name, tasks} and {title, tasks} formats
-      const templateTitle = templateData.title || templateData.name || "Untitled Plan";
-      const templateDescription = templateData.description || "";
-      const templateTasks = templateData.tasks || [];
-      
       const newPlan = {
-        title: templateTitle,
-        description: templateDescription,
+        title: templateData.title || "Untitled Plan",
+        description: templateData.description || "",
         startDate: format(new Date(),"yyyy-MM-dd"),
-        timezone: plan.timezone || "America/Chicago" // Preserve existing timezone if set
+        timezone: "America/Chicago"
       };
       console.log("Setting plan to:", newPlan);
       setPlan(newPlan);
-      setTasks(templateTasks.map(t => ({ id: uid(), ...t }))); // Ensure tasks have IDs
-      
-      // CRITICAL: Set planning mode to "ai-assisted" to make fields editable
-      // This ensures the Plan Setup section shows (condition: planningMode !== "full-ai" && planningMode !== "templates")
-      setPlanningMode("ai-assisted");
-      
+      setTasks(templateData.tasks || []);
+      setPlanningMode("ai-assisted"); // Use normal planning mode, not templates mode - fields will be editable
       clearAllToasts(); // Clear any existing toasts
       
       // Switch to Plan tab and scroll to delivery section for review
-      // Scroll once, then allow user to scroll freely
+      // Since template mode hides Steps 1 & 2, we scroll directly to Step 3 (Deliver)
       setActiveTab("plan");
-      const scrollTimer = setTimeout(() => {
+      setTimeout(() => {
         const deliverySection = document.querySelector('[data-section="delivery"]');
         if (deliverySection) {
           deliverySection.scrollIntoView({
@@ -1454,9 +1257,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         }
       }, 300);
       
-      return () => {
-        clearTimeout(scrollTimer);
-      };
+      // Don't clear template data immediately - let it persist for the user to see
     }
   }, [templateData, onToast]);
 
@@ -1507,9 +1308,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
   const applyPrefill = useCallback(({ plan: rp, tasks: rt, mode })=>{
     try{
-      // Switch to Plan tab
-      setActiveTab("plan");
-      
       setPlan(p=>({
         ...p,
         title: rp?.title ?? p.title,
@@ -1522,17 +1320,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         setMsg(`Restored ${rt.length} task(s) from history`);
         onToast?.("ok", `Restored ${rt.length} task(s)`);
       }
-      
-      // Scroll to delivery section after a brief delay to allow DOM update
-      setTimeout(() => {
-        const deliverySection = document.querySelector('[data-section="delivery"]');
-        if (deliverySection) {
-          deliverySection.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }
-      }, 200);
     }catch(e){ console.error("applyPrefill error", e); }
   },[onToast]);
 
@@ -1674,8 +1461,8 @@ History
             </div>
           )}
 
-          {/* Plan Setup Section - Only show for AI-Assisted and Manual modes */}
-          {planningMode !== "full-ai" && planningMode !== "templates" && (
+          {/* Plan Setup Section - Only show for AI-Assisted and Manual modes, but NOT when template is applied */}
+          {!isTemplateMode && planningMode !== "full-ai" && planningMode !== "templates" && (
             <div data-section="plan-setup" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -1752,7 +1539,8 @@ History
       )}
 
       {/* Tasks Section - Different behavior based on planning mode */}
-      {planningMode === "ai-assisted" && (
+      {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
+      {!isTemplateMode && planningMode === "ai-assisted" && (
         <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
@@ -1779,7 +1567,8 @@ History
         </div>
       )}
 
-      {planningMode === "manual" && (
+      {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
+      {!isTemplateMode && planningMode === "manual" && (
         <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
@@ -1801,15 +1590,24 @@ History
         </div>
       )}
 
-      {/* Deliver Section */}
+      {/* Deliver Section - Enhanced for template mode */}
       {tasks.length>0 && (
         <div data-section="delivery" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">3</div>
-              <div className="text-base sm:text-lg font-semibold">Deliver to User</div>
+              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">
+                {isTemplateMode ? "✓" : "3"}
+              </div>
+              <div className="text-base sm:text-lg font-semibold">
+                {isTemplateMode ? "Review & Deliver Template" : "Deliver to User"}
+              </div>
             </div>
-            <div className="text-sm text-gray-600 ml-8">Review your plan and deliver tasks to the selected user's Google Tasks.</div>
+            <div className="text-sm text-gray-600 ml-8">
+              {isTemplateMode 
+                ? "Review the template plan below. Edit plan details or tasks if needed, then deliver to the selected user's Google Tasks."
+                : "Review your plan and deliver tasks to the selected user's Google Tasks."
+              }
+            </div>
           </div>
 
           {/* Plan Details - Editable */}
@@ -1948,6 +1746,26 @@ History
           />
         </div>
 
+        {/* Task Feedback Section */}
+        {selectedUserEmail && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">📊</div>
+                <div className="text-base sm:text-lg font-semibold">Task Completion Status</div>
+              </div>
+              <div className="text-sm text-gray-600 ml-8">Track task completion and user engagement for {selectedUserEmail}</div>
+            </div>
+            
+            <div className="ml-8">
+              <TaskFeedbackPanel 
+                plannerEmail={plannerEmail} 
+                userEmail={selectedUserEmail} 
+                onToast={onToast}
+              />
+            </div>
+          </div>
+        )}
       </div>
       )}
 
@@ -2002,7 +1820,6 @@ History
           </div>
         </div>
       )}
-
     </div>
   );
 }
@@ -2435,7 +2252,6 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
       if (!resp.ok || j.error) throw new Error(j.error || "Push failed");
 
       try{
-        // Pass taskIdMappings from push response to history/snapshot so google_task_id can be stored
         const snap = await fetch("/api/history/snapshot",{
           method:"POST", headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({
@@ -2445,8 +2261,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
             startDate: plan.startDate,
             timezone: plan.timezone,
             mode: replaceMode ? "replace" : "append",
-            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes })),
-            taskIdMappings: j.taskIdMappings || [] // Pass Google task ID mappings
+            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes }))
           })
         });
         const sj = await snap.json();
@@ -2459,7 +2274,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
 
       const created = j.created || total;
       setMsg(`Success — ${created} task(s) created`);
-      onToast?.("ok", `Plan sent to ${selectedUserEmail} — ${created} task${created>1?"s":""} created`);
+      onToast?.("ok", `Pushed ${created} task${created>1?"s":""}`);
       
       // Save as template if checkbox is checked
       if (saveAsTemplate) {
@@ -2795,6 +2610,142 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   );
 }
 
+/* ───────── Task Feedback Panel ───────── */
+function TaskFeedbackPanel({ plannerEmail, userEmail, onToast }){
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [bundles, setBundles] = useState([]);
+
+  useEffect(() => {
+    loadFeedback();
+  }, [plannerEmail, userEmail]);
+
+  async function loadFeedback() {
+    if (!userEmail) return;
+    
+    setLoading(true);
+    try {
+      // Get assigned bundles for this user
+      const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
+      const r = await fetch(`/api/inbox?${qs.toString()}`);
+      const j = await r.json();
+      
+      if (r.ok && j.bundles) {
+        const userBundles = j.bundles.filter(b => 
+          (b.assigned_user_email || b.assigned_user) === userEmail
+        );
+        setBundles(userBundles);
+        
+        // Get feedback for the most recent bundle
+        if (userBundles.length > 0) {
+          const latestBundle = userBundles[0];
+          await loadBundleFeedback(latestBundle.id);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load feedback:', e);
+      onToast?.("error", "Failed to load task feedback");
+    }
+    setLoading(false);
+  }
+
+  async function loadBundleFeedback(bundleId) {
+    try {
+      const qs = new URLSearchParams({ plannerEmail, bundleId });
+      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
+      const j = await r.json();
+      
+      if (r.ok && j.feedback) {
+        setFeedback(j.feedback);
+      }
+    } catch (e) {
+      console.error('Failed to load bundle feedback:', e);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-4">
+        <div className="text-sm text-gray-500">Loading task feedback...</div>
+      </div>
+    );
+  }
+
+  if (!feedback) {
+    return (
+      <div className="text-center py-4">
+        <div className="text-sm text-gray-500">No feedback data available</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Connection Status */}
+      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+        <div className={`w-3 h-3 rounded-full ${feedback.hasConnection ? 'bg-green-500' : 'bg-red-500'}`}></div>
+        <div className="text-sm">
+          <span className="font-medium">Google Tasks Connection:</span>
+          <span className={`ml-2 ${feedback.hasConnection ? 'text-green-700' : 'text-red-700'}`}>
+            {feedback.hasConnection ? 'Connected' : 'Not Connected'}
+          </span>
+        </div>
+      </div>
+
+      {/* Task Completion Summary */}
+      {feedback.hasConnection && feedback.totalTasks > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{feedback.tasksCompleted}</div>
+            <div className="text-sm text-blue-700">Tasks Completed</div>
+          </div>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="text-2xl font-bold text-gray-600">{feedback.totalTasks - feedback.tasksCompleted}</div>
+            <div className="text-sm text-gray-700">Tasks Pending</div>
+          </div>
+          <div className="p-4 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">
+              {Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)}%
+            </div>
+            <div className="text-sm text-green-700">Completion Rate</div>
+          </div>
+        </div>
+      )}
+
+      {/* Task Details */}
+      {feedback.taskDetails && feedback.taskDetails.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-gray-700 mb-2">Task Details:</div>
+          <div className="space-y-1">
+            {feedback.taskDetails.map((task, index) => (
+              <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <div className={`w-2 h-2 rounded-full ${
+                  task.completed ? 'bg-green-500' : 
+                  task.found ? 'bg-yellow-500' : 'bg-red-500'
+                }`}></div>
+                <div className="flex-1 text-sm">
+                  <span className="font-medium">{task.title}</span>
+                  <span className={`ml-2 text-xs ${
+                    task.completed ? 'text-green-700' : 
+                    task.found ? 'text-yellow-700' : 'text-red-700'
+                  }`}>
+                    {task.completed ? 'Completed' : 
+                     task.found ? 'Found in Google Tasks' : 'Not Found'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Last Checked */}
+      <div className="text-xs text-gray-500">
+        Last checked: {new Date(feedback.lastChecked).toLocaleString()}
+      </div>
+    </div>
+  );
+}
 
 /* ───────── Assigned Bundles Panel ───────── */
 function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle }){
@@ -2932,344 +2883,178 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
 
 /* ───────── Dashboard view ───────── */
 function DashboardView({ plannerEmail, onToast, onNavigate }){
-  const [metrics, setMetrics] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [recentPlans, setRecentPlans] = useState([]);
+  const [userActivity, setUserActivity] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [sortBy, setSortBy] = useState('completionRate'); // completionRate, today, thisWeek, lastActivity
 
-  // Load dashboard metrics
+  // Load dashboard data
   useEffect(() => {
-    loadMetrics();
-  }, [plannerEmail]);
-
-  async function loadMetrics() {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('[DASHBOARD] Fetching metrics for:', plannerEmail);
-      const timestamp = Date.now();
-      const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}&_t=${timestamp}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load users
+        const usersResponse = await fetch(`/api/users?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          setUsers(usersData.users || []);
         }
-      });
-      const data = await response.json();
-      
-      console.log('[DASHBOARD] ===== RESPONSE RECEIVED =====');
-      console.log('[DASHBOARD] Response status:', response.status);
-      console.log('[DASHBOARD] Response ok:', data.ok);
-      console.log('[DASHBOARD] Has metrics:', !!data.metrics);
-      if (data.metrics) {
-        console.log('[DASHBOARD] Aggregate metrics:', JSON.stringify(data.metrics.aggregate, null, 2));
-        console.log('[DASHBOARD] User engagement count:', data.metrics.userEngagement?.length || 0);
-        console.log('[DASHBOARD] User details:', data.metrics.userEngagement?.map(u => ({
-          email: u.userEmail,
-          today: u.today,
-          thisWeek: u.thisWeek,
-          activePlans: u.activePlans,
-          completionRate: u.completionRate
-        })));
+
+        // Load recent plans (placeholder - would need API endpoint)
+        setRecentPlans([
+          { id: 1, name: "Q1 Marketing Campaign", user: "john@company.com", tasks: 12, status: "active" },
+          { id: 2, name: "Product Launch", user: "sarah@company.com", tasks: 8, status: "completed" }
+        ]);
+
+        // Load user activity (placeholder - would need API endpoint)
+        setUserActivity([
+          { user: "john@company.com", action: "completed task", task: "Create social media content", time: "2 hours ago" },
+          { user: "sarah@company.com", action: "started task", task: "Write blog post", time: "1 day ago" }
+        ]);
+
+      } catch (error) {
+        console.error('Dashboard data load error:', error);
+        onToast("error", "Failed to load dashboard data");
+      } finally {
+        setLoading(false);
       }
-      console.log('[DASHBOARD] Full response:', data);
-      
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || 'Failed to load dashboard metrics');
-      }
-      
-      console.log('[DASHBOARD] Setting metrics state...');
-      setMetrics(data.metrics);
-      console.log('[DASHBOARD] Metrics state set');
-    } catch (err) {
-      console.error('[DASHBOARD] Error loading metrics:', err);
-      setError(err.message);
-      onToast?.("error", "Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  }
+    };
 
-  // Sort user engagement data
-  const sortedUsers = metrics?.userEngagement ? [...metrics.userEngagement].sort((a, b) => {
-    switch (sortBy) {
-      case 'today':
-        return b.today - a.today;
-      case 'thisWeek':
-        return b.thisWeek - a.thisWeek;
-      case 'lastActivity':
-        if (!a.lastActivity && !b.lastActivity) return 0;
-        if (!a.lastActivity) return 1;
-        if (!b.lastActivity) return -1;
-        return new Date(b.lastActivity) - new Date(a.lastActivity);
-      case 'completionRate':
-      default:
-        return b.completionRate - a.completionRate;
-    }
-  }) : [];
-
-  // Get user avatar initial
-  function getUserInitial(email) {
-    return email ? email.charAt(0).toUpperCase() : '?';
-  }
-
-  // Format relative time
-  function formatRelativeTime(dateString) {
-    if (!dateString) return 'Never';
-    try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-    } catch {
-      return 'Unknown';
-    }
-  }
+    loadDashboardData();
+  }, [plannerEmail, onToast]);
 
   if (loading) {
     return (
-      <div className="bg-cream-100 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-charcoal-600">Loading dashboard...</div>
-          </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading dashboard...</div>
         </div>
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="bg-cream-100 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="bg-white rounded-lg border border-stone-200 p-6">
-            <div className="text-red-600 mb-2">Error loading dashboard</div>
-            <div className="text-sm text-charcoal-600 mb-4">{error}</div>
-            <button
-              onClick={loadMetrics}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const aggregate = metrics?.aggregate || {};
-  const activityFeed = metrics?.activityFeed || [];
 
   return (
-    <div className="bg-cream-100 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-charcoal-800">Dashboard</h1>
-          <p className="text-charcoal-600 mt-1">System performance and user engagement overview</p>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      {/* Dashboard Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-1">Overview of your planning activities</p>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <button
+          onClick={() => onNavigate("users", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <Users className="h-8 w-8 text-blue-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Manage Users</h3>
+              <p className="text-sm text-gray-600">Invite and manage your users</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate("plan", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <Calendar className="h-8 w-8 text-green-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Create Plan</h3>
+              <p className="text-sm text-gray-600">Start a new plan for a user</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate("settings", null)}
+          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <SettingsIcon className="h-8 w-8 text-purple-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Settings</h3>
+              <p className="text-sm text-gray-600">Configure your preferences</p>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Recent Plans */}
+      <div className="bg-white rounded-lg border border-gray-200 mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Plans</h2>
         </div>
-
-        {/* Aggregate Metrics - 4 Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Tasks Completed Today */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-charcoal-600">Tasks Completed Today</div>
-              {aggregate.trends?.today !== undefined && (
-                <span className={`text-xs font-medium ${
-                  aggregate.trends.today >= 0 ? 'text-emerald-600' : 'text-red-600'
-                }`}>
-                  {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}%
-                </span>
-              )}
-            </div>
-            <div className="text-3xl font-bold text-charcoal-800">{aggregate.completedToday || 0}</div>
-            {aggregate.trends?.today !== undefined && (
-              <div className="text-xs text-charcoal-500 mt-1">
-                vs yesterday
-              </div>
-            )}
-          </div>
-
-          {/* Tasks Completed This Week */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-charcoal-600">Tasks Completed This Week</div>
-              {aggregate.trends?.week !== undefined && (
-                <span className={`text-xs font-medium ${
-                  aggregate.trends.week >= 0 ? 'text-emerald-600' : 'text-red-600'
-                }`}>
-                  {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}%
-                </span>
-              )}
-            </div>
-            <div className="text-3xl font-bold text-charcoal-800">{aggregate.completedThisWeek || 0}</div>
-            {aggregate.trends?.week !== undefined && (
-              <div className="text-xs text-charcoal-500 mt-1">
-                vs last week
-              </div>
-            )}
-          </div>
-
-          {/* Average Completion Rate */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
-            <div className="text-sm font-medium text-charcoal-600 mb-2">Average Completion Rate</div>
-            <div className="text-3xl font-bold text-emerald-600">{aggregate.averageCompletionRate || 0}%</div>
-            <div className="text-xs text-charcoal-500 mt-1">across all users</div>
-          </div>
-
-          {/* Most Active User */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6 shadow-sm">
-            <div className="text-sm font-medium text-charcoal-600 mb-2">Most Active User</div>
-            {aggregate.mostActiveUser ? (
-              <>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                    {getUserInitial(aggregate.mostActiveUser.email)}
+        <div className="p-6">
+          {recentPlans.length > 0 ? (
+            <div className="space-y-4">
+              {recentPlans.map((plan) => (
+                <div key={plan.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{plan.name}</h3>
+                    <p className="text-sm text-gray-600">{plan.user} • {plan.tasks} tasks</p>
                   </div>
-                  <div className="text-sm font-semibold text-charcoal-800 truncate">
-                    {aggregate.mostActiveUser.email.split('@')[0]}
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {plan.status}
+                    </span>
+                    <button
+                      onClick={() => onNavigate("plan", plan.user)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      View
+                    </button>
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-emerald-600">{aggregate.mostActiveUser.completions || 0}</div>
-                <div className="text-xs text-charcoal-500 mt-1">completions today</div>
-              </>
-            ) : (
-              <div className="text-sm text-charcoal-500">No activity yet</div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No recent plans</p>
+              <button
+                onClick={() => onNavigate("plan", null)}
+                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Create your first plan
+              </button>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* User Engagement Table - Takes 2 columns */}
-          <div className="lg:col-span-2 bg-white rounded-lg border border-stone-200 shadow-sm">
-            <div className="px-6 py-4 border-b border-stone-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-charcoal-800">User Engagement</h2>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="text-xs border border-stone-300 rounded px-2 py-1 text-charcoal-600"
-                >
-                  <option value="completionRate">Sort by Completion Rate</option>
-                  <option value="today">Sort by Today</option>
-                  <option value="thisWeek">Sort by This Week</option>
-                  <option value="lastActivity">Sort by Last Activity</option>
-                </select>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-cream-50">
-                  <tr className="text-left text-charcoal-600">
-                    <th className="py-3 px-4 font-medium">User</th>
-                    <th className="py-3 px-4 font-medium text-center">Today</th>
-                    <th className="py-3 px-4 font-medium text-center">This Week</th>
-                    <th className="py-3 px-4 font-medium">Completion Rate</th>
-                    <th className="py-3 px-4 font-medium text-center">Active Plans</th>
-                    <th className="py-3 px-4 font-medium">Last Activity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedUsers.length > 0 ? (
-                    sortedUsers.map((user) => (
-                      <tr
-                        key={user.userEmail}
-                        onClick={() => onNavigate?.("plan", user.userEmail)}
-                        className="border-t border-stone-200 hover:bg-cream-50 cursor-pointer transition-colors"
-                      >
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                              {getUserInitial(user.userEmail)}
-                            </div>
-                            <div>
-                              <div className="font-medium text-charcoal-800">{user.userEmail.split('@')[0]}</div>
-                              <div className="text-xs text-charcoal-500 truncate max-w-[150px]">{user.userEmail}</div>
-                            </div>
-                            {!user.isConnected && (
-                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
-                                Not Connected
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-semibold text-charcoal-800">{user.today || 0}</span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-semibold text-charcoal-800">{user.thisWeek || 0}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-cream-100 rounded-full h-2 overflow-hidden">
-                              <div
-                                className="h-full bg-emerald-500 transition-all"
-                                style={{ width: `${user.completionRate || 0}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-medium text-charcoal-600 w-10 text-right">
-                              {user.completionRate || 0}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="text-charcoal-600">{user.activePlans || 0}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-xs text-charcoal-500">
-                            {formatRelativeTime(user.lastActivity)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="text-center py-8 text-charcoal-500">
-                        <Users className="h-12 w-12 mx-auto mb-4 text-charcoal-300" />
-                        <p>No users with activity yet</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Activity Feed - Takes 1 column */}
-          <div className="bg-white rounded-lg border border-stone-200 shadow-sm">
-            <div className="px-6 py-4 border-b border-stone-200">
-              <h2 className="text-lg font-semibold text-charcoal-800">Recent Activity</h2>
-            </div>
-            <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-              {activityFeed.length > 0 ? (
-                activityFeed.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-cream-50 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                      {getUserInitial(activity.userEmail)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <div className="text-sm font-medium text-charcoal-800 truncate">{activity.taskTitle}</div>
-                      </div>
-                      <div className="text-xs text-charcoal-500 truncate">{activity.bundleTitle}</div>
-                      <div className="text-xs text-charcoal-400 mt-1">
-                        {formatRelativeTime(activity.completedAt)}
-                      </div>
-                    </div>
+      {/* User Activity */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+        </div>
+        <div className="p-6">
+          {userActivity.length > 0 ? (
+            <div className="space-y-3">
+              {userActivity.map((activity, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-900">
+                      <span className="font-medium">{activity.user}</span> {activity.action} "{activity.task}"
+                    </p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-charcoal-500">
-                  <div className="text-4xl mb-2">📋</div>
-                  <div className="text-sm">No completions yet</div>
                 </div>
-              )}
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No recent activity</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -3406,25 +3191,6 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
       setRows(prev => prev.filter(x => x.email !== email));
       onToast?.("ok", `Invite canceled: ${email}`);
       setTimeout(()=>{ load(); }, 400);
-    } catch (e){
-      onToast?.("error", String(e.message||e));
-    }
-  }
-
-  // NEW: Send re-authorization email to user
-  async function doSendReauthEmail(email){
-    try{
-      const r = await fetch("/api/connections/send-reauth-email",{
-        method:"POST", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ plannerEmail, userEmail: email })
-      });
-      const j = await r.json();
-      if (!r.ok || j.error) throw new Error(j.error || j.message || "Failed to send email");
-      if (j.ok) {
-        onToast?.("ok", `Re-authorization email sent to ${email}`);
-      } else {
-        onToast?.("warn", j.error || "Email not sent (may be rate limited)");
-      }
     } catch (e){
       onToast?.("error", String(e.message||e));
     }
@@ -3573,16 +3339,6 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                             title="View comprehensive dashboard for this user"
                           >
                             User Dashboard
-                          </button>
-
-                          {/* NEW: Send Reconnect Email button */}
-                          <button
-                            onClick={()=>doSendReauthEmail(r.email)}
-                            className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700 hover:bg-amber-100 flex items-center gap-1"
-                            title="Send re-authorization email to user (24-hour rate limit)"
-                          >
-                            <Mail className="h-3.5 w-3.5" />
-                            Reconnect
                           </button>
 
                           {/* NEW: Cancel invite for pending invite-only rows */}
@@ -3953,6 +3709,8 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     };
   });
   const [saving,setSaving]=useState(false);
+  const [billingStatus, setBillingStatus] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(()=>{ setLocal({
     default_view: prefs.default_view || "users",
@@ -3963,6 +3721,86 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     show_inbox_badge: !!prefs.show_inbox_badge,
   }); },[prefs]);
 
+  // Load billing status
+  useEffect(() => {
+    loadBillingStatus();
+  }, [plannerEmail]);
+
+  async function loadBillingStatus() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch(`/api/billing/status?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      if (data.ok) {
+        setBillingStatus(data);
+      }
+    } catch (error) {
+      console.error('Failed to load billing status:', error);
+    }
+    setBillingLoading(false);
+  }
+
+  async function createCustomer() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        onToast?.("ok", "Customer created successfully");
+        loadBillingStatus();
+      } else {
+        throw new Error(data.error || 'Failed to create customer');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function createSubscription(priceId) {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, priceId })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error(data.error || 'Failed to create subscription');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function openPortal() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to open portal');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
 
   async function save(){
     setSaving(true);
@@ -4036,6 +3874,110 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
       </div>
     </div>
 
+    {/* Billing Section */}
+    <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="mb-3 text-sm font-semibold">Billing & Subscription</div>
+      
+      {billingLoading ? (
+        <div className="text-sm text-gray-500">Loading billing status...</div>
+      ) : billingStatus ? (
+        <div className="space-y-4">
+          {/* Current Plan */}
+          <div className="rounded-lg border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium">
+                  {billingStatus.subscription.plan_tier === 'free' ? 'Free Plan' : 
+                   billingStatus.subscription.plan_tier === 'starter' ? 'Starter Plan' :
+                   billingStatus.subscription.plan_tier === 'professional' ? 'Professional Plan' :
+                   billingStatus.subscription.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {billingStatus.userCount} / {billingStatus.userLimit} users
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                Status: {billingStatus.subscription.status}
+              </div>
+            </div>
+          </div>
+
+          {/* Upgrade Options */}
+          {billingStatus.subscription.plan_tier === 'free' && (
+            <div className="space-y-3">
+              <div className="text-sm font-medium">Upgrade your plan:</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Starter</div>
+                  <div className="text-xs text-gray-500">Up to 10 users</div>
+                  <div className="text-sm font-semibold">$9.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('starter-monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Professional</div>
+                  <div className="text-xs text-gray-500">Up to 50 users</div>
+                  <div className="text-sm font-semibold">$24.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('professional-monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Business</div>
+                  <div className="text-xs text-gray-500">Up to 100 users</div>
+                  <div className="text-sm font-semibold">$49.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('business-monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Manage Billing */}
+          {billingStatus.subscription.plan_tier !== 'free' && (
+            <div>
+              <button 
+                onClick={openPortal}
+                disabled={billingLoading}
+                className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
+              >
+                Manage Billing
+              </button>
+            </div>
+          )}
+
+          {/* Enterprise Contact */}
+          <div className="text-xs text-gray-500">
+            Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
+          <button 
+            onClick={createCustomer}
+            disabled={billingLoading}
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            Set Up Billing
+          </button>
+        </div>
+      )}
+    </div>
     </>
   );
 }
@@ -6170,6 +6112,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
   const [userData, setUserData] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState(null);
+  const [feedback, setFeedback] = useState(null);
   const [bundles, setBundles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -6219,6 +6162,12 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         // Sort by created_at descending to get most recent first
         userBundles.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setBundles(userBundles);
+        
+        // Get feedback for the most recent bundle
+        if (userBundles.length > 0 && connData.canCallTasks) {
+          const latestBundle = userBundles[0];
+          await loadBundleFeedback(latestBundle.id);
+        }
       }
 
       // Set basic user data
@@ -6245,6 +6194,19 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
     setLoading(false);
   }
 
+  async function loadBundleFeedback(bundleId) {
+    try {
+      const qs = new URLSearchParams({ plannerEmail, bundleId });
+      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
+      const j = await r.json();
+      
+      if (r.ok && j.feedback) {
+        setFeedback(j.feedback);
+      }
+    } catch (e) {
+      console.error('Failed to load bundle feedback:', e);
+    }
+  }
 
   if (!userEmail) {
     return (
@@ -6368,266 +6330,92 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         </div>
       </div>
 
+      {/* Task Completion Overview */}
+      {connectionStatus?.isConnected && feedback && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">📊 Task Completion Overview</h2>
+          
+          {/* Completion Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="text-3xl font-bold text-blue-600">{feedback.tasksCompleted || 0}</div>
+              <div className="text-sm text-blue-700 mt-1">Tasks Completed</div>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="text-3xl font-bold text-gray-600">
+                {(feedback.totalTasks || 0) - (feedback.tasksCompleted || 0)}
+              </div>
+              <div className="text-sm text-gray-700 mt-1">Tasks Pending</div>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="text-3xl font-bold text-green-600">
+                {feedback.totalTasks > 0 
+                  ? Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)
+                  : 0}%
+              </div>
+              <div className="text-sm text-green-700 mt-1">Completion Rate</div>
+            </div>
+          </div>
+
+          {/* Task Details */}
+          {feedback.taskDetails && feedback.taskDetails.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700 mb-3">Task Details:</div>
+              <div className="space-y-2">
+                {feedback.taskDetails.map((task, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                      task.completed ? 'bg-green-500' : 
+                      task.found ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">{task.title}</div>
+                      <div className={`text-xs mt-0.5 ${
+                        task.completed ? 'text-green-700' : 
+                        task.found ? 'text-yellow-700' : 'text-red-700'
+                      }`}>
+                        {task.completed ? '✓ Completed' : 
+                         task.found ? '◷ Found in Google Tasks' : '○ Not Found'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Last Checked */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="text-xs text-gray-500">
+              Last checked: {new Date(feedback.lastChecked).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No Feedback Available Message */}
+      {connectionStatus?.isConnected && !feedback && bundles.length > 0 && (
+        <div className="bg-blue-50 rounded-2xl border border-blue-200 p-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-2">📊 Task Completion Tracking</h2>
+          <p className="text-sm text-blue-700">
+            Task completion data will be available after the daily sync runs. 
+            The system checks Google Tasks status every night at 2 AM UTC.
+          </p>
+        </div>
+      )}
+
+      {/* No Connection Message */}
+      {!connectionStatus?.isConnected && bundles.length > 0 && (
+        <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6">
+          <h2 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Google Tasks Not Connected</h2>
+          <p className="text-sm text-yellow-700">
+            This user needs to authorize Google Tasks connection to enable task completion tracking.
+          </p>
+        </div>
+      )}
 
       {/* Hidden: Incomplete features - Planning workspace, quick actions, recent activity */}
       {/* These features will be restored when fully implemented */}
-    </div>
-  );
-}
-
-/* ───────── Billing View ───────── */
-function BillingView({ plannerEmail, onToast }){
-  const [billingStatus, setBillingStatus] = useState(null);
-  const [billingLoading, setBillingLoading] = useState(false);
-  const [billingPeriod, setBillingPeriod] = useState('monthly');
-
-  // Load billing status
-  useEffect(() => {
-    loadBillingStatus();
-  }, [plannerEmail]);
-
-  async function loadBillingStatus() {
-    setBillingLoading(true);
-    try {
-      const response = await fetch(`/api/billing/status?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-      const data = await response.json();
-      if (data.ok) {
-        setBillingStatus(data);
-      }
-    } catch (error) {
-      console.error('Failed to load billing status:', error);
-    }
-    setBillingLoading(false);
-  }
-
-  async function createCustomer() {
-    setBillingLoading(true);
-    try {
-      const response = await fetch('/api/billing/create-customer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail })
-      });
-      const data = await response.json();
-      if (data.ok) {
-        onToast?.("ok", "Customer created successfully");
-        loadBillingStatus();
-      } else {
-        throw new Error(data.error || 'Failed to create customer');
-      }
-    } catch (error) {
-      onToast?.("error", String(error.message || error));
-    }
-    setBillingLoading(false);
-  }
-
-  async function createSubscription(priceId) {
-    setBillingLoading(true);
-    try {
-      const response = await fetch('/api/billing/create-subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail, priceId })
-      });
-      const data = await response.json();
-      if (data.ok) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.checkoutUrl;
-      } else {
-        throw new Error(data.error || 'Failed to create subscription');
-      }
-    } catch (error) {
-      onToast?.("error", String(error.message || error));
-    }
-    setBillingLoading(false);
-  }
-
-  async function openPortal() {
-    setBillingLoading(true);
-    try {
-      const response = await fetch('/api/billing/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannerEmail })
-      });
-      const data = await response.json();
-      if (data.ok) {
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || 'Failed to open portal');
-      }
-    } catch (error) {
-      onToast?.("error", String(error.message || error));
-    }
-    setBillingLoading(false);
-  }
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      {/* Billing Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Billing & Subscription</h1>
-        <p className="text-gray-600 mt-1">Manage your subscription and billing</p>
-      </div>
-
-      {/* Billing Section */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-        {billingLoading ? (
-          <div className="text-sm text-gray-500">Loading billing status...</div>
-        ) : billingStatus ? (
-          <div className="space-y-4">
-            {/* Current Plan */}
-            <div className="rounded-lg border border-gray-200 p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium">
-                    {billingStatus.subscription?.plan_tier === 'free' ? 'Free Plan' : 
-                     billingStatus.subscription?.plan_tier === 'starter' ? 'Starter Plan' :
-                     billingStatus.subscription?.plan_tier === 'professional' ? 'Professional Plan' :
-                     billingStatus.subscription?.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {billingStatus.userCount || 0} / {billingStatus.userLimit || 1} users
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Status: {billingStatus.subscription?.status || 'Unknown'}
-                </div>
-              </div>
-            </div>
-
-            {/* Set Up Billing - Show when no customer exists */}
-            {!billingStatus.subscription && (
-              <div>
-                <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
-                <button 
-                  onClick={createCustomer}
-                  disabled={billingLoading}
-                  className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Set Up Billing
-                </button>
-              </div>
-            )}
-
-            {/* Upgrade Options - Show when on free plan */}
-            {billingStatus.subscription?.plan_tier === 'free' && (
-              <div className="space-y-3">
-                <div className="text-sm font-medium">Upgrade your plan:</div>
-                
-                {/* Billing Toggle */}
-                <div className="flex items-center justify-center">
-                  <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                    <button 
-                      onClick={() => setBillingPeriod('monthly')}
-                      className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                        billingPeriod === 'monthly' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      Monthly
-                    </button>
-                    <button 
-                      onClick={() => setBillingPeriod('annual')}
-                      className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                        billingPeriod === 'annual' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      Annual
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <div className="text-sm font-medium">Starter</div>
-                    <div className="text-xs text-gray-500">Up to 10 users</div>
-                    <div className="text-sm font-semibold">
-                      {billingPeriod === 'monthly' ? '$9.99/month' : '$99.99/year'}
-                    </div>
-                    {billingPeriod === 'annual' && (
-                      <div className="text-xs text-green-600">Save $20/year</div>
-                    )}
-                    <button 
-                      onClick={() => createSubscription(billingPeriod === 'monthly' ? 'starter-monthly' : 'starter-annual')}
-                      disabled={billingLoading}
-                      className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Subscribe
-                    </button>
-                  </div>
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <div className="text-sm font-medium">Professional</div>
-                    <div className="text-xs text-gray-500">Up to 50 users</div>
-                    <div className="text-sm font-semibold">
-                      {billingPeriod === 'monthly' ? '$24.99/month' : '$249.99/year'}
-                    </div>
-                    {billingPeriod === 'annual' && (
-                      <div className="text-xs text-green-600">Save $50/year</div>
-                    )}
-                    <button 
-                      onClick={() => createSubscription(billingPeriod === 'monthly' ? 'professional-monthly' : 'professional-annual')}
-                      disabled={billingLoading}
-                      className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Subscribe
-                    </button>
-                  </div>
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <div className="text-sm font-medium">Business</div>
-                    <div className="text-xs text-gray-500">Up to 100 users</div>
-                    <div className="text-sm font-semibold">
-                      {billingPeriod === 'monthly' ? '$49.99/month' : '$499.99/year'}
-                    </div>
-                    {billingPeriod === 'annual' && (
-                      <div className="text-xs text-green-600">Save $100/year</div>
-                    )}
-                    <button 
-                      onClick={() => createSubscription(billingPeriod === 'monthly' ? 'business-monthly' : 'business-annual')}
-                      disabled={billingLoading}
-                      className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Subscribe
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Manage Billing - Show when on paid plan */}
-            {billingStatus.subscription?.plan_tier && billingStatus.subscription.plan_tier !== 'free' && (
-              <div>
-                <button 
-                  onClick={openPortal}
-                  disabled={billingLoading}
-                  className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
-                >
-                  Manage Billing
-                </button>
-              </div>
-            )}
-
-            {/* Enterprise Contact */}
-            <div className="text-xs text-gray-500">
-              Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
-            <button 
-              onClick={createCustomer}
-              disabled={billingLoading}
-              className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              Set Up Billing
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
