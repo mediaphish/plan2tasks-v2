@@ -173,7 +173,8 @@ export default async function handler(req, res) {
       mode,
       list: { id: listId, title: listTitle },
       archived,
-      archived_at
+      archived_at,
+      taskIdMappings // Return mappings so frontend can pass to history/snapshot
     });
   } catch (e) {
     console.error("POST /api/push error", e);
