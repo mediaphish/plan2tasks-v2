@@ -491,10 +491,14 @@ export default async function handler(req, res) {
               }
             }
             
+            // Check if task is actually completed (status OR completed field)
+            const isCompleted = gt.status === 'completed' || (gt.completed && gt.completed !== null);
+            
             allGoogleTasks.set(gt.id, {
               status: gt.status,
               completed: completedDate,
               title: gt.title,
+              isCompleted: isCompleted, // Explicit completion flag
               // Store raw data for debugging
               _raw: { status: gt.status, completed: gt.completed, title: gt.title }
             });
@@ -506,6 +510,20 @@ export default async function handler(req, res) {
 
       console.log(`[DASHBOARD] Fetched ${allGoogleTasks.size} tasks from Google Tasks for ${userEmail}`);
       console.log(`[DASHBOARD] User has ${userTasks.length} tasks in database, ${userTasks.filter(t => t.google_task_id).length} have google_task_id`);
+      
+      // Count completed tasks in Google Tasks
+      const completedInGoogle = Array.from(allGoogleTasks.values()).filter(t => 
+        t.isCompleted || t.status === 'completed' || (t.completed && t.completed !== null)
+      );
+      console.log(`[DASHBOARD] Google Tasks shows ${completedInGoogle.length} completed tasks out of ${allGoogleTasks.size} total`);
+      if (completedInGoogle.length > 0) {
+        console.log(`[DASHBOARD] Sample completed tasks from Google:`, completedInGoogle.slice(0, 5).map(t => ({
+          title: t.title,
+          status: t.status,
+          completed: t.completed?.toISOString(),
+          id: Array.from(allGoogleTasks.entries()).find(([id, task]) => task === t)?.[0]
+        })));
+      }
       
       // Log sample of Google Tasks for debugging
       if (allGoogleTasks.size > 0) {
@@ -539,13 +557,17 @@ export default async function handler(req, res) {
               // Use task ID for accurate lookup from our fetched tasks
               const googleTask = allGoogleTasks.get(task.google_task_id);
               if (googleTask) {
-                completed = googleTask.status === 'completed';
+                // Use explicit isCompleted flag OR check both status and completed field
+                completed = googleTask.isCompleted || googleTask.status === 'completed' || (googleTask.completed && googleTask.completed !== null);
                 completedAt = googleTask.completed;
                 if (completed) {
-                  console.log(`[DASHBOARD] Task ${task.id} (${task.title}) is completed via task ID`);
+                  console.log(`[DASHBOARD] ✅ Task ${task.id} (${task.title}) is COMPLETED via task ID - status: ${googleTask.status}, completed: ${googleTask.completed?.toISOString()}`);
+                } else {
+                  console.log(`[DASHBOARD] ⚠️ Task ${task.id} (${task.title}) has ID but NOT completed - status: ${googleTask.status}, completed: ${googleTask.completed?.toISOString() || 'null'}`);
                 }
               } else {
-                console.log(`[DASHBOARD] Task ${task.id} has google_task_id ${task.google_task_id} but not found in Google Tasks`);
+                console.log(`[DASHBOARD] ❌ Task ${task.id} has google_task_id ${task.google_task_id} but NOT FOUND in Google Tasks`);
+                console.log(`[DASHBOARD] Available Google Task IDs (first 10):`, Array.from(allGoogleTasks.keys()).slice(0, 10));
               }
             } else {
               // Fallback: search by title (for older tasks without stored IDs)
@@ -557,15 +579,21 @@ export default async function handler(req, res) {
               
               console.log(`[DASHBOARD] Found ${exactMatches.length} exact title matches for "${task.title}"`);
               
-              const completedMatches = exactMatches.filter(([id, gt]) => gt.status === 'completed');
+              // Check completion using same logic as task ID lookup
+              const completedMatches = exactMatches.filter(([id, gt]) => 
+                gt.isCompleted || gt.status === 'completed' || (gt.completed && gt.completed !== null)
+              );
               
               if (completedMatches.length > 0) {
                 completed = true;
                 completedAt = completedMatches[0][1].completed;
                 console.log(`[DASHBOARD] ✅ Task ${task.id} (${task.title}) is COMPLETED via exact title match at ${completedAt?.toISOString()}`);
+                console.log(`[DASHBOARD]   Match details: status=${completedMatches[0][1].status}, completed=${completedMatches[0][1].completed?.toISOString()}, isCompleted=${completedMatches[0][1].isCompleted}`);
               } else if (exactMatches.length > 0) {
                 // Task exists but not completed
-                console.log(`[DASHBOARD] ⚠️ Task ${task.id} (${task.title}) found in Google Tasks but status is: ${exactMatches[0][1].status}`);
+                const match = exactMatches[0][1];
+                console.log(`[DASHBOARD] ⚠️ Task ${task.id} (${task.title}) found in Google Tasks but NOT completed`);
+                console.log(`[DASHBOARD]   Match details: status=${match.status}, completed=${match.completed?.toISOString() || 'null'}, isCompleted=${match.isCompleted}`);
               } else {
                 // No exact match found - try partial match
                 console.log(`[DASHBOARD] No exact match for "${task.title}", trying partial match...`);
@@ -579,13 +607,22 @@ export default async function handler(req, res) {
                 console.log(`[DASHBOARD] Found ${partialMatches.length} partial title matches for "${task.title}"`);
                 
                 if (partialMatches.length > 0) {
-                  const completedPartial = partialMatches.filter(([id, gt]) => gt.status === 'completed');
+                  // Check completion using same logic
+                  const completedPartial = partialMatches.filter(([id, gt]) => 
+                    gt.isCompleted || gt.status === 'completed' || (gt.completed && gt.completed !== null)
+                  );
                   if (completedPartial.length > 0) {
                     completed = true;
                     completedAt = completedPartial[0][1].completed;
                     console.log(`[DASHBOARD] ✅ Task ${task.id} (${task.title}) is COMPLETED via partial title match at ${completedAt?.toISOString()}`);
                   } else {
-                    console.log(`[DASHBOARD] ⚠️ Found partial matches but none are completed`);
+                    console.log(`[DASHBOARD] ⚠️ Found ${partialMatches.length} partial matches but NONE are completed`);
+                    console.log(`[DASHBOARD]   Sample match statuses:`, partialMatches.slice(0, 3).map(([id, gt]) => ({
+                      title: gt.title,
+                      status: gt.status,
+                      completed: gt.completed?.toISOString(),
+                      isCompleted: gt.isCompleted
+                    })));
                   }
                 } else {
                   console.log(`[DASHBOARD] ❌ No matches found for task "${task.title}" in Google Tasks`);
