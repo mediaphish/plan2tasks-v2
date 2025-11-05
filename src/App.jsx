@@ -513,9 +513,9 @@ function MainApp(){
   return (
     <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="w-full">
         {/* Header - Dark Background per Prompt 6 */}
-        <header className="bg-[#1A1A1A] border-b border-stone-800 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-8">
+        <header className="bg-[#1A1A1A] border-b border-stone-800 w-full px-8 py-4 mb-8">
           <div className="flex items-center justify-between">
             {/* Left: Logo & Navigation */}
             <div className="flex items-center gap-8">
@@ -2915,8 +2915,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
   const sortedUsers = [...userEngagement].sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0));
 
   return (
-    <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4">
-      <div className="w-full bg-white">
+    <div className="bg-white min-h-screen w-full">
         {/* Page Header - No gap, extends to edges */}
         <div className="px-8 py-8 border-b border-stone-200">
           <h1 className="text-[36px] leading-tight font-semibold text-stone-900 mb-2">Dashboard</h1>
@@ -3117,7 +3116,6 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                 )}
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
