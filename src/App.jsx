@@ -3024,7 +3024,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                           <div className="w-20 h-2 bg-stone-100 rounded-full overflow-hidden">
                             <div className="h-full bg-green-600" style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}></div>
                           </div>
-                          <span className="text-base font-semibold text-stone-900">{Math.round(user.completionRate || 0)}%</span>
+                          <span className="text-lg font-semibold text-stone-900">{Math.round(user.completionRate || 0)}%</span>
                         </div>
                       </td>
                       <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.activePlans || 0}</td>
