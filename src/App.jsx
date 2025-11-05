@@ -3368,10 +3368,10 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         <>
                           <button
                             onClick={()=>onManage?.(r.email)}
-                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50 relative"
+                            className="p-2 text-stone-500 hover:bg-stone-50 rounded-lg relative"
                             title="Open Plan view for this user"
                           >
-                            Plan
+                            <Calendar className="h-5 w-5" />
                             {bundleInfo.new > 0 && (
                               <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold w-4 h-4">
                                 {bundleInfo.new}
@@ -3405,10 +3405,10 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
 
                           <button
                             onClick={()=>doArchive(r.email, true)}
-                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
+                            className="p-2 text-stone-500 hover:bg-stone-50 rounded-lg"
                             title="Archive this user connection"
                           >
-                            Archive user
+                            <Trash2 className="h-5 w-5" />
                           </button>
                         </>
                       )}
