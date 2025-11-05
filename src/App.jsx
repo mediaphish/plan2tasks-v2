@@ -2916,7 +2916,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
 
   return (
     <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-stone-900">Dashboard</h1>
@@ -2991,8 +2991,8 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
               <h2 className="text-lg font-semibold text-stone-900">User Engagement</h2>
             </div>
             
-            {sortedUsers.length <= 2 ? (
-              // Empty state - centered when 0-2 users
+            {sortedUsers.length === 0 ? (
+              // Empty state - only when no users at all
               <div className="flex flex-col items-center justify-center flex-1 min-h-[300px]">
                 <Users className="w-12 h-12 text-stone-300 mb-4" />
                 <h3 className="text-lg font-medium text-stone-900 mb-2">No User Activity Yet</h3>
@@ -3001,7 +3001,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                 </p>
               </div>
             ) : (
-              // Table with users when 3+ users
+              // Table with users - show table if there are any users (regardless of count)
               <div className="flex-1 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-stone-50">
