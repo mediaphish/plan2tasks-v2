@@ -448,6 +448,7 @@ export default async function handler(req, res) {
             const url = new URL(`https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(taskList.id)}/tasks`);
             url.searchParams.set('maxResults', '100');
             url.searchParams.set('showCompleted', 'true');
+            url.searchParams.set('showHidden', 'true'); // Include hidden tasks (completed tasks are often hidden)
             if (pageToken) {
               url.searchParams.set('pageToken', pageToken);
             }
