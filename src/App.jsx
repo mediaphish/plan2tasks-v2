@@ -667,29 +667,6 @@ function MainApp(){
           />
         )}
 
-        {/* Users view is now handled by Dashboard - keeping this for backward compatibility */}
-        {view==="users" && (
-          <UsersView
-            plannerEmail={plannerEmail}
-            onToast={(t,m)=>toast(t,m)}
-            onManage={(email)=>{ 
-              setSelectedUserEmail(email);
-              setView("plan"); 
-              updateQueryView("plan");
-              updateQueryUser(email);
-            }}
-            onViewDashboard={(email) => {
-              console.log('[onViewDashboard] Called with email:', email);
-              setSelectedUserEmail(email);
-              setView("plan");
-              console.log('[onViewDashboard] Calling updateQueryView("plan")');
-              updateQueryView("plan");
-              updateQueryUser(email);
-              console.log('[onViewDashboard] URL should now be:', window.location.href);
-            }}
-          />
-        )}
-
         {view==="plan" && (
           <PlanView
             plannerEmail={plannerEmail}
@@ -1217,6 +1194,19 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       setPlanningMode(prefs.default_planning_mode);
     }
   }, [prefs?.default_planning_mode]);
+
+  // Prevent auto-scroll on plan view mount - force scroll to top
+  useEffect(() => {
+    if (activeTab === "plan") {
+      // Aggressively prevent any auto-scroll by forcing scroll to top multiple times
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      // Additional attempts to prevent late scrolls
+      const timers = [10, 50, 100, 200, 300, 500].map(delay => 
+        setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }), delay)
+      );
+      return () => timers.forEach(clearTimeout);
+    }
+  }, [activeTab]);
 
   useEffect(()=>{ (async ()=>{
     const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
@@ -2292,8 +2282,9 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
       }
 
       const created = j.created || total;
-      setMsg(`Success — ${created} task(s) created`);
-      onToast?.("ok", `Pushed ${created} task${created>1?"s":""}`);
+      const successMsg = `Success — ${created} task${created>1?"s":""} delivered to ${selectedUserEmail}`;
+      setMsg(successMsg);
+      onToast?.("ok", `Pushed ${created} task${created>1?"s":""} to ${selectedUserEmail}`);
       
       // Save as template if checkbox is checked
       if (saveAsTemplate) {
@@ -2321,7 +2312,13 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
         }
       }
       
-      setTasks([]);
+      // Don't clear tasks immediately - keep them visible for user feedback
+      // Only clear after a delay to show success message
+      setTimeout(() => {
+        setTasks([]);
+        setMsg("");
+      }, 3000);
+      
       onPushed?.(created);
     } catch (e) {
       const m = String(e.message||e);
