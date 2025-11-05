@@ -1241,18 +1241,23 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       console.log("Setting plan to:", newPlan);
       setPlan(newPlan);
       setTasks(templateData.tasks || []);
-      setPlanningMode("ai-assisted"); // Use normal planning mode, not templates mode - fields will be editable
+      setPlanningMode("ai-assisted"); // Use normal planning mode - keeps fields editable
       clearAllToasts(); // Clear any existing toasts
       
-      // Switch to Plan tab and scroll to delivery section for review
-      // Since template mode hides Steps 1 & 2, we scroll directly to Step 3 (Deliver)
+      // Switch to Plan tab and gently scroll to plan setup section (where editable fields are)
+      // Scroll with offset to keep navigation accessible - allows user to scroll freely after
       setActiveTab("plan");
       setTimeout(() => {
-        const deliverySection = document.querySelector('[data-section="delivery"]');
-        if (deliverySection) {
-          deliverySection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+        const planSetupSection = document.querySelector('[data-section="plan-setup"]');
+        if (planSetupSection) {
+          // Scroll with a small offset to keep navigation accessible
+          const headerOffset = 80; // Account for header/navigation
+          const elementPosition = planSetupSection.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
           });
         }
       }, 300);
@@ -1444,16 +1449,20 @@ History
                     setPlanningMode("ai-assisted"); // Switch to review mode
                     onToast?.("ok", `Applied template: ${template.title}`);
                     
-                    // Auto-scroll to delivery section
+                    // Gently scroll to plan setup section (where editable fields are) with offset to keep navigation accessible
                     setTimeout(() => {
-                      const deliverySection = document.querySelector('[data-section="delivery"]');
-                      if (deliverySection) {
-                        deliverySection.scrollIntoView({ 
-                          behavior: 'smooth', 
-                          block: 'start' 
+                      const planSetupSection = document.querySelector('[data-section="plan-setup"]');
+                      if (planSetupSection) {
+                        const headerOffset = 80;
+                        const elementPosition = planSetupSection.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        
+                        window.scrollTo({
+                          top: offsetPosition,
+                          behavior: 'smooth'
                         });
                       }
-                    }, 100);
+                    }, 300);
                   }}
                   onToast={onToast}
                 />
@@ -1461,15 +1470,24 @@ History
             </div>
           )}
 
-          {/* Plan Setup Section - Only show for AI-Assisted and Manual modes, but NOT when template is applied */}
-          {!isTemplateMode && planningMode !== "full-ai" && planningMode !== "templates" && (
+          {/* Plan Setup Section - Show for AI-Assisted and Manual modes, OR in template mode for editing */}
+          {((!isTemplateMode && planningMode !== "full-ai" && planningMode !== "templates") || isTemplateMode) && (
             <div data-section="plan-setup" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
-                  <div className="text-base sm:text-lg font-semibold">Plan Setup</div>
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">
+                    {isTemplateMode ? "✓" : "1"}
+                  </div>
+                  <div className="text-base sm:text-lg font-semibold">
+                    {isTemplateMode ? "Review & Edit Plan Details" : "Plan Setup"}
+                  </div>
                 </div>
-                <div className="text-sm text-gray-600 ml-8">Configure your plan details and settings</div>
+                <div className="text-sm text-gray-600 ml-8">
+                  {isTemplateMode 
+                    ? "Review and edit plan details before delivering to the user"
+                    : "Configure your plan details and settings"
+                  }
+                </div>
                 {!!msg && <div className="mt-2 ml-8 text-xs text-gray-600">{msg}</div>}
               </div>
 
