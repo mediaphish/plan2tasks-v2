@@ -1244,26 +1244,12 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       setPlanningMode("ai-assisted"); // Use normal planning mode - keeps fields editable
       clearAllToasts(); // Clear any existing toasts
       
-      // Switch to Plan tab and scroll to delivery section (where template review happens)
+      // Switch to Plan tab - NO auto-scroll, let user scroll freely
       setActiveTab("plan");
-      setTimeout(() => {
-        const deliverySection = document.querySelector('[data-section="delivery"]');
-        if (deliverySection) {
-          // Scroll with offset to keep navigation accessible, then allow free scrolling
-          const headerOffset = 80;
-          const elementPosition = deliverySection.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-          
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-        }
-      }, 400);
       
       // Don't clear template data immediately - let it persist for the user to see
     }
-  }, [templateData, onToast]);
+  }, [templateData]);
 
   async function loadNewBundleCount(){
     if (!selectedUserEmail) { setNewBundleCount(0); return; }
@@ -1445,23 +1431,9 @@ History
                       startDate: new Date().toISOString().split('T')[0]
                     });
                     setTasks(template.tasks || []);
-                    setPlanningMode("ai-assisted"); // Switch to review mode
+                    setPlanningMode("ai-assisted"); // Switch to review mode - keeps fields editable
                     onToast?.("ok", `Applied template: ${template.title}`);
-                    
-                    // Scroll to delivery section where template review and delivery happens
-                    setTimeout(() => {
-                      const deliverySection = document.querySelector('[data-section="delivery"]');
-                      if (deliverySection) {
-                        const headerOffset = 80;
-                        const elementPosition = deliverySection.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                        
-                        window.scrollTo({
-                          top: offsetPosition,
-                          behavior: 'smooth'
-                        });
-                      }
-                    }, 400);
+                    // NO auto-scroll - let user scroll freely
                   }}
                   onToast={onToast}
                 />
