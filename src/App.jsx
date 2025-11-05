@@ -2261,6 +2261,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
       if (!resp.ok || j.error) throw new Error(j.error || "Push failed");
 
       try{
+        // Pass taskIdMappings from push response to history/snapshot so google_task_id can be stored
         const snap = await fetch("/api/history/snapshot",{
           method:"POST", headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({
@@ -2270,7 +2271,8 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
             startDate: plan.startDate,
             timezone: plan.timezone,
             mode: replaceMode ? "replace" : "append",
-            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes }))
+            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes })),
+            taskIdMappings: j.taskIdMappings || [] // Pass Google task ID mappings
           })
         });
         const sj = await snap.json();
@@ -3130,19 +3132,19 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
               {activityFeed && activityFeed.length > 0 ? (
                 activityFeed.map((activity, index) => (
                   <div key={index} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                      {activity.userEmail?.charAt(0).toUpperCase() || '?'}
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckCircle className="h-4 w-4 text-emerald-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <div className="text-sm font-medium text-gray-800 truncate">{activity.taskTitle}</div>
+                      <div className="text-xs font-medium text-gray-900 truncate">
+                        {activity.userEmail}
                       </div>
-                      <div className="text-xs text-gray-500 truncate">{activity.bundleTitle}</div>
+                      <div className="text-xs text-gray-700 truncate">
+                        {activity.taskTitle}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {activity.bundleTitle}
+                      </div>
                       <div className="text-xs text-gray-400 mt-1">
                         {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}
                       </div>
