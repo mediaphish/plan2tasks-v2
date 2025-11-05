@@ -3238,49 +3238,57 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
   const visible = rows.filter(r=>!filter || (r.email||"").toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="text-sm font-semibold">Users</div>
-          {/* Active / Archived / Deleted toggle */}
-          <div className="ml-2 inline-flex rounded-xl border overflow-hidden">
-            <button
-              onClick={()=>setTab("active")}
-              className={cn("px-2.5 py-1 text-xs", tab==="active" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
-            >
-              Active
-            </button>
-            <button
-              onClick={()=>setTab("archived")}
-              className={cn("px-2.5 py-1 text-xs border-l", tab==="archived" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
-            >
-              Archived
-            </button>
-            <button
-              onClick={()=>setTab("deleted")}
-              className={cn("px-2.5 py-1 text-xs border-l", tab==="deleted" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
-            >
-              Deleted
-            </button>
+    <div className="w-full">
+      {/* Page Title Section */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-stone-900 mb-2">Users</h1>
+        <p className="text-lg text-stone-600">Manage your users and their planning activities</p>
+      </div>
+
+      {/* All Users Panel */}
+      <div className="rounded-xl border border-stone-200 bg-white p-6 sm:p-8 shadow-sm">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-stone-900 mb-2">All Users</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Active / Archived / Deleted toggle */}
+            <div className="inline-flex rounded-xl border overflow-hidden">
+              <button
+                onClick={()=>setTab("active")}
+                className={cn("px-2.5 py-1 text-xs", tab==="active" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
+              >
+                Active
+              </button>
+              <button
+                onClick={()=>setTab("archived")}
+                className={cn("px-2.5 py-1 text-xs border-l", tab==="archived" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
+              >
+                Archived
+              </button>
+              <button
+                onClick={()=>setTab("deleted")}
+                className={cn("px-2.5 py-1 text-xs border-l", tab==="deleted" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
+              >
+                Deleted
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input value={filter} onChange={(e)=>setFilter(e.target.value)} placeholder="Search…" className="rounded-xl border border-stone-300 px-2 py-1 text-sm" />
+              <button onClick={load} className="rounded-xl border px-2 py-1 text-sm hover:bg-stone-50"><RotateCcw className="h-4 w-4" /></button>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <input value={filter} onChange={(e)=>setFilter(e.target.value)} placeholder="Search…" className="rounded-xl border border-stone-300 px-2 py-1 text-sm" />
-          <button onClick={load} className="rounded-xl border px-2 py-1 text-sm hover:bg-stone-50"><RotateCcw className="h-4 w-4" /></button>
-        </div>
-      </div>
-
-      <div className="rounded-lg border overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-stone-50">
-            <tr className="text-left text-stone-500">
-              <th className="py-1.5 px-2">Email</th>
-              <th className="py-1.5 px-2">Status</th>
-              <th className="py-1.5 px-2">Categories</th>
-              <th className="py-1.5 px-2 text-right w-[24rem]">Actions</th>
-            </tr>
-          </thead>
+        <div className="rounded-lg border overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-stone-50 border-b border-stone-200">
+              <tr className="text-left">
+                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase">Email</th>
+                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase">Status</th>
+                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase">Categories</th>
+                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase text-right">Actions</th>
+              </tr>
+            </thead>
           <tbody>
             {visible.map(r=>{
               const list = (groups[r.email] ?? r.groups ?? []).slice().sort((a,b)=>a.localeCompare(b));
@@ -3292,42 +3300,49 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
 
               const bundleInfo = bundleCounts[r.email] || { new: 0, total: 0 };
               return (
-                <tr key={r.email} className={`border-t align-top ${bundleInfo.new > 0 ? 'bg-blue-50' : ''}`}>
-                  <td className="py-1.5 px-2">{r.email || "Unknown"}</td>
-                  <td className="py-1.5 px-2">
+                <tr key={r.email} className={`border-b border-stone-100 align-top ${bundleInfo.new > 0 ? 'bg-blue-50' : ''}`}>
+                  <td className="py-4 px-4 text-base text-stone-900">{r.email || "Unknown"}</td>
+                  <td className="py-4 px-4">
                     <span className={cn(
-                      "inline-flex items-center rounded-full px-2 py-0.5 text-xs border",
+                      "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs border",
                       isDeleted ? "border-red-300 text-red-700 bg-red-50" :
                       isArchived ? "border-stone-300 text-stone-600 bg-stone-50" :
                       (r.status==="connected" ? "border-emerald-300 text-emerald-800 bg-emerald-50" : "border-stone-300 text-stone-700 bg-white")
                     )}>
+                      {r.status==="connected" && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                      )}
                       {r.status||"—"}
                     </span>
                   </td>
-                  <td className="py-1.5 px-2">
+                  <td className="py-4 px-4">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      {pills.map(g=>(
-                        <span key={g} className="inline-flex max-w-[140px] items-center gap-1 rounded-full border px-2 py-0.5 text-xs" title={g}>
-                          <span className="truncate">{g}</span>
-                        </span>
-                      ))}
-                      <button
-                        onClick={()=>openCats(r.email)}
-                        className="relative inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs hover:bg-stone-50 disabled:opacity-40"
-                        aria-label={count===0 ? "Add categories" : "Edit categories"}
-                        title={count===0 ? "Add categories" : "Edit categories"}
-                        disabled={isDeleted}
-                      >
-                        <Tag className="h-3.5 w-3.5" />
-                        {count===0 ? (
-                          <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-white text-[10px] font-bold">+</span>
-                        ) : (
-                          <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] font-bold text-white">{count}</span>
-                        )}
-                      </button>
+                      {count === 0 ? (
+                        <span className="text-stone-600 text-sm">+ Add</span>
+                      ) : (
+                        <>
+                          {pills.map(g=>(
+                            <span key={g} className="inline-flex max-w-[140px] items-center gap-1 rounded-full border border-stone-300 px-2 py-0.5 text-xs text-stone-600 bg-stone-50" title={g}>
+                              <span className="truncate">{g}</span>
+                            </span>
+                          ))}
+                          {count > 2 && (
+                            <button
+                              onClick={()=>openCats(r.email)}
+                              className="relative inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs hover:bg-stone-50 disabled:opacity-40"
+                              aria-label="Edit categories"
+                              title="Edit categories"
+                              disabled={isDeleted}
+                            >
+                              <Tag className="h-3.5 w-3.5" />
+                              <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] font-bold text-white">{count}</span>
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </td>
-                  <td className="py-1.5 px-2">
+                  <td className="py-4 px-4">
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
                       {!isArchived && !isDeleted && (
                         <>
@@ -3361,7 +3376,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                           {isPendingInvite && (
                             <button
                               onClick={()=>doCancelInvite(r.email)}
-                              className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                              className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
                               title="Cancel pending invite"
                             >
                               Cancel invite
@@ -3370,7 +3385,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
 
                           <button
                             onClick={()=>doArchive(r.email, true)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
                             title="Archive this user connection"
                           >
                             Archive user
@@ -3382,7 +3397,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         <>
                           <button
                             onClick={()=>doArchive(r.email, false)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
                             title="Restore user from archive"
                           >
                             Restore user
@@ -3401,7 +3416,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         <>
                           <button
                             onClick={()=>doArchive(r.email, false)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
                             title="Restore user (undelete)"
                           >
                             Restore user
@@ -3421,12 +3436,12 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
               );
             })}
             {visible.length===0 && (
-              <tr><td colSpan={4} className="py-6 text-center text-gray-500">No users</td></tr>
+              <tr><td colSpan={4} className="py-6 text-center text-stone-500">No users</td></tr>
             )}
           </tbody>
         </table>
       </div>
-
+      </div>
 
       {catOpen && (
         <CategoriesModal
