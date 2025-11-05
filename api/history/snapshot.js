@@ -157,6 +157,16 @@ async function doSnapshot(body){
   const src = Array.isArray(items) ? items : [];
   if (src.length === 0) return { ok:true, status:200, planId, items:0, colsUsed: cols };
 
+  // Log taskIdMappings for debugging
+  console.log(`[SNAPSHOT] Received ${Array.isArray(taskIdMappings) ? taskIdMappings.length : 0} taskIdMappings for plan ${planId}`);
+  if (Array.isArray(taskIdMappings) && taskIdMappings.length > 0) {
+    console.log(`[SNAPSHOT] Sample taskIdMappings:`, taskIdMappings.slice(0, 3).map(m => ({
+      title: m.title,
+      dayOffset: m.dayOffset,
+      googleTaskId: m.googleTaskId
+    })));
+  }
+
   const ins = await insertItems(planId, src, cols, taskIdMappings);
   if (!ins.ok) {
     return {
