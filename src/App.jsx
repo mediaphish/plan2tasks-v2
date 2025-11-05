@@ -2928,7 +2928,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           {/* Tasks Completed Today */}
           <div className="bg-white rounded-lg border border-stone-200 p-6">
             <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed Today</p>
-            <p className="text-5xl font-bold text-stone-900 mb-2">{aggregate?.completedToday || 0}</p>
+            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedToday || 0}</p>
             {aggregate?.trends?.today !== undefined && (
               <p className={`text-sm text-green-600 ${aggregate.trends.today < 0 ? 'text-stone-500' : ''}`}>
                 {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
@@ -2939,7 +2939,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           {/* Tasks Completed This Week */}
           <div className="bg-white rounded-lg border border-stone-200 p-6">
             <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed This Week</p>
-            <p className="text-5xl font-bold text-stone-900 mb-2">{aggregate?.completedThisWeek || 0}</p>
+            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedThisWeek || 0}</p>
             {aggregate?.trends?.week !== undefined && (
               <p className={`text-sm text-green-600 ${aggregate.trends.week < 0 ? 'text-stone-500' : ''}`}>
                 {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}% vs last week
@@ -2950,7 +2950,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           {/* Average Completion Rate */}
           <div className="bg-white rounded-lg border border-stone-200 p-6">
             <p className="text-sm font-medium text-stone-600 mb-3">Average Completion Rate</p>
-            <p className="text-5xl font-bold text-stone-900 mb-2">{aggregate?.averageCompletionRate || 0}%</p>
+            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.averageCompletionRate || 0}%</p>
             <p className="text-sm text-stone-600">Across all users</p>
           </div>
 
@@ -2974,7 +2974,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* User Engagement Panel */}
           <div className="bg-white rounded-xl border border-stone-200 p-8 min-h-[500px]">
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">User Engagement</h2>
+            <h2 className="!text-2xl !font-bold text-stone-900 mb-2">User Engagement</h2>
             <p className="text-base text-stone-600 mb-8">Track user activity and completion rates</p>
             
             {sortedUsers.length === 0 ? (
@@ -3040,7 +3040,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
 
           {/* Live Activity Panel */}
           <div className="bg-white rounded-xl border border-stone-200 p-8 max-h-[600px] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">Live Activity</h2>
+            <h2 className="!text-2xl !font-bold text-stone-900 mb-2">Live Activity</h2>
             <p className="text-base text-stone-600 mb-8">Recent completions</p>
             
             <div className="space-y-3">
