@@ -511,7 +511,7 @@ function MainApp(){
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-6">
+    <div className="min-h-screen bg-[#F5F3F0] pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
       <div className="w-full">
         {/* Header - Dark Background per Prompt 6 */}
@@ -793,7 +793,7 @@ function MainApp(){
       </div>
       
       {/* Footer */}
-      <footer className="mt-8 border-t border-gray-200 py-4 text-center text-xs text-gray-500">
+      <footer className="mt-8 border-t border-stone-200 py-4 text-center text-xs text-stone-500">
         <div className="flex items-center justify-center gap-4">
           <span>Version {APP_VERSION}</span>
           <span>•</span>
@@ -856,7 +856,7 @@ function NavBtn({ active, onClick, icon, children }){
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs sm:text-sm",
-        active ? "border-gray-800 bg-gray-900 text-white" : "border-gray-300 bg-white hover:bg-gray-50"
+        active ? "border-stone-800 bg-stone-900 text-white" : "border-stone-300 bg-white hover:bg-stone-50"
       )}
     >
       {icon} {children}
@@ -878,7 +878,7 @@ function Toasts({ items, dismiss }){
               <span className="font-semibold">{t.type==="ok"?"Success":t.type==="warn"?"Heads up":"Error"}</span>
               <span className="opacity-70">{t.text}</span>
             </div>
-            <button onClick={()=>dismiss(t.id)} className="absolute right-1 top-1 text-xs text-gray-500 hover:text-gray-800">×</button>
+            <button onClick={()=>dismiss(t.id)} className="absolute right-1 top-1 text-xs text-stone-500 hover:text-stone-800">×</button>
           </div>
         ))}
       </div>
@@ -982,7 +982,7 @@ function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="text-base sm:text-lg font-semibold">Inbox — New Bundles</div>
         <div className="flex items-center gap-3">
@@ -991,7 +991,7 @@ function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
             id="inboxUserSelect"
             value={selectedUser || ""}
             onChange={(e)=>setSelectedUser(e.target.value)}
-            className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
           >
             <option value="">Select…</option>
             {users.map(u=>(
@@ -999,16 +999,16 @@ function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
             ))}
           </select>
 
-          <button onClick={()=>loadInbox("new")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load NEW</button>
-          <button onClick={()=>loadInbox("assigned")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Load ASSIGNED</button>
-          <button onClick={()=>loadInbox("new", { fallbackToAssigned:true })} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-gray-50">Refresh</button>
+          <button onClick={()=>loadInbox("new")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-stone-50">Load NEW</button>
+          <button onClick={()=>loadInbox("assigned")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-stone-50">Load ASSIGNED</button>
+          <button onClick={()=>loadInbox("new", { fallbackToAssigned:true })} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-stone-50">Refresh</button>
         </div>
       </div>
 
       <div className="rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-gray-500">
+          <thead className="bg-stone-50">
+            <tr className="text-left text-stone-500">
               <th className="py-1.5 px-2">Title</th>
               <th className="py-1.5 px-2">Start Date</th>
               <th className="py-1.5 px-2">Timezone</th>
@@ -2589,8 +2589,8 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
 
       <div className="rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-gray-500">
+          <thead className="bg-stone-50">
+            <tr className="text-left text-stone-500">
               <th className="py-1.5 px-2">Title</th>
               <th className="py-1.5 px-2">Type</th>
               <th className="py-1.5 px-2">Start</th>
@@ -2721,8 +2721,8 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
 
       <div className="rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-gray-500">
+          <thead className="bg-stone-50">
+            <tr className="text-left text-stone-500">
               <th className="py-1.5 px-2">Title</th>
               <th className="py-1.5 px-2">Start Date</th>
               <th className="py-1.5 px-2">Timezone</th>
@@ -3238,7 +3238,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
   const visible = rows.filter(r=>!filter || (r.email||"").toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="text-sm font-semibold">Users</div>
@@ -3246,19 +3246,19 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
           <div className="ml-2 inline-flex rounded-xl border overflow-hidden">
             <button
               onClick={()=>setTab("active")}
-              className={cn("px-2.5 py-1 text-xs", tab==="active" ? "bg-gray-900 text-white" : "bg-white hover:bg-gray-50")}
+              className={cn("px-2.5 py-1 text-xs", tab==="active" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
             >
               Active
             </button>
             <button
               onClick={()=>setTab("archived")}
-              className={cn("px-2.5 py-1 text-xs border-l", tab==="archived" ? "bg-gray-900 text-white" : "bg-white hover:bg-gray-50")}
+              className={cn("px-2.5 py-1 text-xs border-l", tab==="archived" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
             >
               Archived
             </button>
             <button
               onClick={()=>setTab("deleted")}
-              className={cn("px-2.5 py-1 text-xs border-l", tab==="deleted" ? "bg-gray-900 text-white" : "bg-white hover:bg-gray-50")}
+              className={cn("px-2.5 py-1 text-xs border-l", tab==="deleted" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
             >
               Deleted
             </button>
@@ -3266,15 +3266,15 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
         </div>
 
         <div className="flex items-center gap-2">
-          <input value={filter} onChange={(e)=>setFilter(e.target.value)} placeholder="Search…" className="rounded-xl border border-gray-300 px-2 py-1 text-sm" />
-          <button onClick={load} className="rounded-xl border px-2 py-1 text-sm hover:bg-gray-50"><RotateCcw className="h-4 w-4" /></button>
+          <input value={filter} onChange={(e)=>setFilter(e.target.value)} placeholder="Search…" className="rounded-xl border border-stone-300 px-2 py-1 text-sm" />
+          <button onClick={load} className="rounded-xl border px-2 py-1 text-sm hover:bg-stone-50"><RotateCcw className="h-4 w-4" /></button>
         </div>
       </div>
 
       <div className="rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-gray-500">
+          <thead className="bg-stone-50">
+            <tr className="text-left text-stone-500">
               <th className="py-1.5 px-2">Email</th>
               <th className="py-1.5 px-2">Status</th>
               <th className="py-1.5 px-2">Categories</th>
@@ -3298,8 +3298,8 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                     <span className={cn(
                       "inline-flex items-center rounded-full px-2 py-0.5 text-xs border",
                       isDeleted ? "border-red-300 text-red-700 bg-red-50" :
-                      isArchived ? "border-gray-300 text-gray-600 bg-gray-50" :
-                      (r.status==="connected" ? "border-emerald-300 text-emerald-800 bg-emerald-50" : "border-gray-300 text-gray-700 bg-white")
+                      isArchived ? "border-stone-300 text-stone-600 bg-stone-50" :
+                      (r.status==="connected" ? "border-emerald-300 text-emerald-800 bg-emerald-50" : "border-stone-300 text-stone-700 bg-white")
                     )}>
                       {r.status||"—"}
                     </span>
@@ -3313,7 +3313,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                       ))}
                       <button
                         onClick={()=>openCats(r.email)}
-                        className="relative inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs hover:bg-gray-50 disabled:opacity-40"
+                        className="relative inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs hover:bg-stone-50 disabled:opacity-40"
                         aria-label={count===0 ? "Add categories" : "Edit categories"}
                         title={count===0 ? "Add categories" : "Edit categories"}
                         disabled={isDeleted}
@@ -3322,7 +3322,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         {count===0 ? (
                           <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-white text-[10px] font-bold">+</span>
                         ) : (
-                          <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[10px] font-bold text-white">{count}</span>
+                          <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] font-bold text-white">{count}</span>
                         )}
                       </button>
                     </div>
@@ -3333,7 +3333,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         <>
                           <button
                             onClick={()=>onManage?.(r.email)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 relative"
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50 relative"
                             title="Open Plan view for this user"
                           >
                             Plan
@@ -3969,7 +3969,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
               <button 
                 onClick={openPortal}
                 disabled={billingLoading}
-                className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
+                className="rounded-lg bg-stone-900 px-3 py-2 text-sm text-white hover:bg-stone-800 disabled:opacity-50"
               >
                 Manage Billing
               </button>
@@ -3977,13 +3977,13 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
           )}
 
           {/* Enterprise Contact */}
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-stone-500">
             Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
           </div>
         </div>
       ) : (
         <div>
-          <div className="text-sm text-gray-500 mb-3">Set up billing to manage your subscription</div>
+          <div className="text-sm text-stone-500 mb-3">Set up billing to manage your subscription</div>
           <button 
             onClick={createCustomer}
             disabled={billingLoading}
