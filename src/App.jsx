@@ -2984,38 +2984,49 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* User Engagement Table */}
-          <div className="lg:col-span-2 bg-white rounded-lg border border-stone-200 flex flex-col min-h-[400px]">
-            <div className="px-4 py-3 border-b border-stone-200 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-gray-900">User Engagement</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* User Engagement Panel */}
+          <div className="bg-white border border-stone-200 rounded-lg p-6 min-h-[400px] flex flex-col">
+            <div className="mb-4 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-stone-900">User Engagement</h2>
             </div>
-            <div className="overflow-x-auto flex-1 flex flex-col">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">User</th>
-                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Today</th>
-                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">This Week</th>
-                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Completion Rate</th>
-                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Active Plans</th>
-                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Last Activity</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {sortedUsers.length > 0 ? (
-                    sortedUsers.map((user) => (
+            
+            {sortedUsers.length <= 2 ? (
+              // Empty state - centered when 0-2 users
+              <div className="flex flex-col items-center justify-center flex-1 min-h-[300px]">
+                <Users className="w-12 h-12 text-stone-300 mb-4" />
+                <h3 className="text-lg font-medium text-stone-900 mb-2">No User Activity Yet</h3>
+                <p className="text-sm text-stone-600 text-center max-w-sm">
+                  Task completions will appear here as users engage with their plans
+                </p>
+              </div>
+            ) : (
+              // Table with users when 3+ users
+              <div className="flex-1 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-stone-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-stone-700">User</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Today</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">This Week</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Completion Rate</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Active Plans</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Last Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-200">
+                    {sortedUsers.map((user) => (
                       <tr
                         key={user.userEmail}
                         onClick={() => onNavigate("plan", user.userEmail)}
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="hover:bg-stone-50 cursor-pointer transition-colors"
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-700">
+                            <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-xs font-medium text-stone-700">
                               {user.userEmail?.charAt(0).toUpperCase() || '?'}
                             </div>
-                            <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                            <div className="text-sm font-medium text-stone-900 truncate">
                               {user.userEmail}
                             </div>
                             {!user.isConnected && (
@@ -3025,91 +3036,84 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-gray-900">
+                        <td className="px-4 py-3 text-center text-sm text-stone-900">
                           {user.today || 0}
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-gray-900">
+                        <td className="px-4 py-3 text-center text-sm text-stone-900">
                           {user.thisWeek || 0}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div className="flex-1 bg-stone-200 rounded-full h-2.5">
                               <div
-                                className="bg-emerald-500 h-2 rounded-full"
+                                className="bg-emerald-500 h-2.5 rounded-full transition-all"
                                 style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-600 w-10 text-right">
+                            <span className="text-xs text-stone-600 w-10 text-right font-medium">
                               {Math.round(user.completionRate || 0)}%
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-gray-900">
+                        <td className="px-4 py-3 text-center text-sm text-stone-900">
                           {user.activePlans || 0}
                         </td>
-                        <td className="px-4 py-3 text-center text-xs text-gray-500">
+                        <td className="px-4 py-3 text-center text-xs text-stone-500">
                           {user.lastActivity ? formatDistanceToNow(new Date(user.lastActivity), { addSuffix: true }) : 'Never'}
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="px-4 py-12 text-center">
-                        <div className="flex flex-col items-center justify-center min-h-[300px]">
-                          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                            <User className="h-6 w-6 text-gray-400" />
-                          </div>
-                          <div className="text-sm font-medium text-gray-900 mb-1">No users connected yet</div>
-                          <div className="text-xs text-gray-500">Invite users to start tracking engagement</div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
-          {/* Live Activity Feed */}
-          <div className="bg-white rounded-lg border border-stone-200 flex flex-col">
-            <div className="px-4 py-3 border-b border-stone-200 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-gray-900">Live Activity</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Recent completions</p>
+          {/* Live Activity Panel */}
+          <div className="bg-white border border-stone-200 rounded-lg p-6 flex flex-col">
+            <div className="mb-4 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-stone-900">Live Activity</h2>
+              <p className="text-sm text-stone-600 mt-1">Recent completions</p>
             </div>
-            <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto flex-1">
-              {activityFeed && activityFeed.length > 0 ? (
-                <>
-                  {activityFeed.map((activity, index) => (
-                    <div key={index} className="flex items-start gap-2.5 p-2 hover:bg-gray-50 rounded transition-colors">
+            
+            <div className="flex-1 max-h-[500px] overflow-y-auto">
+              <div className="space-y-3">
+                {activityFeed && activityFeed.length > 0 ? (
+                  activityFeed.map((activity, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-stone-50 transition-colors"
+                      style={{ minHeight: '80px' }}
+                    >
                       <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-gray-900 truncate">
+                        <div className="text-sm font-semibold text-stone-900 truncate mb-1">
                           {activity.taskTitle}
                         </div>
-                        <div className="text-xs text-gray-600 truncate mt-0.5">
+                        <div className="text-xs text-stone-600 truncate mb-0.5">
                           {activity.userEmail}
                         </div>
-                        <div className="text-xs text-gray-400 truncate mt-0.5">
+                        <div className="text-xs text-stone-500 truncate mb-1">
                           {activity.bundleTitle}
                         </div>
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="text-xs text-stone-400">
                           {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}
                         </div>
                       </div>
                     </div>
-                  ))}
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                    <CheckCircle className="h-6 w-6 text-gray-400" />
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-3">
+                      <CheckCircle className="h-6 w-6 text-stone-400" />
+                    </div>
+                    <div className="text-sm font-medium text-stone-900 mb-1">No recent completions</div>
+                    <div className="text-xs text-stone-500 text-center">Task completions will appear here</div>
                   </div>
-                  <div className="text-sm font-medium text-gray-900 mb-1">No recent completions</div>
-                  <div className="text-xs text-gray-500 text-center">Task completions will appear here</div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
