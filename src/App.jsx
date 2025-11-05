@@ -2915,103 +2915,105 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
   const sortedUsers = [...userEngagement].sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0));
 
   return (
-    <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
-      <div className="w-full">
-        {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-stone-900">Dashboard</h1>
-          <p className="text-sm text-stone-600 mt-1">
+    <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4">
+      <div className="w-full bg-white">
+        {/* Page Header - No gap, extends to edges */}
+        <div className="px-8 py-8 border-b border-stone-200">
+          <h1 className="text-[36px] leading-tight font-semibold text-stone-900 mb-2">Dashboard</h1>
+          <p className="text-base text-stone-600 leading-relaxed">
             Monitor user engagement and task completions
           </p>
         </div>
 
-        {/* Aggregate Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {/* Tasks Completed Today */}
-          <div className="bg-white rounded-lg border border-stone-200 p-4">
-            <div className="text-sm text-gray-600 mb-1">Tasks Completed Today</div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {aggregate?.completedToday || 0}
-            </div>
-            {aggregate?.trends?.today !== undefined && (
-              <div className={`text-xs flex items-center gap-1 ${
-                aggregate.trends.today >= 0 ? 'text-emerald-600' : 'text-gray-500'
-              }`}>
-                {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
+        {/* Content Area - Generous padding */}
+        <div className="px-8 py-8">
+          {/* Aggregate Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Tasks Completed Today */}
+            <div className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+              <div className="text-sm text-stone-600 mb-3 leading-relaxed">Tasks Completed Today</div>
+              <div className="text-[48px] font-bold text-stone-900 mb-2 leading-none">
+                {aggregate?.completedToday || 0}
               </div>
-            )}
-          </div>
-
-          {/* Tasks Completed This Week */}
-          <div className="bg-white rounded-lg border border-stone-200 p-4">
-            <div className="text-sm text-gray-600 mb-1">Tasks Completed This Week</div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {aggregate?.completedThisWeek || 0}
+              {aggregate?.trends?.today !== undefined && (
+                <div className={`text-sm flex items-center gap-1 leading-relaxed ${
+                  aggregate.trends.today >= 0 ? 'text-emerald-600' : 'text-stone-500'
+                }`}>
+                  {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
+                </div>
+              )}
             </div>
-            {aggregate?.trends?.week !== undefined && (
-              <div className={`text-xs flex items-center gap-1 ${
-                aggregate.trends.week >= 0 ? 'text-emerald-600' : 'text-gray-500'
-              }`}>
-                {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}% vs last week
+
+            {/* Tasks Completed This Week */}
+            <div className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+              <div className="text-sm text-stone-600 mb-3 leading-relaxed">Tasks Completed This Week</div>
+              <div className="text-[48px] font-bold text-stone-900 mb-2 leading-none">
+                {aggregate?.completedThisWeek || 0}
               </div>
-            )}
-          </div>
-
-          {/* Average Completion Rate */}
-          <div className="bg-white rounded-lg border border-stone-200 p-4">
-            <div className="text-sm text-gray-600 mb-1">Average Completion Rate</div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {aggregate?.averageCompletionRate || 0}%
+              {aggregate?.trends?.week !== undefined && (
+                <div className={`text-sm flex items-center gap-1 leading-relaxed ${
+                  aggregate.trends.week >= 0 ? 'text-emerald-600' : 'text-stone-500'
+                }`}>
+                  {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}% vs last week
+                </div>
+              )}
             </div>
-            <div className="text-xs text-gray-500">Across all users</div>
+
+            {/* Average Completion Rate */}
+            <div className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+              <div className="text-sm text-stone-600 mb-3 leading-relaxed">Average Completion Rate</div>
+              <div className="text-[48px] font-bold text-stone-900 mb-2 leading-none">
+                {aggregate?.averageCompletionRate || 0}%
+              </div>
+              <div className="text-sm text-stone-500 leading-relaxed">Across all users</div>
+            </div>
+
+            {/* Most Active User */}
+            <div className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+              <div className="text-sm text-stone-600 mb-3 leading-relaxed">Most Active User</div>
+              {aggregate?.mostActiveUser ? (
+                <>
+                  <div className="text-xl font-semibold text-stone-900 truncate mb-2 leading-relaxed">
+                    {aggregate.mostActiveUser.email?.split('@')[0] || aggregate.mostActiveUser.email}
+                  </div>
+                  <div className="text-sm text-emerald-600 leading-relaxed">
+                    {aggregate.mostActiveUser.completions || 0} completions today
+                  </div>
+                </>
+              ) : (
+                <div className="text-base text-stone-500 leading-relaxed">No activity yet</div>
+              )}
+            </div>
           </div>
 
-          {/* Most Active User */}
-          <div className="bg-white rounded-lg border border-stone-200 p-4">
-            <div className="text-sm text-gray-600 mb-1">Most Active User</div>
-            {aggregate?.mostActiveUser ? (
-              <>
-                <div className="text-lg font-semibold text-gray-900 truncate">
-                  {aggregate.mostActiveUser.email?.split('@')[0] || aggregate.mostActiveUser.email}
-                </div>
-                <div className="text-xs text-emerald-600">
-                  {aggregate.mostActiveUser.completions || 0} completions today
-                </div>
-              </>
-            ) : (
-              <div className="text-sm text-gray-500">No activity yet</div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* User Engagement Panel */}
-          <div className="bg-white border border-stone-200 rounded-lg p-6 min-h-[400px] flex flex-col">
-            <div className="mb-4 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-stone-900">User Engagement</h2>
+          <div className="bg-white border border-stone-200 rounded-xl p-8 min-h-[500px] flex flex-col shadow-sm">
+            <div className="mb-6 flex-shrink-0">
+              <h2 className="text-[24px] font-semibold text-stone-900 leading-tight">User Engagement</h2>
             </div>
             
             {sortedUsers.length === 0 ? (
               // Empty state - only when no users at all
-              <div className="flex flex-col items-center justify-center flex-1 min-h-[300px]">
-                <Users className="w-12 h-12 text-stone-300 mb-4" />
-                <h3 className="text-lg font-medium text-stone-900 mb-2">No User Activity Yet</h3>
-                <p className="text-sm text-stone-600 text-center max-w-sm">
+              <div className="flex flex-col items-center justify-center flex-1 min-h-[400px]">
+                <Users className="w-16 h-16 text-stone-300 mb-6" />
+                <h3 className="text-xl font-medium text-stone-900 mb-3 leading-relaxed">No User Activity Yet</h3>
+                <p className="text-base text-stone-600 text-center max-w-sm leading-relaxed">
                   Task completions will appear here as users engage with their plans
                 </p>
               </div>
             ) : (
               // Table with users - show table if there are any users (regardless of count)
               <div className="flex-1 overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-base">
                   <thead className="bg-stone-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-stone-700">User</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Today</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">This Week</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Completion Rate</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Active Plans</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-stone-700">Last Activity</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-stone-700">User</th>
+                      <th className="px-6 py-4 text-center text-sm font-medium text-stone-700">Today</th>
+                      <th className="px-6 py-4 text-center text-sm font-medium text-stone-700">This Week</th>
+                      <th className="px-6 py-4 text-center text-sm font-medium text-stone-700">Completion Rate</th>
+                      <th className="px-6 py-4 text-center text-sm font-medium text-stone-700">Active Plans</th>
+                      <th className="px-6 py-4 text-center text-sm font-medium text-stone-700">Last Activity</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-200">
@@ -3021,44 +3023,44 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                         onClick={() => onNavigate("plan", user.userEmail)}
                         className="hover:bg-stone-50 cursor-pointer transition-colors"
                       >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-xs font-medium text-stone-700">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-base font-medium text-stone-700">
                               {user.userEmail?.charAt(0).toUpperCase() || '?'}
                             </div>
-                            <div className="text-sm font-medium text-stone-900 truncate">
+                            <div className="text-base font-medium text-stone-900 truncate">
                               {user.userEmail}
                             </div>
                             {!user.isConnected && (
-                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                              <span className="ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-700">
                                 Not Connected
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-stone-900">
+                        <td className="px-6 py-4 text-center text-base text-stone-900">
                           {user.today || 0}
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-stone-900">
+                        <td className="px-6 py-4 text-center text-base text-stone-900">
                           {user.thisWeek || 0}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-stone-200 rounded-full h-2.5">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 bg-stone-200 rounded-full h-3">
                               <div
-                                className="bg-emerald-500 h-2.5 rounded-full transition-all"
+                                className="bg-emerald-500 h-3 rounded-full transition-all"
                                 style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}
                               />
                             </div>
-                            <span className="text-xs text-stone-600 w-10 text-right font-medium">
+                            <span className="text-sm text-stone-600 w-12 text-right font-medium">
                               {Math.round(user.completionRate || 0)}%
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-stone-900">
+                        <td className="px-6 py-4 text-center text-base text-stone-900">
                           {user.activePlans || 0}
                         </td>
-                        <td className="px-4 py-3 text-center text-xs text-stone-500">
+                        <td className="px-6 py-4 text-center text-sm text-stone-500 leading-relaxed">
                           {user.lastActivity ? formatDistanceToNow(new Date(user.lastActivity), { addSuffix: true }) : 'Never'}
                         </td>
                       </tr>
@@ -3070,51 +3072,52 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           </div>
 
           {/* Live Activity Panel */}
-          <div className="bg-white border border-stone-200 rounded-lg p-6 flex flex-col">
-            <div className="mb-4 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-stone-900">Live Activity</h2>
-              <p className="text-sm text-stone-600 mt-1">Recent completions</p>
+          <div className="bg-white border border-stone-200 rounded-xl p-8 flex flex-col shadow-sm">
+            <div className="mb-6 flex-shrink-0">
+              <h2 className="text-[24px] font-semibold text-stone-900 leading-tight">Live Activity</h2>
+              <p className="text-sm text-stone-600 mt-2 leading-relaxed">Recent completions</p>
             </div>
             
-            <div className="flex-1 max-h-[500px] overflow-y-auto">
-              <div className="space-y-3">
+            <div className="flex-1 max-h-[600px] overflow-y-auto">
+              <div className="space-y-4">
                 {activityFeed && activityFeed.length > 0 ? (
                   activityFeed.map((activity, index) => (
                     <div 
                       key={index} 
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-stone-50 transition-colors"
-                      style={{ minHeight: '80px' }}
+                      className="flex items-start gap-4 p-4 rounded-lg hover:bg-stone-50 transition-colors"
+                      style={{ minHeight: '100px' }}
                     >
-                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-1">
+                        <CheckCircle className="h-5 w-5 text-emerald-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-stone-900 truncate mb-1">
+                        <div className="text-base font-semibold text-stone-900 truncate mb-2 leading-relaxed">
                           {activity.taskTitle}
                         </div>
-                        <div className="text-xs text-stone-600 truncate mb-0.5">
+                        <div className="text-sm text-stone-600 truncate mb-1 leading-relaxed">
                           {activity.userEmail}
                         </div>
-                        <div className="text-xs text-stone-500 truncate mb-1">
+                        <div className="text-sm text-stone-500 truncate mb-2 leading-relaxed">
                           {activity.bundleTitle}
                         </div>
-                        <div className="text-xs text-stone-400">
+                        <div className="text-sm text-stone-400 leading-relaxed">
                           {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-3">
-                      <CheckCircle className="h-6 w-6 text-stone-400" />
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+                      <CheckCircle className="h-8 w-8 text-stone-400" />
                     </div>
-                    <div className="text-sm font-medium text-stone-900 mb-1">No recent completions</div>
-                    <div className="text-xs text-stone-500 text-center">Task completions will appear here</div>
+                    <div className="text-base font-medium text-stone-900 mb-2 leading-relaxed">No recent completions</div>
+                    <div className="text-sm text-stone-500 text-center leading-relaxed">Task completions will appear here</div>
                   </div>
                 )}
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
