@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 
 const APP_VERSION = "2025-09-02 · C4";
@@ -631,6 +631,21 @@ function MainApp(){
         </div>
 
         {view==="dashboard" && (
+          <DashboardView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onNavigate={(newView, userEmail) => {
+              if (userEmail) {
+                setSelectedUserEmail(userEmail);
+                updateQueryUser(userEmail);
+              }
+              setView(newView);
+              updateQueryView(newView);
+            }}
+          />
+        )}
+
+        {view==="users" && (
           <UsersView
             plannerEmail={plannerEmail}
             onToast={(t,m)=>toast(t,m)}
@@ -2863,178 +2878,262 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
 
 /* ───────── Dashboard view ───────── */
 function DashboardView({ plannerEmail, onToast, onNavigate }){
-  const [users, setUsers] = useState([]);
-  const [recentPlans, setRecentPlans] = useState([]);
-  const [userActivity, setUserActivity] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Load dashboard data
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        // Load users
-        const usersResponse = await fetch(`/api/users?plannerEmail=${encodeURIComponent(plannerEmail)}`);
-        if (usersResponse.ok) {
-          const usersData = await usersResponse.json();
-          setUsers(usersData.users || []);
+  // Load dashboard metrics
+  const loadMetrics = async () => {
+    try {
+      console.log('[DASHBOARD] Loading metrics for:', plannerEmail);
+      setLoading(true);
+      setError(null);
+      
+      // Add cache-busting query parameter
+      const cacheBuster = Date.now();
+      const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}&_t=${cacheBuster}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
-
-        // Load recent plans (placeholder - would need API endpoint)
-        setRecentPlans([
-          { id: 1, name: "Q1 Marketing Campaign", user: "john@company.com", tasks: 12, status: "active" },
-          { id: 2, name: "Product Launch", user: "sarah@company.com", tasks: 8, status: "completed" }
-        ]);
-
-        // Load user activity (placeholder - would need API endpoint)
-        setUserActivity([
-          { user: "john@company.com", action: "completed task", task: "Create social media content", time: "2 hours ago" },
-          { user: "sarah@company.com", action: "started task", task: "Write blog post", time: "1 day ago" }
-        ]);
-
-      } catch (error) {
-        console.error('Dashboard data load error:', error);
-        onToast("error", "Failed to load dashboard data");
-      } finally {
-        setLoading(false);
+      });
+      
+      const data = await response.json();
+      console.log('[DASHBOARD] Metrics response:', data);
+      
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Failed to load dashboard metrics');
       }
-    };
+      
+      setMetrics(data);
+    } catch (err) {
+      console.error('[DASHBOARD] Error loading metrics:', err);
+      setError(err.message);
+      onToast?.("error", "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadDashboardData();
-  }, [plannerEmail, onToast]);
+  useEffect(() => {
+    loadMetrics();
+  }, [plannerEmail]);
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading dashboard...</div>
+      <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-500">Loading dashboard...</div>
+          </div>
         </div>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-lg border border-stone-200 p-6">
+            <div className="text-red-600 mb-4">Error loading dashboard: {error}</div>
+            <button
+              onClick={loadMetrics}
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-gray-500">No dashboard data available</div>
+        </div>
+      </div>
+    );
+  }
+
+  const { aggregateMetrics, userEngagement, recentActivity } = metrics;
+  const sortedUsers = [...(userEngagement || [])].sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0));
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      {/* Dashboard Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Overview of your planning activities</p>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <button
-          onClick={() => onNavigate("users", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3">
-            <Users className="h-8 w-8 text-blue-600" />
-            <div>
-              <h3 className="font-semibold text-gray-900">Manage Users</h3>
-              <p className="text-sm text-gray-600">Invite and manage your users</p>
+    <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Aggregate Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Tasks Completed Today */}
+          <div className="bg-white rounded-lg border border-stone-200 p-4">
+            <div className="text-sm text-gray-600 mb-1">Tasks Completed Today</div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">
+              {aggregateMetrics?.completedToday || 0}
             </div>
+            {aggregateMetrics?.trends?.today && (
+              <div className={`text-xs flex items-center gap-1 ${
+                aggregateMetrics.trends.today >= 0 ? 'text-emerald-600' : 'text-gray-500'
+              }`}>
+                {aggregateMetrics.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregateMetrics.trends.today)} vs yesterday
+              </div>
+            )}
           </div>
-        </button>
 
-        <button
-          onClick={() => onNavigate("plan", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3">
-            <Calendar className="h-8 w-8 text-green-600" />
-            <div>
-              <h3 className="font-semibold text-gray-900">Create Plan</h3>
-              <p className="text-sm text-gray-600">Start a new plan for a user</p>
+          {/* Tasks Completed This Week */}
+          <div className="bg-white rounded-lg border border-stone-200 p-4">
+            <div className="text-sm text-gray-600 mb-1">Tasks Completed This Week</div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">
+              {aggregateMetrics?.completedThisWeek || 0}
             </div>
+            {aggregateMetrics?.trends?.week && (
+              <div className={`text-xs flex items-center gap-1 ${
+                aggregateMetrics.trends.week >= 0 ? 'text-emerald-600' : 'text-gray-500'
+              }`}>
+                {aggregateMetrics.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregateMetrics.trends.week)} vs last week
+              </div>
+            )}
           </div>
-        </button>
 
-        <button
-          onClick={() => onNavigate("settings", null)}
-          className="p-6 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all text-left"
-        >
-          <div className="flex items-center gap-3">
-            <SettingsIcon className="h-8 w-8 text-purple-600" />
-            <div>
-              <h3 className="font-semibold text-gray-900">Settings</h3>
-              <p className="text-sm text-gray-600">Configure your preferences</p>
+          {/* Average Completion Rate */}
+          <div className="bg-white rounded-lg border border-stone-200 p-4">
+            <div className="text-sm text-gray-600 mb-1">Average Completion Rate</div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">
+              {aggregateMetrics?.averageCompletionRate ? Math.round(aggregateMetrics.averageCompletionRate) : 0}%
             </div>
+            <div className="text-xs text-gray-500">Across all users</div>
           </div>
-        </button>
-      </div>
 
-      {/* Recent Plans */}
-      <div className="bg-white rounded-lg border border-gray-200 mb-8">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Plans</h2>
-        </div>
-        <div className="p-6">
-          {recentPlans.length > 0 ? (
-            <div className="space-y-4">
-              {recentPlans.map((plan) => (
-                <div key={plan.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{plan.name}</h3>
-                    <p className="text-sm text-gray-600">{plan.user} • {plan.tasks} tasks</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {plan.status}
-                    </span>
-                    <button
-                      onClick={() => onNavigate("plan", plan.user)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View
-                    </button>
-                  </div>
+          {/* Most Active User */}
+          <div className="bg-white rounded-lg border border-stone-200 p-4">
+            <div className="text-sm text-gray-600 mb-1">Most Active User</div>
+            {aggregateMetrics?.mostActiveUser ? (
+              <>
+                <div className="text-lg font-semibold text-gray-900 truncate">
+                  {aggregateMetrics.mostActiveUser.email}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No recent plans</p>
-              <button
-                onClick={() => onNavigate("plan", null)}
-                className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Create your first plan
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* User Activity */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-        </div>
-        <div className="p-6">
-          {userActivity.length > 0 ? (
-            <div className="space-y-3">
-              {userActivity.map((activity, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">{activity.user}</span> {activity.action} "{activity.task}"
-                    </p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
+                <div className="text-xs text-emerald-600">
+                  {aggregateMetrics.mostActiveUser.completionCount} completions
                 </div>
-              ))}
+              </>
+            ) : (
+              <div className="text-sm text-gray-500">No activity yet</div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* User Engagement Table */}
+          <div className="lg:col-span-2 bg-white rounded-lg border border-stone-200">
+            <div className="px-4 py-3 border-b border-stone-200">
+              <h2 className="text-lg font-semibold text-gray-900">User Engagement</h2>
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No recent activity</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">User</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Today</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">This Week</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Completion Rate</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Active Plans</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Last Activity</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {sortedUsers.length > 0 ? (
+                    sortedUsers.map((user) => (
+                      <tr
+                        key={user.email}
+                        onClick={() => onNavigate("plan", user.email)}
+                        className="hover:bg-gray-50 cursor-pointer"
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-700">
+                              {user.email.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                              {user.email}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center text-sm text-gray-900">
+                          {user.completedToday || 0}
+                        </td>
+                        <td className="px-4 py-3 text-center text-sm text-gray-900">
+                          {user.completedThisWeek || 0}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-emerald-500 h-2 rounded-full"
+                                style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-600 w-10 text-right">
+                              {Math.round(user.completionRate || 0)}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center text-sm text-gray-900">
+                          {user.activePlans || 0}
+                        </td>
+                        <td className="px-4 py-3 text-center text-xs text-gray-500">
+                          {user.lastActivity ? formatDistanceToNow(new Date(user.lastActivity), { addSuffix: true }) : 'Never'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                        No users connected yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
+
+          {/* Live Activity Feed */}
+          <div className="bg-white rounded-lg border border-stone-200">
+            <div className="px-4 py-3 border-b border-stone-200">
+              <h2 className="text-lg font-semibold text-gray-900">Live Activity</h2>
+            </div>
+            <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+              {recentActivity && recentActivity.length > 0 ? (
+                recentActivity.slice(0, 15).map((activity, index) => (
+                  <div key={index} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-gray-900 truncate">
+                        {activity.userEmail}
+                      </div>
+                      <div className="text-xs text-gray-700 truncate">
+                        {activity.taskTitle}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {activity.planTitle}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-sm">No recent completions</div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
