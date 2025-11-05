@@ -2420,6 +2420,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
       if (!resp.ok || j.error) throw new Error(j.error || "Push failed");
 
       try{
+        // Pass taskIdMappings from push response to history/snapshot so google_task_id can be stored
         const snap = await fetch("/api/history/snapshot",{
           method:"POST", headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({
@@ -2429,7 +2430,8 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
             startDate: plan.startDate,
             timezone: plan.timezone,
             mode: replaceMode ? "replace" : "append",
-            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes }))
+            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes })),
+            taskIdMappings: j.taskIdMappings || [] // Pass Google task ID mappings
           })
         });
         const sj = await snap.json();
