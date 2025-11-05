@@ -515,7 +515,7 @@ function MainApp(){
       <Toasts items={toasts} dismiss={dismissToast} />
       <div className="w-full">
         {/* Header - Dark Background per Prompt 6 */}
-        <header className="bg-[#1A1A1A] border-b border-stone-800 w-full px-8 py-4 mb-8">
+        <header className="bg-[#1A1A1A] border-b border-stone-800 w-full px-8 py-4">
           <div className="flex items-center justify-between">
             {/* Left: Logo & Navigation */}
             <div className="flex items-center gap-8">
