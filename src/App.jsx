@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
+  FileText, Layout, UserPlus
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -368,7 +369,9 @@ function MainApp(){
   const [plannerProfile,setPlannerProfile]=useState(null);
   const [profileEditMode,setProfileEditMode]=useState(false);
   const [templateData,setTemplateData]=useState(null); // Template data from Templates view
+  const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
   const profileRef = useRef(null);
+  const createDropdownRef = useRef(null);
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -424,6 +427,9 @@ function MainApp(){
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
+      }
+      if (createDropdownRef.current && !createDropdownRef.current.contains(event.target)) {
+        setCreateDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -508,127 +514,155 @@ function MainApp(){
     <div className="min-h-screen bg-gray-100 pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {/* Professional Header - Clean & Minimal */}
-        <div className="mb-8 flex items-center justify-between pt-6">
-          {/* Left: Logo & Navigation */}
-          <div className="flex items-center gap-8">
-            <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8" />
-            <nav className="hidden md:flex items-center gap-1 bg-gray-50/50 rounded-lg p-1 border border-gray-200/60 backdrop-blur-sm">
-              <button 
-                onClick={()=>{ 
-                  // Clear user parameter first
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete("user");
-                  url.searchParams.set("view", "dashboard");
-                  window.history.pushState({}, "", url.toString());
-                  
-                  // Update state
-                  setView("dashboard"); 
-                  setSelectedUserEmail("");
-                }}
-                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
-                  view === "dashboard" 
-                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                }`}
-              >
-                Dashboard
-              </button>
-              <button 
-                onClick={()=>{ setView("users"); updateQueryView("users"); }}
-                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
-                  view === "users" 
-                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                }`}
-              >
-                Users
-              </button>
-              {/* Hidden: Plan navigation - Plan creation now accessed via User Dashboard */}
-              <button 
-                onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
-                className={`relative text-sm font-medium transition-all duration-200 px-4 py-2.5 rounded-md ${
-                  view === "templates" 
-                    ? "text-slate-900 bg-white shadow-sm border border-gray-200/80" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                }`}
-              >
-                Templates
-              </button>
-            </nav>
-          </div>
-
-          {/* Right: Actions & Profile */}
-          <div className="flex items-center gap-3">
-            {/* Primary Action */}
-            <button 
-              onClick={()=>setInviteOpen(true)} 
-              className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-            >
-              <Mail className="h-4 w-4" />
-              Invite User
-            </button>
-
-
-           {/* Profile Avatar - Top Right Corner */}
-           <div className="relative" ref={profileRef}>
-             <button 
-               onClick={()=>setProfileOpen(!profileOpen)}
-               className="rounded-full border-2 border-transparent hover:border-gray-200 transition-colors"
-             >
-              <div className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <SettingsIcon className="h-4 w-4 text-gray-600" />
-              </div>
-             </button>
-              
-              {profileOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
-                  <div className="p-2">
-                    {/* Profile Info */}
-                    <div className="px-3 py-2 border-b border-gray-100">
-                      <div className="text-sm font-medium text-gray-900">
-                        {plannerProfile?.planner_name || "Planner"}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {plannerProfile?.company_name || plannerEmail}
-                      </div>
-                    </div>
+        {/* Header - Dark Background per Prompt 6 */}
+        <header className="bg-[#1A1A1A] border-b border-stone-800 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-8">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo & Navigation */}
+            <div className="flex items-center gap-8">
+              <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8 brightness-0 invert" />
+              <nav className="hidden md:flex items-center gap-2">
+                <button 
+                  onClick={()=>{ 
+                    // Clear user parameter first
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("user");
+                    url.searchParams.set("view", "dashboard");
+                    window.history.pushState({}, "", url.toString());
                     
-                   {/* Menu Items */}
-                   <div className="py-1">
-                     <button 
-                       onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(true);}}
-                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                     >
-                       <User className="h-4 w-4" />
-                       Profile
-                     </button>
-                     <button 
-                       onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
-                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                     >
-                       <SettingsIcon className="h-4 w-4" />
-                       Settings
-                     </button>
-                     <div className="border-t border-gray-100 my-1"></div>
-                     <button 
-                       onClick={()=>{
-                         setProfileOpen(false);
-                         localStorage.removeItem("plannerEmail");
-                         window.location.href = "/";
-                       }}
-                       className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-md flex items-center gap-2"
-                     >
-                       <LogOut className="h-4 w-4" />
-                       Logout
-                     </button>
-                   </div>
+                    // Update state
+                    setView("dashboard"); 
+                    setSelectedUserEmail("");
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    view === "dashboard" 
+                      ? "bg-white/10 text-white" 
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Dashboard
+                </button>
+                <button 
+                  onClick={()=>{ setView("users"); updateQueryView("users"); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    view === "users" 
+                      ? "bg-white/10 text-white" 
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Users
+                </button>
+                <button 
+                  onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    view === "templates" 
+                      ? "bg-white/10 text-white" 
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Templates
+                </button>
+              </nav>
+            </div>
+
+            {/* Right: Actions & Profile */}
+            <div className="flex items-center gap-3">
+              {/* Create Dropdown */}
+              <div className="relative" ref={createDropdownRef}>
+                <button
+                  onClick={() => setCreateDropdownOpen(!createDropdownOpen)}
+                  className="flex items-center gap-2 px-4 py-2 bg-stone-700 text-white rounded-lg hover:bg-stone-600 transition-colors text-sm font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                
+                {createDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-stone-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        setCreateDropdownOpen(false);
+                        setInviteOpen(true);
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left flex items-center gap-3"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Invite User
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCreateDropdownOpen(false);
+                        // Navigate to plan view (user selection will be prompted)
+                        setView("plan");
+                        updateQueryView("plan");
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left flex items-center gap-3"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Plan for User
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCreateDropdownOpen(false);
+                        setView("templates");
+                        updateQueryView("templates");
+                        // Trigger template creation modal if available
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left flex items-center gap-3"
+                    >
+                      <Layout className="w-4 h-4" />
+                      Create Template
+                    </button>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Settings Dropdown */}
+              <div className="relative" ref={profileRef}>
+                <button 
+                  onClick={()=>setProfileOpen(!profileOpen)}
+                  className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <SettingsIcon className="w-5 h-5" />
+                </button>
+                
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-stone-200 py-2 z-50">
+                    <button 
+                      onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(true);}}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
+                    >
+                      Profile
+                    </button>
+                    <button 
+                      onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
+                    >
+                      Settings
+                    </button>
+                    <button 
+                      onClick={()=>{setProfileOpen(false); setView("billing"); updateQueryView("billing");}}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
+                    >
+                      Billing
+                    </button>
+                    <div className="border-t border-stone-200 my-2" />
+                    <button 
+                      onClick={()=>{
+                        setProfileOpen(false);
+                        localStorage.removeItem("plannerEmail");
+                        window.location.href = "/";
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {view==="dashboard" && (
           <DashboardView
@@ -1753,26 +1787,7 @@ History
           />
         </div>
 
-        {/* Task Feedback Section */}
-        {selectedUserEmail && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">📊</div>
-                <div className="text-base sm:text-lg font-semibold">Task Completion Status</div>
-              </div>
-              <div className="text-sm text-gray-600 ml-8">Track task completion and user engagement for {selectedUserEmail}</div>
-            </div>
-            
-            <div className="ml-8">
-              <TaskFeedbackPanel 
-                plannerEmail={plannerEmail} 
-                userEmail={selectedUserEmail} 
-                onToast={onToast}
-              />
-            </div>
-          </div>
-        )}
+        {/* Task Feedback Section - REMOVED per Prompt 2: Broken section that showed "Not Found" errors */}
       </div>
       )}
 
@@ -2267,7 +2282,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
             userEmail: selectedUserEmail,
             listTitle: plan.title,
             startDate: plan.startDate,
-            timezone: plan.timezone,
+            timezone: plan.timezone || "America/Chicago", // Ensure timezone is always provided
             mode: replaceMode ? "replace" : "append",
             items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes })),
             taskIdMappings: j.taskIdMappings || [] // Pass Google task ID mappings
@@ -2275,10 +2290,14 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
         });
         const sj = await snap.json();
         if (!snap.ok || sj.error) {
-          onToast?.("warn", "Pushed, but could not save to History");
+          console.error("[PUSH] History snapshot failed:", sj);
+          onToast?.("warn", `Pushed, but could not save to History: ${sj.error || "Unknown error"}`);
+        } else {
+          console.log("[PUSH] History snapshot successful:", sj);
         }
-      } catch (_e) {
-        onToast?.("warn", "Pushed, but could not save to History");
+      } catch (e) {
+        console.error("[PUSH] History snapshot exception:", e);
+        onToast?.("warn", `Pushed, but could not save to History: ${e.message || "Network error"}`);
       }
 
       const created = j.created || total;
@@ -2627,141 +2646,9 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
 }
 
 /* ───────── Task Feedback Panel ───────── */
-function TaskFeedbackPanel({ plannerEmail, userEmail, onToast }){
-  const [feedback, setFeedback] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [bundles, setBundles] = useState([]);
-
-  useEffect(() => {
-    loadFeedback();
-  }, [plannerEmail, userEmail]);
-
-  async function loadFeedback() {
-    if (!userEmail) return;
-    
-    setLoading(true);
-    try {
-      // Get assigned bundles for this user
-      const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
-      const r = await fetch(`/api/inbox?${qs.toString()}`);
-      const j = await r.json();
-      
-      if (r.ok && j.bundles) {
-        const userBundles = j.bundles.filter(b => 
-          (b.assigned_user_email || b.assigned_user) === userEmail
-        );
-        setBundles(userBundles);
-        
-        // Get feedback for the most recent bundle
-        if (userBundles.length > 0) {
-          const latestBundle = userBundles[0];
-          await loadBundleFeedback(latestBundle.id);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load feedback:', e);
-      onToast?.("error", "Failed to load task feedback");
-    }
-    setLoading(false);
-  }
-
-  async function loadBundleFeedback(bundleId) {
-    try {
-      const qs = new URLSearchParams({ plannerEmail, bundleId });
-      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
-      const j = await r.json();
-      
-      if (r.ok && j.feedback) {
-        setFeedback(j.feedback);
-      }
-    } catch (e) {
-      console.error('Failed to load bundle feedback:', e);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="text-center py-4">
-        <div className="text-sm text-gray-500">Loading task feedback...</div>
-      </div>
-    );
-  }
-
-  if (!feedback) {
-    return (
-      <div className="text-center py-4">
-        <div className="text-sm text-gray-500">No feedback data available</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Connection Status */}
-      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-        <div className={`w-3 h-3 rounded-full ${feedback.hasConnection ? 'bg-green-500' : 'bg-red-500'}`}></div>
-        <div className="text-sm">
-          <span className="font-medium">Google Tasks Connection:</span>
-          <span className={`ml-2 ${feedback.hasConnection ? 'text-green-700' : 'text-red-700'}`}>
-            {feedback.hasConnection ? 'Connected' : 'Not Connected'}
-          </span>
-        </div>
-      </div>
-
-      {/* Task Completion Summary */}
-      {feedback.hasConnection && feedback.totalTasks > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{feedback.tasksCompleted}</div>
-            <div className="text-sm text-blue-700">Tasks Completed</div>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-600">{feedback.totalTasks - feedback.tasksCompleted}</div>
-            <div className="text-sm text-gray-700">Tasks Pending</div>
-          </div>
-          <div className="p-4 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">
-              {Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)}%
-            </div>
-            <div className="text-sm text-green-700">Completion Rate</div>
-          </div>
-        </div>
-      )}
-
-      {/* Task Details */}
-      {feedback.taskDetails && feedback.taskDetails.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-700 mb-2">Task Details:</div>
-          <div className="space-y-1">
-            {feedback.taskDetails.map((task, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                <div className={`w-2 h-2 rounded-full ${
-                  task.completed ? 'bg-green-500' : 
-                  task.found ? 'bg-yellow-500' : 'bg-red-500'
-                }`}></div>
-                <div className="flex-1 text-sm">
-                  <span className="font-medium">{task.title}</span>
-                  <span className={`ml-2 text-xs ${
-                    task.completed ? 'text-green-700' : 
-                    task.found ? 'text-yellow-700' : 'text-red-700'
-                  }`}>
-                    {task.completed ? 'Completed' : 
-                     task.found ? 'Found in Google Tasks' : 'Not Found'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Last Checked */}
-      <div className="text-xs text-gray-500">
-        Last checked: {new Date(feedback.lastChecked).toLocaleString()}
-      </div>
-    </div>
-  );
-}
+/* ───────── TaskFeedbackPanel - REMOVED per Prompt 2 ───────── */
+/* This broken component showed "Not Found" errors and has been removed.
+   Task completion tracking is now handled by the main Dashboard view. */
 
 /* ───────── Assigned Bundles Panel ───────── */
 function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle }){
@@ -2898,19 +2785,49 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
 }
 
 /* ───────── Dashboard view ───────── */
+// Client-side caching for dashboard data (Prompt 4)
+const CACHE_DURATION = 30000; // 30 seconds
+const dashboardCache = new Map();
+
+function getCachedDashboardData(key) {
+  const cached = dashboardCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log('[DASHBOARD] Using cached data for:', key);
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedDashboardData(key, data) {
+  dashboardCache.set(key, { data, timestamp: Date.now() });
+}
+
 function DashboardView({ plannerEmail, onToast, onNavigate }){
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load dashboard metrics
-  const loadMetrics = async () => {
+  // Load dashboard metrics with client-side caching
+  const loadMetrics = async (useCache = true) => {
     try {
       console.log('[DASHBOARD] Loading metrics for:', plannerEmail);
+      
+      // Check cache first
+      const cacheKey = `dashboard_${plannerEmail}`;
+      if (useCache) {
+        const cached = getCachedDashboardData(cacheKey);
+        if (cached) {
+          setMetrics(cached);
+          setLoading(false);
+          setError(null);
+          return;
+        }
+      }
+      
       setLoading(true);
       setError(null);
       
-      // Add cache-busting query parameter
+      // Add cache-busting query parameter (only if not using cache)
       const cacheBuster = Date.now();
       const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}&_t=${cacheBuster}`, {
         headers: {
@@ -2926,7 +2843,11 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         throw new Error(data.error || 'Failed to load dashboard metrics');
       }
       
-      setMetrics(data.metrics); // Extract metrics from response
+      const metricsData = data.metrics; // Extract metrics from response
+      setMetrics(metricsData);
+      
+      // Cache the response
+      setCachedDashboardData(cacheKey, metricsData);
     } catch (err) {
       console.error('[DASHBOARD] Error loading metrics:', err);
       setError(err.message);
@@ -2937,7 +2858,14 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
   };
 
   useEffect(() => {
-    loadMetrics();
+    loadMetrics(true); // Use cache on initial load
+    
+    // Auto-refresh every 60 seconds (bypass cache to get fresh data)
+    const interval = setInterval(() => {
+      loadMetrics(false); // Bypass cache for auto-refresh
+    }, 60000);
+    
+    return () => clearInterval(interval);
   }, [plannerEmail, onToast]);
 
   if (loading) {
@@ -2989,6 +2917,14 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
   return (
     <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
       <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-stone-900">Dashboard</h1>
+          <p className="text-sm text-stone-600 mt-1">
+            Monitor user engagement and task completions
+          </p>
+        </div>
+
         {/* Aggregate Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {/* Tasks Completed Today */}
@@ -3050,11 +2986,11 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User Engagement Table */}
-          <div className="lg:col-span-2 bg-white rounded-lg border border-stone-200">
-            <div className="px-4 py-3 border-b border-stone-200">
+          <div className="lg:col-span-2 bg-white rounded-lg border border-stone-200 flex flex-col min-h-[400px]">
+            <div className="px-4 py-3 border-b border-stone-200 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-900">User Engagement</h2>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1 flex flex-col">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
@@ -3118,8 +3054,14 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
-                        No users connected yet
+                      <td colSpan="6" className="px-4 py-12 text-center">
+                        <div className="flex flex-col items-center justify-center min-h-[300px]">
+                          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                            <User className="h-6 w-6 text-gray-400" />
+                          </div>
+                          <div className="text-sm font-medium text-gray-900 mb-1">No users connected yet</div>
+                          <div className="text-xs text-gray-500">Invite users to start tracking engagement</div>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -3129,36 +3071,43 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           </div>
 
           {/* Live Activity Feed */}
-          <div className="bg-white rounded-lg border border-stone-200">
-            <div className="px-4 py-3 border-b border-stone-200">
+          <div className="bg-white rounded-lg border border-stone-200 flex flex-col">
+            <div className="px-4 py-3 border-b border-stone-200 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-900">Live Activity</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Recent completions</p>
             </div>
-            <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+            <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto flex-1">
               {activityFeed && activityFeed.length > 0 ? (
-                activityFeed.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
+                <>
+                  {activityFeed.map((activity, index) => (
+                    <div key={index} className="flex items-start gap-2.5 p-2 hover:bg-gray-50 rounded transition-colors">
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-gray-900 truncate">
+                          {activity.taskTitle}
+                        </div>
+                        <div className="text-xs text-gray-600 truncate mt-0.5">
+                          {activity.userEmail}
+                        </div>
+                        <div className="text-xs text-gray-400 truncate mt-0.5">
+                          {activity.bundleTitle}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-gray-900 truncate">
-                        {activity.userEmail}
-                      </div>
-                      <div className="text-xs text-gray-700 truncate">
-                        {activity.taskTitle}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {activity.bundleTitle}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}
-                      </div>
-                    </div>
-                  </div>
-                ))
+                  ))}
+                </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="text-sm">No recent completions</div>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                    <CheckCircle className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <div className="text-sm font-medium text-gray-900 mb-1">No recent completions</div>
+                  <div className="text-xs text-gray-500 text-center">Task completions will appear here</div>
                 </div>
               )}
             </div>
