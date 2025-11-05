@@ -3,7 +3,7 @@ import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
-  FileText, Layout, UserPlus
+  FileText, Layout, UserPlus, Zap, BarChart, ArrowRight
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -139,187 +139,361 @@ function MainApp(){
   // Show landing page if no planner email
   if (!plannerEmail) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F5F3F0]">
         {/* Header */}
-        <header className="bg-white shadow-sm">
-          <div className="max-w-4xl mx-auto px-4 py-6">
+        <header className="bg-[#1A1A1A] w-full">
+          <div className="max-w-7xl mx-auto px-8 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-10 w-auto" />
-                <span className="text-xl font-bold text-gray-900">Plan2Tasks</span>
+              <div className="flex items-center gap-3">
+                <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-8 brightness-0 invert" />
+                <span className="text-xl font-bold text-white">Plan2Tasks</span>
               </div>
-              <a href="#contact" className="text-purple-600 hover:text-purple-700 font-medium">
-                Contact
-              </a>
+              <div className="flex items-center gap-4">
+                <a href="#login" className="text-white/80 hover:text-white font-medium">
+                  Log in
+                </a>
+                <button className="bg-[#2d7a5f] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#236049] transition-colors">
+                  Get Started
+                </button>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Hero Section */}
-        <main className="max-w-4xl mx-auto px-4 py-16">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Coming Soon: The Easiest Way to Give People Things to Do
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Plan2Tasks is a simple, AI-powered tool that helps you plan and deliver task lists to anyone — fast.
-              Trainers, contractors, lenders, and families can all use it to create and share to-dos without messy spreadsheets or complex project apps.
+        {/* Hero Bar - Benefits */}
+        <div className="bg-white border-b border-stone-200">
+          <div className="max-w-7xl mx-auto px-8 py-4">
+            <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide text-center mb-4">
+              TRUSTED BY COACHES, CONSULTANTS, AND TEAM LEADERS
             </p>
-          </div>
-
-          {/* What It Will Do */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">What It Will Do</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-purple-600 text-xl">📝</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Create a Plan</h3>
-                <p className="text-gray-600">Use natural language or AI to outline what needs to be done.</p>
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">Create Plans in Minutes</span>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-purple-600 text-xl">👥</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Assign Tasks</h3>
-                <p className="text-gray-600">Choose who receives them.</p>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">Instant Delivery</span>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-purple-600 text-xl">⚡</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Send Instantly</h3>
-                <p className="text-gray-600">Tasks appear right inside the recipient's Google Tasks list, or as an ICS file they can import into any calendar.</p>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">Track Progress</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">No App Required</span>
               </div>
             </div>
-            <p className="text-center text-gray-600 mt-6">
-              No new app for them to learn — just the work, delivered clearly.
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-8 py-16">
+          {/* Hero Section - The Problem */}
+          <section className="text-center mb-20 max-w-4xl mx-auto">
+            <h1 className="text-5xl md:text-6xl font-bold text-stone-900 mb-6 leading-tight">
+              Stop Wondering If Your Plans Are Working
+            </h1>
+            <p className="text-xl text-stone-600 max-w-3xl mx-auto leading-relaxed mb-8">
+              You spend hours creating perfect task plans for your clients or team. But once you send them, it's a black hole. Are they using it? Are they making progress? You have no idea.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button className="bg-[#2d7a5f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors text-lg">
+                Start Your Free Trial
+              </button>
+              <button className="border-2 border-stone-300 text-stone-700 px-8 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors text-lg">
+                Schedule a Demo
+              </button>
+            </div>
+          </section>
+
+          {/* Two-Way Street - The Solution */}
+          <section className="text-center mb-20 max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold text-stone-900 mb-4">
+              The Two-Way Street That Changes Everything
+            </h2>
+            <p className="text-lg text-stone-600 leading-relaxed">
+              Plan2Tasks creates a feedback loop between you and your users. You plan, they execute, you see results.
             </p>
           </section>
 
-          {/* Why We're Building It */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Why We're Building It</h2>
-            <div className="bg-white p-8 rounded-xl shadow-sm border">
-              <p className="text-lg text-gray-700 leading-relaxed">
-                Because planning shouldn't require a project-management degree.<br/>
-                Plan2Tasks focuses on one simple outcome: helping you get things out of your head and into the hands of the people who need to do them.
+          {/* How It Works */}
+          <section className="mb-20">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+              {/* Step 1 */}
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-stone-700">1</span>
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Create Your Plan</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Use natural language or AI to outline tasks. Organize by categories, set priorities, add context.
+                </p>
+              </div>
+
+              {/* Arrow 1 */}
+              <div className="hidden md:flex items-center justify-center -mt-4">
+                <ArrowRight className="h-8 w-8 text-stone-400" />
+              </div>
+
+              {/* Step 2 */}
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-stone-700">2</span>
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Assign to Users</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Choose recipients and send. Tasks appear instantly in their Google Tasks—no new app required.
+                </p>
+              </div>
+
+              {/* Arrow 2 - points down on mobile, right on desktop */}
+              <div className="hidden md:flex items-center justify-center md:col-start-1 md:col-span-3 md:row-start-2 md:-mt-4">
+                <ArrowRight className="h-8 w-8 text-stone-400 rotate-90" />
+              </div>
+
+              {/* Step 3 */}
+              <div className="text-center md:col-start-2">
+                <div className="w-16 h-16 rounded-full bg-[#2d7a5f] flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-white">3</span>
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Track Completions</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  See real-time completion data on your dashboard. Know who's engaged and what's working.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Dashboard Screenshot - The Proof */}
+          <section className="mb-20">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-stone-900 mb-4">
+                See Exactly What's Happening
+              </h2>
+              <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
+                Your dashboard shows real-time completion data from all your users. Finally, proof that your plans are working.
               </p>
+            </div>
+            
+            {/* Dashboard Screenshot Placeholder */}
+            <div className="bg-white border border-stone-200 rounded-xl p-8 mb-8">
+              <div className="aspect-[16/10] bg-gradient-to-br from-stone-50 to-stone-100 rounded-lg border-2 border-dashed border-stone-300 flex items-center justify-center">
+                <div className="text-center">
+                  <BarChart className="h-16 w-16 text-stone-400 mx-auto mb-4" />
+                  <p className="text-stone-500 font-medium">Dashboard Screenshot</p>
+                  <p className="text-sm text-stone-400 mt-2">Placeholder for actual dashboard screenshot</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Three Metric Callouts */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="font-semibold text-stone-900 mb-2">Real-Time Updates</h3>
+                <p className="text-sm text-stone-600">Completion data syncs automatically</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
+                  <Users className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="font-semibold text-stone-900 mb-2">User Engagement</h3>
+                <p className="text-sm text-stone-600">See who's active and who needs support</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
+                  <BarChart className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="font-semibold text-stone-900 mb-2">Activity Feed</h3>
+                <p className="text-sm text-stone-600">Track recent completions across all users</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Feature Cards */}
+          <section className="mb-20">
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Card 1 */}
+              <div className="bg-green-50 border border-green-100 p-6 rounded-xl">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Create Plans Instantly</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Use AI or templates to build task plans in minutes. No spreadsheets, no complex project management tools.
+                </p>
+              </div>
+
+              {/* Card 2 */}
+              <div className="bg-amber-50 border border-amber-100 p-6 rounded-xl">
+                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-amber-700" />
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Deliver to Google Tasks</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Tasks appear instantly in your users' Google Tasks. No new app to learn, no friction, just work. Also supports ICS file delivery via email for non-Google users.
+                </p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="bg-purple-50 border border-purple-100 p-6 rounded-xl">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <BarChart className="h-6 w-6 text-purple-700" />
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">See Real Completion Data</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Watch task completions flow back in real-time. Know who's engaged, who needs help, and what's working.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Target Audience */}
+          <section className="mb-20 text-center max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold text-stone-900 mb-4">
+              Built for People Who Plan for Others
+            </h2>
+            <p className="text-lg text-stone-600 leading-relaxed mb-8">
+              Whether you're a coach, consultant, trainer, or team leader—if you create plans for others, this is for you.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6 text-left">
+              <div className="flex gap-4">
+                <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-stone-900 mb-2">No New App for Your Users</h3>
+                  <p className="text-base text-stone-600 leading-relaxed">
+                    Tasks go straight to Google Tasks. Your users don't need to learn anything new or download another app.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-stone-900 mb-2">AI-Powered Planning</h3>
+                  <p className="text-base text-stone-600 leading-relaxed">
+                    Describe what needs to be done in plain English. AI structures it into actionable tasks automatically.
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Pricing */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Launch Pricing Preview</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Free</h3>
-                <p className="text-2xl font-bold text-gray-900 mb-2">1 User</p>
-                <p className="text-sm text-gray-600">Perfect for personal use</p>
+          <section className="mb-20">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-stone-900 mb-2">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="text-lg text-stone-600">Start free, scale as you grow</p>
+            </div>
+
+            {/* Callout Box */}
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-6 mb-8 max-w-4xl mx-auto">
+              <p className="text-base text-stone-700 leading-relaxed">
+                <strong>Every Plan Includes:</strong> Unlimited plans, AI planning, Templates, Google Tasks integration, ICS email delivery, Real-time analytics, Full support
+              </p>
+            </div>
+
+            {/* Pricing Cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              {/* Free */}
+              <div className="bg-white border border-stone-200 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Free</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$0</p>
+                <p className="text-sm text-stone-600 mb-4">Perfect for personal use</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">1 User</p>
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                  Start Free Trial
+                </button>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Starter</h3>
-                <p className="text-2xl font-bold text-gray-900 mb-2">$9.99 / month</p>
-                <p className="text-sm text-gray-600">or $99 / year – up to 10 Users</p>
+
+              {/* Starter */}
+              <div className="bg-white border border-stone-200 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Starter</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$9.99</p>
+                <p className="text-sm text-stone-600 mb-4">per month</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">Up to 10 users</p>
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                  Start Free Trial
+                </button>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Pro</h3>
-                <p className="text-2xl font-bold text-gray-900 mb-2">$24.99 / month</p>
-                <p className="text-sm text-gray-600">or $249 / year – up to 50 Users</p>
+
+              {/* Pro */}
+              <div className="bg-white border-2 border-[#2d7a5f] rounded-xl p-6 relative">
+                <span className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#2d7a5f] text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  POPULAR
+                </span>
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Pro</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$24.99</p>
+                <p className="text-sm text-stone-600 mb-4">per month</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">Up to 50 users</p>
+                <button className="w-full bg-[#2d7a5f] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors">
+                  Start Free Trial
+                </button>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Team</h3>
-                <p className="text-2xl font-bold text-gray-900 mb-2">$49.99 / month</p>
-                <p className="text-sm text-gray-600">or $499 / year – up to 100 Users</p>
+
+              {/* Team */}
+              <div className="bg-white border border-stone-200 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Team</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$49.99</p>
+                <p className="text-sm text-stone-600 mb-4">per month</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">Up to 100 users</p>
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                  Start Free Trial
+                </button>
               </div>
             </div>
-            <div className="text-center mt-6">
-              <div className="bg-purple-50 p-4 rounded-lg inline-block">
-                <p className="text-sm text-gray-700">
-                  <strong>Enterprise:</strong> up to 1,000 Users – contact us for custom pricing
-                </p>
-              </div>
-            </div>
-            <p className="text-center text-gray-600 mt-4">
-              All tiers include AI planning, unlimited plans, and Google Tasks integration.
+
+            <p className="text-center text-stone-600">
+              <a href="#contact" className="text-[#2d7a5f] hover:underline font-medium">
+                Enterprise: Up to 1,000 users — contact us for custom pricing
+              </a>
             </p>
           </section>
 
-          {/* Waitlist Form */}
-          <section className="mb-16">
-            <div className="bg-white p-8 rounded-xl shadow-sm border">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Join the Waitlist</h2>
-              <p className="text-gray-600 text-center mb-8">
-                Be first to know when Plan2Tasks goes live — and lock in early-access pricing.
+          {/* Final CTA */}
+          <section className="mb-20">
+            <div className="bg-white border border-stone-200 rounded-xl p-12 text-center max-w-3xl mx-auto">
+              <h2 className="text-4xl font-bold text-stone-900 mb-4">
+                Ready to See Your Plans Come to Life?
+              </h2>
+              <p className="text-lg text-stone-600 leading-relaxed mb-8">
+                Join coaches, consultants, and team leaders who are finally getting visibility into their planning efforts.
               </p>
-              
-              <form id="waitlistForm" className="max-w-md mx-auto">
-                <div className="mb-4">
-                  <input type="email" id="email" name="email" required 
-                         placeholder="Enter your email address"
-                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"/>
-                </div>
-                <button type="submit" 
-                        className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                  Join the Waitlist →
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                <button className="bg-[#2d7a5f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors text-lg">
+                  Start Your Free Trial
                 </button>
-              </form>
-            </div>
-          </section>
-
-          {/* Contact Form */}
-          <section className="mb-16">
-            <div className="bg-white p-8 rounded-xl shadow-sm border">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Contact Us</h2>
-              <p className="text-gray-600 text-center mb-8">
-                Have questions? We'd love to hear from you.
-              </p>
-              
-              <form id="contactForm" className="max-w-2xl mx-auto">
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <input type="text" id="name" name="name" required 
-                           placeholder="Your name"
-                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"/>
-                  </div>
-                  <div>
-                    <input type="email" id="contactEmail" name="email" required 
-                           placeholder="Your email"
-                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"/>
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <textarea id="message" name="message" required rows="4"
-                            placeholder="Your message"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
-                </div>
-                <button type="submit" 
-                        className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-semibold hover:bg-black transition-colors">
-                  Send Message
+                <button className="border-2 border-stone-300 text-stone-700 px-8 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors text-lg">
+                  Schedule a Demo
                 </button>
-              </form>
-            </div>
-          </section>
-
-          {/* About Us */}
-          <section className="mb-16">
-            <div className="bg-gray-100 p-8 rounded-xl">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">About Us</h2>
-              <p className="text-lg text-gray-700 text-center leading-relaxed">
-                Plan2Tasks is created by <strong>Archetype Original</strong>, based in Carthage, Missouri (USA).<br/>
-                We build straightforward, people-first software that helps real teams and individuals work better.
+              </div>
+              <p className="text-sm text-stone-500">
+                14-day free trial · No credit card required · Cancel anytime
               </p>
-            </div>
-          </section>
-
-          {/* Contact Info */}
-          <section className="text-center">
-            <div className="space-y-2">
-              <p className="text-gray-600">🌐 <a href="https://www.plan2tasks.com" className="text-purple-600 hover:text-purple-700">www.plan2tasks.com</a></p>
             </div>
           </section>
         </main>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-stone-200 py-8">
+          <div className="max-w-7xl mx-auto px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-stone-600">
+                © 2025 Plan2Tasks
+              </p>
+              <div className="flex items-center gap-6">
+                <a href="#privacy" className="text-sm text-stone-600 hover:text-stone-900">Privacy</a>
+                <a href="#terms" className="text-sm text-stone-600 hover:text-stone-900">Terms</a>
+                <a href="#contact" className="text-sm text-stone-600 hover:text-stone-900">Contact</a>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
