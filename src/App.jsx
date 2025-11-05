@@ -2919,7 +2919,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         throw new Error(data.error || 'Failed to load dashboard metrics');
       }
       
-      setMetrics(data);
+      setMetrics(data.metrics); // Extract metrics from response
     } catch (err) {
       console.error('[DASHBOARD] Error loading metrics:', err);
       setError(err.message);
@@ -2973,8 +2973,11 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
     );
   }
 
-  const { aggregateMetrics, userEngagement, recentActivity } = metrics;
-  const sortedUsers = [...(userEngagement || [])].sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0));
+  const aggregate = metrics?.aggregate || {};
+  const userEngagement = metrics?.userEngagement || [];
+  const activityFeed = metrics?.activityFeed || [];
+  
+  const sortedUsers = [...userEngagement].sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0));
 
   return (
     <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
@@ -2985,13 +2988,13 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           <div className="bg-white rounded-lg border border-stone-200 p-4">
             <div className="text-sm text-gray-600 mb-1">Tasks Completed Today</div>
             <div className="text-2xl font-bold text-gray-900 mb-1">
-              {aggregateMetrics?.completedToday || 0}
+              {aggregate?.completedToday || 0}
             </div>
-            {aggregateMetrics?.trends?.today && (
+            {aggregate?.trends?.today !== undefined && (
               <div className={`text-xs flex items-center gap-1 ${
-                aggregateMetrics.trends.today >= 0 ? 'text-emerald-600' : 'text-gray-500'
+                aggregate.trends.today >= 0 ? 'text-emerald-600' : 'text-gray-500'
               }`}>
-                {aggregateMetrics.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregateMetrics.trends.today)} vs yesterday
+                {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
               </div>
             )}
           </div>
@@ -3000,13 +3003,13 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           <div className="bg-white rounded-lg border border-stone-200 p-4">
             <div className="text-sm text-gray-600 mb-1">Tasks Completed This Week</div>
             <div className="text-2xl font-bold text-gray-900 mb-1">
-              {aggregateMetrics?.completedThisWeek || 0}
+              {aggregate?.completedThisWeek || 0}
             </div>
-            {aggregateMetrics?.trends?.week && (
+            {aggregate?.trends?.week !== undefined && (
               <div className={`text-xs flex items-center gap-1 ${
-                aggregateMetrics.trends.week >= 0 ? 'text-emerald-600' : 'text-gray-500'
+                aggregate.trends.week >= 0 ? 'text-emerald-600' : 'text-gray-500'
               }`}>
-                {aggregateMetrics.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregateMetrics.trends.week)} vs last week
+                {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}% vs last week
               </div>
             )}
           </div>
@@ -3015,7 +3018,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           <div className="bg-white rounded-lg border border-stone-200 p-4">
             <div className="text-sm text-gray-600 mb-1">Average Completion Rate</div>
             <div className="text-2xl font-bold text-gray-900 mb-1">
-              {aggregateMetrics?.averageCompletionRate ? Math.round(aggregateMetrics.averageCompletionRate) : 0}%
+              {aggregate?.averageCompletionRate || 0}%
             </div>
             <div className="text-xs text-gray-500">Across all users</div>
           </div>
@@ -3023,13 +3026,13 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
           {/* Most Active User */}
           <div className="bg-white rounded-lg border border-stone-200 p-4">
             <div className="text-sm text-gray-600 mb-1">Most Active User</div>
-            {aggregateMetrics?.mostActiveUser ? (
+            {aggregate?.mostActiveUser ? (
               <>
                 <div className="text-lg font-semibold text-gray-900 truncate">
-                  {aggregateMetrics.mostActiveUser.email}
+                  {aggregate.mostActiveUser.email?.split('@')[0] || aggregate.mostActiveUser.email}
                 </div>
                 <div className="text-xs text-emerald-600">
-                  {aggregateMetrics.mostActiveUser.completionCount} completions
+                  {aggregate.mostActiveUser.completions || 0} completions today
                 </div>
               </>
             ) : (
@@ -3060,25 +3063,30 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                   {sortedUsers.length > 0 ? (
                     sortedUsers.map((user) => (
                       <tr
-                        key={user.email}
-                        onClick={() => onNavigate("plan", user.email)}
+                        key={user.userEmail}
+                        onClick={() => onNavigate("plan", user.userEmail)}
                         className="hover:bg-gray-50 cursor-pointer"
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-700">
-                              {user.email.charAt(0).toUpperCase()}
+                              {user.userEmail?.charAt(0).toUpperCase() || '?'}
                             </div>
                             <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                              {user.email}
+                              {user.userEmail}
                             </div>
+                            {!user.isConnected && (
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                                Not Connected
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-center text-sm text-gray-900">
-                          {user.completedToday || 0}
+                          {user.today || 0}
                         </td>
                         <td className="px-4 py-3 text-center text-sm text-gray-900">
-                          {user.completedThisWeek || 0}
+                          {user.thisWeek || 0}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -3119,22 +3127,22 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
               <h2 className="text-lg font-semibold text-gray-900">Live Activity</h2>
             </div>
             <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-              {recentActivity && recentActivity.length > 0 ? (
-                recentActivity.slice(0, 15).map((activity, index) => (
+              {activityFeed && activityFeed.length > 0 ? (
+                activityFeed.map((activity, index) => (
                   <div key={index} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {activity.userEmail?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-gray-900 truncate">
-                        {activity.userEmail}
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div className="text-sm font-medium text-gray-800 truncate">{activity.taskTitle}</div>
                       </div>
-                      <div className="text-xs text-gray-700 truncate">
-                        {activity.taskTitle}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {activity.planTitle}
-                      </div>
+                      <div className="text-xs text-gray-500 truncate">{activity.bundleTitle}</div>
                       <div className="text-xs text-gray-400 mt-1">
                         {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}
                       </div>
