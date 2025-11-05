@@ -1237,10 +1237,14 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   })(); },[plannerEmail]);
 
   useEffect(()=>{ 
-    setTasks([]); 
-    setMsg(""); 
+    // Only clear tasks if we're NOT applying a template
+    // If templateData exists, let the template application handle setting tasks
+    if (!templateData) {
+      setTasks([]); 
+      setMsg(""); 
+    }
     setLocalTemplateApplied(false); // Clear template flag when user changes
-  },[selectedUserEmail]);
+  },[selectedUserEmail, templateData]); // Include templateData to check current state
 
   // Clear template data when user starts modifying the plan
   const clearTemplateData = () => {
@@ -1253,9 +1257,10 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   };
 
   // Apply template data when available
+  // Only apply if we have a selected user (template assignment requires a user)
   useEffect(() => {
-    if (templateData) {
-      console.log("Applying template data:", templateData);
+    if (templateData && selectedUserEmail) {
+      console.log("Applying template data:", templateData, "for user:", selectedUserEmail);
       const newPlan = {
         title: templateData.title || "Untitled Plan",
         description: templateData.description || "",
@@ -1264,7 +1269,10 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       };
       console.log("Setting plan to:", newPlan);
       setPlan(newPlan);
-      setTasks(templateData.tasks || []);
+      // Ensure tasks array is properly formatted
+      const templateTasks = Array.isArray(templateData.tasks) ? templateData.tasks : [];
+      console.log("Setting tasks:", templateTasks.length, "tasks");
+      setTasks(templateTasks);
       setPlanningMode("ai-assisted"); // Use normal planning mode - keeps fields editable
       clearAllToasts(); // Clear any existing toasts
       
@@ -1273,7 +1281,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       
       // Don't clear template data immediately - let it persist for the user to see
     }
-  }, [templateData]);
+  }, [templateData, selectedUserEmail]); // Apply when both template and user are ready
 
   async function loadNewBundleCount(){
     if (!selectedUserEmail) { setNewBundleCount(0); return; }
