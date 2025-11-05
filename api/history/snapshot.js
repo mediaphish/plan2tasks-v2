@@ -49,37 +49,16 @@ async function columnExists(col){
   return !/column .* does not exist/i.test(msg);
 }
 
-async function resolveItemColumns(){
-  // Always present: plan_id, title, day_offset
-  // Optional we detect: time, notes, duration_mins
-  const [hasTime, hasNotes, hasDuration] = await Promise.all([
-    columnExists("time"),
-    columnExists("notes"),
-    columnExists("duration_mins"),
-  ]);
-  return { hasTime, hasNotes, hasDuration };
-}
-
-async function insertPlan({ plannerEmail, userEmail, listTitle, startDate, timezone, mode, itemsLen }){
-  const pushedAt = new Date().toISOString();
-  return await supabaseAdmin
-    .from("history_plans")
-    .insert({
-      planner_email: plannerEmail,
-      user_email: userEmail,
-      title: listTitle,
-      start_date: startDate,
-      timezone: timezone || "America/Chicago", // ✅ ensure NOT NULL
-      items_count: itemsLen,
-      mode: mode || "append",
-      pushed_at: pushedAt,
-      // archived_at null => active
-    })
-    .select("id")
-    .single();
-}
-
-async function insertItems(planId, items, cols){
+async function insertItems(planId, items, cols, taskIdMappings = []){
+  // Build a map of taskIdMappings by title+dayOffset for quick lookup
+  const taskIdMap = new Map();
+  if (Array.isArray(taskIdMappings)) {
+    taskIdMappings.forEach(mapping => {
+      const key = `${norm(mapping.title)}|${mapping.dayOffset || 0}`;
+      taskIdMap.set(key, mapping.googleTaskId);
+    });
+  }
+  
   // Build rows with only available columns.
   const rows = items.map((it) => {
     const base = {
@@ -95,6 +74,16 @@ async function insertItems(planId, items, cols){
           : (isFiniteNum(Number(it.durationMins)) ? Number(it.durationMins) : null);
     }
     if (cols.hasNotes) base.notes = it.notes != null ? String(it.notes) : null;
+    
+    // Add google_task_id if column exists and we have a mapping
+    if (cols.hasGoogleTaskId) {
+      const key = `${norm(it.title)}|${base.day_offset}`;
+      const googleTaskId = taskIdMap.get(key);
+      if (googleTaskId) {
+        base.google_task_id = googleTaskId;
+      }
+    }
+    
     return base;
   });
 
@@ -125,6 +114,7 @@ async function doSnapshot(body){
     timezone,   // ✅ new
     mode,
     items = [],
+    taskIdMappings = [], // Google task ID mappings from push.js
   } = body || {};
 
   const planner = toLowerEmail(plannerEmail);
@@ -167,7 +157,7 @@ async function doSnapshot(body){
   const src = Array.isArray(items) ? items : [];
   if (src.length === 0) return { ok:true, status:200, planId, items:0, colsUsed: cols };
 
-  const ins = await insertItems(planId, src, cols);
+  const ins = await insertItems(planId, src, cols, taskIdMappings);
   if (!ins.ok) {
     return {
       ok:false,
