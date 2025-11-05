@@ -1359,9 +1359,12 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     }
   }, [prefs?.default_planning_mode]);
 
-  // Prevent auto-scroll when plan view first opens
+  // Prevent auto-scroll when plan view first opens (but NOT when template is being applied)
   // Keep page at top when opening plan view, don't auto-scroll to AI Planning Assistant
   useEffect(() => {
+    // Don't prevent scroll if templateData is being applied (let that scroll happen once)
+    if (templateData) return;
+    
     // Aggressively scroll to top multiple times to override any auto-scrolls from component initialization
     // This catches scrolls that happen at different render phases
     const scrollToTop = () => {
@@ -1384,7 +1387,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     return () => {
       timeouts.forEach(timeout => clearTimeout(timeout));
     };
-  }, []); // Empty dependency array = only run on mount
+  }, [templateData]); // Run when templateData changes - skip if template is being applied
 
   useEffect(()=>{ (async ()=>{
     const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
@@ -1417,21 +1420,31 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   useEffect(() => {
     if (templateData) {
       console.log("Applying template data:", templateData);
+      // Map template structure - handle both {name, tasks} and {title, tasks} formats
+      const templateTitle = templateData.title || templateData.name || "Untitled Plan";
+      const templateDescription = templateData.description || "";
+      const templateTasks = templateData.tasks || [];
+      
       const newPlan = {
-        title: templateData.title || "Untitled Plan",
-        description: templateData.description || "",
+        title: templateTitle,
+        description: templateDescription,
         startDate: format(new Date(),"yyyy-MM-dd"),
-        timezone: "America/Chicago"
+        timezone: plan.timezone || "America/Chicago" // Preserve existing timezone if set
       };
       console.log("Setting plan to:", newPlan);
       setPlan(newPlan);
-      setTasks(templateData.tasks || []);
-      setPlanningMode("ai-assisted"); // Use normal planning mode, not templates mode
+      setTasks(templateTasks.map(t => ({ id: uid(), ...t }))); // Ensure tasks have IDs
+      
+      // CRITICAL: Set planning mode to "ai-assisted" to make fields editable
+      // This ensures the Plan Setup section shows (condition: planningMode !== "full-ai" && planningMode !== "templates")
+      setPlanningMode("ai-assisted");
+      
       clearAllToasts(); // Clear any existing toasts
       
       // Switch to Plan tab and scroll to delivery section for review
+      // Scroll once, then allow user to scroll freely
       setActiveTab("plan");
-      setTimeout(() => {
+      const scrollTimer = setTimeout(() => {
         const deliverySection = document.querySelector('[data-section="delivery"]');
         if (deliverySection) {
           deliverySection.scrollIntoView({
@@ -1439,9 +1452,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             block: 'start'
           });
         }
-      }, 200);
+      }, 300);
       
-      // Don't clear template data immediately - let it persist for the user to see
+      return () => {
+        clearTimeout(scrollTimer);
+      };
     }
   }, [templateData, onToast]);
 
@@ -2444,7 +2459,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
 
       const created = j.created || total;
       setMsg(`Success — ${created} task(s) created`);
-      onToast?.("ok", `Pushed ${created} task${created>1?"s":""}`);
+      onToast?.("ok", `Plan sent to ${selectedUserEmail} — ${created} task${created>1?"s":""} created`);
       
       // Save as template if checkbox is checked
       if (saveAsTemplate) {
