@@ -1197,9 +1197,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   const [planningMode,setPlanningMode]=useState(prefs?.default_planning_mode || "full-ai"); // "full-ai", "ai-assisted", "manual", "templates"
   const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
   const [pendingNotes,setPendingNotes]=useState("");
+  const [localTemplateApplied, setLocalTemplateApplied] = useState(false); // Track template applied locally in PlanView
   
   // Track if we're in template review mode (template applied, ready to review and deliver)
-  const isTemplateMode = !!templateData;
+  // Check both templateData prop (from Templates view navigation) and localTemplateApplied (from TemplatesView in planning mode)
+  const isTemplateMode = !!templateData || localTemplateApplied;
 
   useEffect(()=>{ 
     if (urlUser) {
@@ -1234,12 +1236,19 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     }
   })(); },[plannerEmail]);
 
-  useEffect(()=>{ setTasks([]); setMsg(""); },[selectedUserEmail]);
+  useEffect(()=>{ 
+    setTasks([]); 
+    setMsg(""); 
+    setLocalTemplateApplied(false); // Clear template flag when user changes
+  },[selectedUserEmail]);
 
   // Clear template data when user starts modifying the plan
   const clearTemplateData = () => {
     if (templateData) {
       onTemplateApplied?.();
+    }
+    if (localTemplateApplied) {
+      setLocalTemplateApplied(false);
     }
   };
 
@@ -1440,10 +1449,15 @@ History
                       return;
                     }
                     
+                    // Set local flag to indicate template is applied
+                    setLocalTemplateApplied(true);
+                    
+                    // Set plan and tasks directly
                     setPlan({
                       title: template.title,
                       description: template.description,
-                      startDate: new Date().toISOString().split('T')[0]
+                      startDate: new Date().toISOString().split('T')[0],
+                      timezone: "America/Chicago"
                     });
                     setTasks(template.tasks || []);
                     setPlanningMode("ai-assisted"); // Switch to review mode - keeps fields editable
@@ -2917,7 +2931,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
 
   useEffect(() => {
     loadMetrics();
-  }, [plannerEmail]);
+  }, [plannerEmail, onToast]);
 
   if (loading) {
     return (
