@@ -284,9 +284,22 @@ export default async function handler(req, res) {
     
     let tasks = [];
     if (planIds.length > 0) {
+      // First check if google_task_id column exists
+      const { data: testItem, error: testError } = await supabaseAdmin
+        .from('history_items')
+        .select('id, google_task_id')
+        .limit(1);
+      
+      const hasGoogleTaskIdColumn = !testError && testItem;
+      
+      // Select google_task_id if column exists
+      const selectFields = hasGoogleTaskIdColumn 
+        ? 'id, plan_id, title, day_offset, google_task_id'
+        : 'id, plan_id, title, day_offset';
+      
       const { data: historyItems, error: historyItemsError } = await supabaseAdmin
         .from('history_items')
-        .select('id, plan_id, title, day_offset')
+        .select(selectFields)
         .in('plan_id', planIds);
       
       if (historyItemsError) {
@@ -300,8 +313,10 @@ export default async function handler(req, res) {
         bundle_id: item.plan_id, // Use plan_id as bundle_id for grouping
         title: item.title,
         day_offset: item.day_offset || 0,
-        google_task_id: null // history_items don't store google_task_id (will match by title)
+        google_task_id: item.google_task_id || null // Include google_task_id if available
       }));
+      
+      console.log(`[DASHBOARD] Fetched ${tasks.length} tasks, ${tasks.filter(t => t.google_task_id).length} have google_task_id`);
     }
 
     console.log(`[DASHBOARD] Found ${(tasks || []).length} tasks`);
