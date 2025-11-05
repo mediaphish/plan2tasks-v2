@@ -3379,19 +3379,6 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                             )}
                           </button>
 
-                          {/* NEW: View User Dashboard button */}
-                          <button
-                            onClick={() => {
-                              console.log('[User Dashboard Button] Clicked for email:', r.email);
-                              console.log('[User Dashboard Button] onViewDashboard function:', typeof onViewDashboard);
-                              onViewDashboard?.(r.email);
-                            }}
-                            className="px-3 py-1.5 text-sm font-medium border border-blue-200 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100"
-                            title="View comprehensive dashboard for this user"
-                          >
-                            User Dashboard
-                          </button>
-
                           {/* NEW: Cancel invite for pending invite-only rows */}
                           {isPendingInvite && (
                             <button
