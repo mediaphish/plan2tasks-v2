@@ -3238,57 +3238,73 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
   const visible = rows.filter(r=>!filter || (r.email||"").toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <div className="w-full">
-      {/* Page Title Section */}
+    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+      {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-stone-900 mb-2">Users</h1>
         <p className="text-lg text-stone-600">Manage your users and their planning activities</p>
       </div>
 
-      {/* All Users Panel */}
-      <div className="rounded-xl border border-stone-200 bg-white p-6 sm:p-8 shadow-sm">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-stone-900 mb-2">All Users</h2>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Active / Archived / Deleted toggle */}
-            <div className="inline-flex rounded-xl border overflow-hidden">
-              <button
-                onClick={()=>setTab("active")}
-                className={cn("px-2.5 py-1 text-xs", tab==="active" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
-              >
-                Active
-              </button>
-              <button
-                onClick={()=>setTab("archived")}
-                className={cn("px-2.5 py-1 text-xs border-l", tab==="archived" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
-              >
-                Archived
-              </button>
-              <button
-                onClick={()=>setTab("deleted")}
-                className={cn("px-2.5 py-1 text-xs border-l", tab==="deleted" ? "bg-stone-900 text-white" : "bg-white hover:bg-stone-50")}
-              >
-                Deleted
-              </button>
-            </div>
+      {/* Main Content Panel */}
+      <div className="bg-white rounded-xl border border-stone-200 p-8">
+        {/* Panel Header with Filters and Search */}
+        <div className="flex items-center justify-between mb-6">
+          {/* Filter Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={()=>setTab("active")}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium",
+                tab==="active" ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              Active
+            </button>
+            <button
+              onClick={()=>setTab("archived")}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium",
+                tab==="archived" ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              Archived
+            </button>
+            <button
+              onClick={()=>setTab("deleted")}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium",
+                tab==="deleted" ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              Deleted
+            </button>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <input value={filter} onChange={(e)=>setFilter(e.target.value)} placeholder="Search…" className="rounded-xl border border-stone-300 px-2 py-1 text-sm" />
-              <button onClick={load} className="rounded-xl border px-2 py-1 text-sm hover:bg-stone-50"><RotateCcw className="h-4 w-4" /></button>
-            </div>
+          {/* Search Bar */}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={filter}
+              onChange={(e)=>setFilter(e.target.value)}
+              placeholder="Search..."
+              className="px-4 py-2 border border-stone-200 rounded-lg text-base w-64 focus:outline-none focus:ring-2 focus:ring-stone-900"
+            />
+            <button onClick={load} className="p-2 hover:bg-stone-50 rounded-lg">
+              <RotateCcw className="h-5 w-5 text-stone-600" />
+            </button>
           </div>
         </div>
 
-        <div className="rounded-lg border overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-stone-50 border-b border-stone-200">
-              <tr className="text-left">
-                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase">Email</th>
-                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase">Status</th>
-                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase">Categories</th>
-                <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase text-right">Actions</th>
-              </tr>
-            </thead>
+        {/* Users Table */}
+        <table className="w-full">
+          <thead>
+            <tr className="text-left border-b border-stone-200">
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Email</th>
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Status</th>
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Categories</th>
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide text-right">Actions</th>
+            </tr>
+          </thead>
           <tbody>
             {visible.map(r=>{
               const list = (groups[r.email] ?? r.groups ?? []).slice().sort((a,b)=>a.localeCompare(b));
@@ -3300,41 +3316,45 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
 
               const bundleInfo = bundleCounts[r.email] || { new: 0, total: 0 };
               return (
-                <tr key={r.email} className={`border-b border-stone-100 align-top ${bundleInfo.new > 0 ? 'bg-blue-50' : ''}`}>
-                  <td className="py-4 px-4 text-base text-stone-900">{r.email || "Unknown"}</td>
-                  <td className="py-4 px-4">
-                    <span className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs border",
-                      isDeleted ? "border-red-300 text-red-700 bg-red-50" :
-                      isArchived ? "border-stone-300 text-stone-600 bg-stone-50" :
-                      (r.status==="connected" ? "border-emerald-300 text-emerald-800 bg-emerald-50" : "border-stone-300 text-stone-700 bg-white")
-                    )}>
-                      {r.status==="connected" && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                      )}
-                      {r.status||"—"}
-                    </span>
+                <tr key={r.email} className={`align-top ${bundleInfo.new > 0 ? 'bg-blue-50' : ''}`}>
+                  <td className="py-4 border-b border-stone-100 text-base text-stone-900">{r.email || "Unknown"}</td>
+                  <td className="py-4 border-b border-stone-100">
+                    {r.status==="connected" ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                        connected
+                      </span>
+                    ) : (
+                      <span className={cn(
+                        "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium",
+                        isDeleted ? "bg-red-100 text-red-700" :
+                        isArchived ? "bg-stone-100 text-stone-700" :
+                        "bg-stone-100 text-stone-700"
+                      )}>
+                        {r.status||"—"}
+                      </span>
+                    )}
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 border-b border-stone-100">
                     <div className="flex flex-wrap items-center gap-1.5">
                       {count === 0 ? (
-                        <span className="text-stone-600 text-sm">+ Add</span>
+                        <span className="text-stone-600 text-base">+ Add</span>
                       ) : (
                         <>
                           {pills.map(g=>(
-                            <span key={g} className="inline-flex max-w-[140px] items-center gap-1 rounded-full border border-stone-300 px-2 py-0.5 text-xs text-stone-600 bg-stone-50" title={g}>
-                              <span className="truncate">{g}</span>
+                            <span key={g} className="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg text-sm" title={g}>
+                              {g}
                             </span>
                           ))}
                           {count > 2 && (
                             <button
                               onClick={()=>openCats(r.email)}
-                              className="relative inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs hover:bg-stone-50 disabled:opacity-40"
+                              className="relative inline-flex items-center justify-center rounded-lg border border-stone-200 px-2.5 py-1 text-sm hover:bg-stone-50 disabled:opacity-40"
                               aria-label="Edit categories"
                               title="Edit categories"
                               disabled={isDeleted}
                             >
-                              <Tag className="h-3.5 w-3.5" />
+                              <Tag className="h-4 w-4" />
                               <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] font-bold text-white">{count}</span>
                             </button>
                           )}
@@ -3342,13 +3362,13 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                       )}
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 border-b border-stone-100">
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
                       {!isArchived && !isDeleted && (
                         <>
                           <button
                             onClick={()=>onManage?.(r.email)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50 relative"
+                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50 relative"
                             title="Open Plan view for this user"
                           >
                             Plan
@@ -3366,7 +3386,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                               console.log('[User Dashboard Button] onViewDashboard function:', typeof onViewDashboard);
                               onViewDashboard?.(r.email);
                             }}
-                            className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100 relative"
+                            className="px-3 py-1.5 text-sm font-medium border border-blue-200 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100"
                             title="View comprehensive dashboard for this user"
                           >
                             User Dashboard
@@ -3376,7 +3396,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                           {isPendingInvite && (
                             <button
                               onClick={()=>doCancelInvite(r.email)}
-                              className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
+                              className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
                               title="Cancel pending invite"
                             >
                               Cancel invite
@@ -3385,7 +3405,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
 
                           <button
                             onClick={()=>doArchive(r.email, true)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
+                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
                             title="Archive this user connection"
                           >
                             Archive user
@@ -3397,7 +3417,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         <>
                           <button
                             onClick={()=>doArchive(r.email, false)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
+                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
                             title="Restore user from archive"
                           >
                             Restore user
@@ -3416,7 +3436,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         <>
                           <button
                             onClick={()=>doArchive(r.email, false)}
-                            className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
+                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
                             title="Restore user (undelete)"
                           >
                             Restore user
@@ -3441,7 +3461,6 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
           </tbody>
         </table>
       </div>
-      </div>
 
       {catOpen && (
         <CategoriesModal
@@ -3453,7 +3472,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
           onToast={onToast}
         />
       )}
-    </div>
+    </main>
   );
 }
 
