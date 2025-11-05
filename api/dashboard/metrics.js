@@ -474,6 +474,19 @@ export default async function handler(req, res) {
           
           console.log(`[DASHBOARD] Total fetched ${allTasksFromList.length} tasks from list "${taskList.title}"`);
           
+          // Log raw task data from Google to see what we're actually getting
+          if (allTasksFromList.length > 0) {
+            console.log(`[DASHBOARD] Raw Google Tasks data from "${taskList.title}" (first 3):`, allTasksFromList.slice(0, 3).map(t => ({
+              id: t.id,
+              title: t.title,
+              status: t.status,
+              completed: t.completed,
+              hidden: t.hidden,
+              deleted: t.deleted,
+              updated: t.updated
+            })));
+          }
+          
           allTasksFromList.forEach(gt => {
             // Google Tasks returns completed date as ISO string (e.g., "2025-11-04T17:30:00.000Z")
             let completedDate = null;
@@ -491,8 +504,15 @@ export default async function handler(req, res) {
               }
             }
             
-            // Check if task is actually completed (status OR completed field)
-            const isCompleted = gt.status === 'completed' || (gt.completed && gt.completed !== null);
+            // Check if task is actually completed - Google Tasks marks completed tasks as:
+            // 1. status === 'completed' (primary indicator)
+            // 2. OR completed field exists (alternative indicator)
+            const isCompleted = gt.status === 'completed' || (gt.completed != null && gt.completed !== '');
+            
+            // Log each task for debugging
+            if (isCompleted) {
+              console.log(`[DASHBOARD] ✅ Found COMPLETED task in Google: "${gt.title}" (id: ${gt.id}, status: ${gt.status}, completed: ${gt.completed})`);
+            }
             
             allGoogleTasks.set(gt.id, {
               status: gt.status,
