@@ -4,7 +4,7 @@ import {
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
   FileText, Layout, UserPlus, Zap, BarChart, ArrowRight, MessageCircle,
-  CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb
+  CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb, Edit3, Send
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -1744,25 +1744,25 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     <>
       {/* Sub-navigation Bar - Right under main header */}
       <div className="bg-white border-b border-stone-200 w-full">
-        <div className="px-8 flex items-center justify-between">
+        <div className="px-8 py-0 flex items-center justify-between">
           {/* Tabs on the left */}
           <div className="flex">
             <button
               onClick={() => setActiveTab("plan")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === "plan"
-                  ? "text-stone-900 border-b-2 border-[#2D3748]"
-                  : "text-stone-600 border-b-2 border-transparent"
+                  ? "text-stone-900 border-blue-600"
+                  : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
               Plan
             </button>
             <button
               onClick={() => setActiveTab("assigned")}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              className={`px-4 py-3 text-sm font-medium transition-colors relative border-b-2 ${
                 activeTab === "assigned"
-                  ? "text-stone-900 border-b-2 border-[#2D3748]"
-                  : "text-stone-600 border-b-2 border-transparent"
+                  ? "text-stone-900 border-blue-600"
+                  : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
               Assigned
@@ -1774,20 +1774,20 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             </button>
             <button
               onClick={() => setActiveTab("notes")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === "notes"
-                  ? "text-stone-900 border-b-2 border-[#2D3748]"
-                  : "text-stone-600 border-b-2 border-transparent"
+                  ? "text-stone-900 border-blue-600"
+                  : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
               User Notes
             </button>
             <button
               onClick={() => setActiveTab("history")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === "history"
-                  ? "text-stone-900 border-b-2 border-[#2D3748]"
-                  : "text-stone-600 border-b-2 border-transparent"
+                  ? "text-stone-900 border-blue-600"
+                  : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
               History
@@ -1804,7 +1804,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
                 setSelectedUserEmail(newUser);
                 onUserChange?.(newUser);
               }}
-              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-900 focus:border-[#2D3748] focus:outline-none focus:ring-2 focus:ring-[#2D3748]/20"
+              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               title={selectedUserEmail || "— Choose user —"}
             >
               <option value="">— Choose user —</option>
@@ -1912,18 +1912,20 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
           {/* Full AI Planning Interface */}
           {planningMode === "full-ai" && (
-            <div className="rounded-lg border border-stone-200 bg-white shadow-sm overflow-hidden mb-6">
+            <div className="bg-white rounded-xl border border-stone-200 overflow-hidden mb-6">
               {/* Header */}
-              <div className="border-b border-stone-200 bg-[#2D3748]/5 px-6 py-4">
+              <div className="bg-blue-50 border-b border-stone-200 px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2D3748]">
-                    <MessageCircle className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-stone-900">AI Planning Assistant</h3>
-                    <p className="text-sm text-stone-600">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</p>
+                    <h3 className="text-xl font-bold text-stone-900">AI Planning Assistant</h3>
                   </div>
                 </div>
+              </div>
+              <div className="px-6 py-4 text-base text-stone-600">
+                Let's create your plan through conversation. I'll research, analyze, and build your complete plan.
               </div>
               
               {/* Chat Content */}
@@ -2074,7 +2076,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       {/* Assigned Tab Content */}
       {activeTab === "assigned" && (
         <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
-          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Assigned Bundles</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <Package className="w-6 h-6 text-orange-600" />
+            <h2 className="text-2xl font-bold text-stone-900">Assigned Bundles</h2>
+          </div>
+          <p className="text-base text-stone-600 mb-8">View and manage bundles assigned to this user</p>
           <AssignedBundlesPanel 
             plannerEmail={plannerEmail} 
             userEmail={selectedUserEmail} 
@@ -2129,7 +2135,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       {/* User Notes Tab Content */}
       {activeTab === "notes" && (
         <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
-          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">User Notes</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="w-6 h-6 text-blue-600" />
+            <h2 className="text-2xl font-bold text-stone-900">User Notes</h2>
+          </div>
+          <p className="text-base text-stone-600 mb-2">Manage notes and context for this user</p>
           {selectedUserEmail ? (
             <UserNotesManager
               userEmail={selectedUserEmail}
@@ -2149,7 +2159,11 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
       {/* History Tab Content */}
       {activeTab === "history" && (
         <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
-          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Plan History</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <History className="w-6 h-6 text-purple-600" />
+            <h2 className="text-2xl font-bold text-stone-900">Plan History</h2>
+          </div>
+          <p className="text-base text-stone-600 mb-8">View and restore previous plans</p>
           <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
         </div>
       )}
@@ -2863,60 +2877,58 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   return (
     <>
       {/* Search and Controls */}
-      <div className="mb-6 space-y-6">
+      <div className="mb-4">
         {/* Search Box */}
-        <div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
             type="text"
             placeholder="Search history..."
             value={searchQuery}
             onChange={(e)=>setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-stone-200 px-4 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
+            className="w-full rounded-lg border border-stone-200 pl-10 pr-4 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
           />
         </div>
-
-        {/* Filter Controls and Page Size */}
-        {/* Page Size Selector */}
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-stone-600">{filteredItems.length} of {totalItems} item(s)</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-stone-600">Show:</span>
-            <select 
-              value={pageSize} 
-              onChange={(e)=>setPageSize(Number(e.target.value))}
-              className="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
+      </div>
+      <div className="mb-8 flex items-center justify-end">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-stone-600">Show:</span>
+          <select 
+            value={pageSize} 
+            onChange={(e)=>setPageSize(Number(e.target.value))}
+            className="rounded-lg border border-stone-200 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
         </div>
       </div>
+
 
       <div className="rounded-lg border border-stone-200 overflow-x-auto">
         <table className="w-full">
           <thead className="bg-stone-50">
             <tr className="text-left border-b border-stone-200">
-              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Title</th>
-              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Type</th>
-              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Start</th>
-              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Items</th>
-              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide text-right">Actions</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 pb-3 border-b border-stone-200">Title</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 pb-3 border-b border-stone-200">Type</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 pb-3 border-b border-stone-200">Start</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 pb-3 border-b border-stone-200">Items</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 pb-3 border-b border-stone-200 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredItems.map(item=>(
               <tr key={`history-${item.id}`} className="border-b border-stone-100 hover:bg-stone-50">
-                <td className="py-4 px-4 text-base text-stone-900">
+                <td className="py-4 px-4 text-sm text-stone-900">
                   <div className="flex items-center gap-2">
                     {item.title}
                   </div>
                 </td>
-                <td className="py-4 px-4 text-base text-stone-600">History</td>
-                <td className="py-4 px-4 text-base text-stone-900">{item.startDate}</td>
-                <td className="py-4 px-4 text-base text-stone-900">{item.itemsCount||"—"}</td>
+                <td className="py-4 px-4 text-sm text-stone-600">History</td>
+                <td className="py-4 px-4 text-sm text-stone-900">{item.startDate}</td>
+                <td className="py-4 px-4 text-sm text-stone-900">{item.itemsCount||"—"}</td>
                 <td className="py-4 px-4">
                   <div className="flex justify-end">
                     <button 
@@ -2925,7 +2937,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
                         tasks:item.tasks, 
                         mode:item.mode 
                       })} 
-                      className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50"
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                     >
                       Restore
                     </button>
@@ -2942,10 +2954,10 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         </table>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-2">
-        <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50"><ChevronLeft className="h-4 w-4" /></button>
-        <div className="text-sm text-stone-600">Page {page}</div>
-        <button onClick={()=>setPage(p=>p+1)} className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50"><ChevronRight className="h-4 w-4" /></button>
+      <div className="mt-4 flex justify-center gap-2">
+        <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors"><ChevronLeft className="h-4 w-4" /></button>
+        <div className="text-sm text-stone-600 flex items-center px-3">Page {page}</div>
+        <button onClick={()=>setPage(p=>p+1)} className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors"><ChevronRight className="h-4 w-4" /></button>
       </div>
     </>
   );
@@ -4491,46 +4503,42 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
   return (
     <>
       {lastUpdated && (
-        <div className="text-xs text-stone-500 mb-4">
+        <div className="text-sm text-stone-500 mb-6">
           Last updated: {new Date(lastUpdated).toLocaleString()}
         </div>
       )}
-        <div className="mb-3">
-          <label className="block text-sm font-medium text-stone-700 mb-1">
-            Notes & Context
-          </label>
-          <div className="text-xs text-stone-500 mb-2">
-            These notes are automatically considered by AI in all planning sessions for this user.
-          </div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm resize-none h-32"
-            placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
-          />
+      <div className="mb-2">
+        <h3 className="text-lg font-semibold text-stone-900 mb-2">Notes & Context</h3>
+        <p className="text-sm text-stone-600 mb-4">
+          These notes are automatically considered by AI in all planning sessions for this user.
+        </p>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="w-full min-h-[300px] rounded-lg border border-stone-200 px-4 py-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+          placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
+        />
+        <div className="text-sm text-stone-500 mt-2">
+          {notes.length} characters
         </div>
+      </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-stone-500">
-            {notes.length} characters
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={loadUserNotes}
-              disabled={isSaving}
-              className="px-3 py-1.5 text-sm font-medium text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 disabled:opacity-50"
-            >
-              Reload
-            </button>
-            <button
-              onClick={saveUserNotes}
-              disabled={isSaving || !notes.trim()}
-              className="px-4 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? "Saving..." : "Save Notes"}
-            </button>
-          </div>
-        </div>
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={loadUserNotes}
+          disabled={isSaving}
+          className="px-4 py-2 border border-stone-200 text-stone-700 rounded-lg font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+        >
+          Reload
+        </button>
+        <button
+          onClick={saveUserNotes}
+          disabled={isSaving || !notes.trim()}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSaving ? "Saving..." : "Save Notes"}
+        </button>
+      </div>
     </>
   );
 }
@@ -5318,32 +5326,24 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 
   return (
     <>
-      {/* Header Section with Lightbulb Icon */}
-      <div className="flex items-start gap-4 mb-8">
-        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center">
-          <Lightbulb className="w-6 h-6 text-stone-700" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold text-stone-900 mb-1">How would you like to create this plan?</h2>
-          <p className="text-base text-stone-600">Choose your planning approach for {selectedUserEmail}</p>
-        </div>
-      </div>
+      <h2 className="text-2xl font-bold text-stone-900 mb-2">How would you like to create this plan?</h2>
+      <p className="text-base text-stone-600 mb-6">Choose your planning approach for {selectedUserEmail}</p>
       
       {/* Planning Mode Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-4 gap-4">
         {/* Full AI Option */}
         <button
           onClick={() => onModeSelect("full-ai")}
-          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
+          className={`bg-white p-5 rounded-lg text-left transition-all cursor-pointer hover:shadow-md ${
             planningMode === "full-ai"
-              ? "border-2 border-[#2D3748]"
+              ? "border-2 border-blue-600 shadow-sm"
               : "border border-stone-200"
           }`}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <MessageCircle className="w-5 h-5 text-stone-700" />
-            <div className="text-base font-semibold text-stone-900">Full AI Planning</div>
+          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-2">
+            <MessageSquare className="w-5 h-5 text-blue-600" />
           </div>
+          <div className="text-base font-semibold text-stone-900 mb-2">Full AI Planning</div>
           <div className="text-sm text-stone-600">
             Conversational AI creates your entire plan through research and dialogue
           </div>
@@ -5352,16 +5352,16 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         {/* AI-Assisted Manual Option */}
         <button
           onClick={() => onModeSelect("ai-assisted")}
-          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
+          className={`bg-white p-5 rounded-lg text-left transition-all cursor-pointer hover:shadow-md ${
             planningMode === "ai-assisted"
-              ? "border-2 border-[#2D3748]"
+              ? "border-2 border-blue-600 shadow-sm"
               : "border border-stone-200"
           }`}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-5 h-5 text-stone-700" />
-            <div className="text-base font-semibold text-stone-900">AI-Assisted Manual</div>
+          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center mb-2">
+            <Lightbulb className="w-5 h-5 text-orange-600" />
           </div>
+          <div className="text-base font-semibold text-stone-900 mb-2">AI-Assisted Manual</div>
           <div className="text-sm text-stone-600">
             You create tasks manually with smart AI suggestions and recommendations
           </div>
@@ -5370,16 +5370,16 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         {/* Pure Manual Option */}
         <button
           onClick={() => onModeSelect("manual")}
-          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
+          className={`bg-white p-5 rounded-lg text-left transition-all cursor-pointer hover:shadow-md ${
             planningMode === "manual"
-              ? "border-2 border-[#2D3748]"
+              ? "border-2 border-blue-600 shadow-sm"
               : "border border-stone-200"
           }`}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <Edit className="w-5 h-5 text-stone-700" />
-            <div className="text-base font-semibold text-stone-900">Pure Manual</div>
+          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-2">
+            <Edit3 className="w-5 h-5 text-green-600" />
           </div>
+          <div className="text-base font-semibold text-stone-900 mb-2">Pure Manual</div>
           <div className="text-sm text-stone-600">
             Traditional task creation without AI assistance
           </div>
@@ -5388,16 +5388,16 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         {/* Templates Option */}
         <button
           onClick={() => onModeSelect("templates")}
-          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
+          className={`bg-white p-5 rounded-lg text-left transition-all cursor-pointer hover:shadow-md ${
             planningMode === "templates"
-              ? "border-2 border-[#2D3748]"
+              ? "border-2 border-blue-600 shadow-sm"
               : "border border-stone-200"
           }`}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <FileText className="w-5 h-5 text-stone-700" />
-            <div className="text-base font-semibold text-stone-900">Use Template</div>
+          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center mb-2">
+            <FileText className="w-5 h-5 text-purple-600" />
           </div>
+          <div className="text-base font-semibold text-stone-900 mb-2">Use Template</div>
           <div className="text-sm text-stone-600">
             Select from your saved plan templates
           </div>
@@ -5605,7 +5605,8 @@ What type of plan would you like to create? For example: "Create a workout plan"
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="h-96 overflow-y-auto p-6 space-y-4 relative"
+        className="px-6 py-4 space-y-4 relative"
+        style={{ maxHeight: '400px', overflowY: 'auto' }}
       >
         {messages.map((message) => (
           <div
@@ -5619,7 +5620,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
                   : 'bg-stone-50 p-4'
               }`}
             >
-              <div className={`text-sm whitespace-pre-wrap ${message.type === 'user' ? 'text-white' : 'text-stone-700'}`}>{message.content}</div>
+              <div className={`text-sm whitespace-pre-wrap leading-relaxed ${message.type === 'user' ? 'text-white' : 'text-stone-700'}`}>{message.content}</div>
             </div>
           </div>
         ))}
@@ -5642,7 +5643,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
         {showScrollButton && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-4 right-4 bg-[#2D3748] text-white rounded-full p-2 shadow-lg hover:bg-[#1A202C] transition-colors"
+            className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2 shadow-lg hover:bg-blue-700 transition-colors"
             title="Scroll to bottom"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5660,15 +5661,16 @@ What type of plan would you like to create? For example: "Create a workout plan"
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
-            className="flex-1 rounded-lg border border-stone-200 px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#2D3748]/20 focus:border-[#2D3748]"
+            className="flex-1 rounded-lg border border-stone-200 px-4 py-3 text-sm placeholder:text-stone-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 resize-none"
             disabled={isLoading}
             rows={3}
           />
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading}
-            className="bg-[#8B6F47] px-6 py-3 text-sm font-medium text-white rounded-lg hover:bg-[#2D3748] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
+            <Send className="w-4 h-4" />
             Send
           </button>
         </div>
