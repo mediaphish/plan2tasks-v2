@@ -4146,7 +4146,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-stone-900 mb-2">Settings</h1>
-        <p className="text-lg text-stone-600">Manage your application preferences</p>
+        <p className="text-lg text-stone-600">Manage your application preferences and subscription</p>
       </div>
 
       {/* Settings Form Panel */}
@@ -4220,24 +4220,24 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
           {/* Row 3: Auto-archive after assign and Show inbox badge */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={!!local.auto_archive_after_assign} 
                   onChange={(e)=>setLocal({...local, auto_archive_after_assign:(e.target.checked)})} 
-                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-[#246650]/20 focus:border-[#246650] checked:bg-[#246650] checked:border-[#246650] text-[#246650]"
+                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-accent-green/20 focus:border-accent-green checked:bg-accent-green checked:border-accent-green appearance-none cursor-pointer"
                 />
                 <span className="text-sm font-medium text-stone-700">Auto-archive after assign</span>
               </label>
             </div>
 
             <div>
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={!!local.show_inbox_badge} 
                   onChange={(e)=>setLocal({...local, show_inbox_badge:(e.target.checked)})} 
-                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-[#246650]/20 focus:border-[#246650] checked:bg-[#246650] checked:border-[#246650] text-[#246650]"
+                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-accent-green/20 focus:border-accent-green checked:bg-accent-green checked:border-accent-green appearance-none cursor-pointer"
                 />
                 <span className="text-sm font-medium text-stone-700">Show inbox badge</span>
               </label>
@@ -4359,24 +4359,24 @@ function BillingView({ plannerEmail, onToast }) {
       {/* Billing Panel */}
       <div className="bg-white rounded-xl border border-stone-200 p-8">
         {billingLoading ? (
-          <div className="text-sm text-stone-500">Loading billing status...</div>
+          <div className="text-base text-stone-600">Loading billing status...</div>
         ) : billingStatus ? (
           <div className="space-y-6">
             {/* Current Plan Status */}
             <div className="rounded-lg border border-stone-200 p-4 bg-stone-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-base font-semibold text-stone-900 mb-1">
+                  <div className="text-lg font-semibold text-stone-900 mb-1">
                     {currentPlanTier === 'free' ? 'Free Plan' : 
                      currentPlanTier === 'starter' ? 'Starter Plan' :
                      currentPlanTier === 'professional' ? 'Professional Plan' :
                      currentPlanTier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
                   </div>
-                  <div className="text-sm text-stone-600">
+                  <div className="text-base text-stone-600">
                     {billingStatus.userCount || 0} / {billingStatus.userLimit || 'Unlimited'} users
                   </div>
                 </div>
-                <div className="text-sm">
+                <div className="text-base">
                   <span className="text-stone-600">Status: </span>
                   <span className="text-[#246650] font-medium">{billingStatus.subscription?.status || 'Active'}</span>
                 </div>
@@ -4386,17 +4386,17 @@ function BillingView({ plannerEmail, onToast }) {
             {/* Upgrade Options - Only show if on Free Plan */}
             {currentPlanTier === 'free' && (
               <div>
-                <h2 className="text-base font-semibold text-stone-900 mb-4">Upgrade your plan</h2>
+                <h2 className="text-lg font-semibold text-stone-900 mb-4">Upgrade your plan</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Starter Plan */}
                   <div className="bg-white border border-stone-200 rounded-lg p-6">
                     <div className="text-lg font-semibold text-stone-900 mb-2">Starter</div>
-                    <div className="text-sm text-stone-600 mb-4">Up to 10 users</div>
+                    <div className="text-base text-stone-600 mb-4">Up to 10 users</div>
                     <div className="text-2xl font-bold text-stone-900 mb-4">$9.99</div>
                     <button 
                       onClick={() => createSubscription('starter-monthly')}
                       disabled={billingLoading}
-                      className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full bg-[#246650] text-white text-sm font-medium py-2.5 rounded-lg hover:bg-[#1e5141] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Subscribe
                     </button>
@@ -4405,12 +4405,12 @@ function BillingView({ plannerEmail, onToast }) {
                   {/* Professional Plan */}
                   <div className="bg-white border border-stone-200 rounded-lg p-6">
                     <div className="text-lg font-semibold text-stone-900 mb-2">Professional</div>
-                    <div className="text-sm text-stone-600 mb-4">Up to 50 users</div>
+                    <div className="text-base text-stone-600 mb-4">Up to 50 users</div>
                     <div className="text-2xl font-bold text-stone-900 mb-4">$24.99</div>
                     <button 
                       onClick={() => createSubscription('professional-monthly')}
                       disabled={billingLoading}
-                      className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full bg-[#246650] text-white text-sm font-medium py-2.5 rounded-lg hover:bg-[#1e5141] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Subscribe
                     </button>
@@ -4419,12 +4419,12 @@ function BillingView({ plannerEmail, onToast }) {
                   {/* Business Plan */}
                   <div className="bg-white border border-stone-200 rounded-lg p-6">
                     <div className="text-lg font-semibold text-stone-900 mb-2">Business</div>
-                    <div className="text-sm text-stone-600 mb-4">Up to 100 users</div>
+                    <div className="text-base text-stone-600 mb-4">Up to 100 users</div>
                     <div className="text-2xl font-bold text-stone-900 mb-4">$49.99</div>
                     <button 
                       onClick={() => createSubscription('business-monthly')}
                       disabled={billingLoading}
-                      className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full bg-[#246650] text-white text-sm font-medium py-2.5 rounded-lg hover:bg-[#1e5141] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Subscribe
                     </button>
@@ -4433,9 +4433,9 @@ function BillingView({ plannerEmail, onToast }) {
 
                 {/* Enterprise Contact */}
                 <div className="mt-6 text-center">
-                  <p className="text-sm text-stone-600">
+                  <p className="text-base text-stone-600">
                     Need more than 100 users?{' '}
-                    <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+                    <a href="#contact" className="text-[#246650] hover:underline font-medium">Contact us for Enterprise pricing</a>
                   </p>
                 </div>
               </div>
@@ -4447,7 +4447,7 @@ function BillingView({ plannerEmail, onToast }) {
                 <button 
                   onClick={openPortal}
                   disabled={billingLoading}
-                  className="px-4 py-2 bg-stone-900 text-sm font-medium text-white rounded-lg hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2.5 bg-stone-900 text-sm font-medium text-white rounded-lg hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Manage Billing
                 </button>
@@ -4456,11 +4456,11 @@ function BillingView({ plannerEmail, onToast }) {
           </div>
         ) : (
           <div>
-            <div className="text-sm text-stone-600 mb-4">Set up billing to manage your subscription</div>
+            <div className="text-base text-stone-600 mb-4">Set up billing to manage your subscription</div>
             <button 
               onClick={createCustomer}
               disabled={billingLoading}
-              className="px-4 py-2 bg-blue-600 text-sm font-medium text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2.5 bg-[#246650] text-sm font-medium text-white rounded-lg hover:bg-[#1e5141] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Set Up Billing
             </button>
