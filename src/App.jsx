@@ -1740,84 +1740,88 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   },[onToast]);
 
   return (
-    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-stone-900 mb-2">Plan Management</h1>
-        <p className="text-lg text-stone-600">Create and manage plans for your users</p>
+    <>
+      {/* Sub-navigation Bar - Right under main header */}
+      <div className="bg-white border-b border-stone-200 w-full">
+        <div className="px-8 flex items-center justify-between">
+          {/* Tabs on the left */}
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("plan")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === "plan"
+                  ? "text-stone-900 border-b-2 border-[#2D3748]"
+                  : "text-stone-600 border-b-2 border-transparent"
+              }`}
+            >
+              Plan
+            </button>
+            <button
+              onClick={() => setActiveTab("assigned")}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                activeTab === "assigned"
+                  ? "text-stone-900 border-b-2 border-[#2D3748]"
+                  : "text-stone-600 border-b-2 border-transparent"
+              }`}
+            >
+              Assigned
+              {newBundleCount > 0 && (
+                <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                  {newBundleCount} New
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("notes")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === "notes"
+                  ? "text-stone-900 border-b-2 border-[#2D3748]"
+                  : "text-stone-600 border-b-2 border-transparent"
+              }`}
+            >
+              User Notes
+            </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === "history"
+                  ? "text-stone-900 border-b-2 border-[#2D3748]"
+                  : "text-stone-600 border-b-2 border-transparent"
+              }`}
+            >
+              History
+            </button>
+          </div>
+          
+          {/* User dropdown on the right */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-stone-600">User:</label>
+            <select
+              value={selectedUserEmail || ""}
+              onChange={(e)=>{
+                const newUser = e.target.value;
+                setSelectedUserEmail(newUser);
+                onUserChange?.(newUser);
+              }}
+              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-900 focus:border-[#2D3748] focus:outline-none focus:ring-2 focus:ring-[#2D3748]/20"
+              title={selectedUserEmail || "— Choose user —"}
+            >
+              <option value="">— Choose user —</option>
+              {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+                {u.email}
+              </option>))}
+            </select>
+          </div>
+        </div>
       </div>
 
-      {/* Sub-navigation Bar */}
-      <div className="bg-white border-b border-stone-200 mb-6 flex items-center justify-between">
-        {/* Tabs on the left */}
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab("plan")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === "plan"
-                ? "text-stone-900 border-b-2 border-[#2D3748]"
-                : "text-stone-600 border-b-2 border-transparent"
-            }`}
-          >
-            Plan
-          </button>
-          <button
-            onClick={() => setActiveTab("assigned")}
-            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-              activeTab === "assigned"
-                ? "text-stone-900 border-b-2 border-[#2D3748]"
-                : "text-stone-600 border-b-2 border-transparent"
-            }`}
-          >
-            Assigned
-            {newBundleCount > 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                {newBundleCount} New
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("notes")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === "notes"
-                ? "text-stone-900 border-b-2 border-[#2D3748]"
-                : "text-stone-600 border-b-2 border-transparent"
-            }`}
-          >
-            User Notes
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === "history"
-                ? "text-stone-900 border-b-2 border-[#2D3748]"
-                : "text-stone-600 border-b-2 border-transparent"
-            }`}
-          >
-            History
-          </button>
+      {/* Main Content */}
+      <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-stone-900 mb-2">Plan Management</h1>
+          <p className="text-lg text-stone-600">Create and manage plans for your users</p>
         </div>
-        
-        {/* User dropdown on the right */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-stone-600">User:</label>
-          <select
-            value={selectedUserEmail || ""}
-            onChange={(e)=>{
-              const newUser = e.target.value;
-              setSelectedUserEmail(newUser);
-              onUserChange?.(newUser);
-            }}
-            className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-900 focus:border-[#2D3748] focus:outline-none focus:ring-2 focus:ring-[#2D3748]/20"
-            title={selectedUserEmail || "— Choose user —"}
-          >
-            <option value="">— Choose user —</option>
-            {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
-              {u.email}
-            </option>))}
-          </select>
-        </div>
-      </div>
 
 
       {/* Plan Tab Content */}
@@ -2148,7 +2152,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
           <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
         </div>
       )}
-    </main>
+      </main>
+    </>
   );
 }
 
@@ -5308,7 +5313,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
+            <MessageCircle className="w-5 h-5 text-stone-700" />
             <div className="text-base font-semibold text-stone-900">Full AI Planning</div>
           </div>
           <div className="text-sm text-stone-600">
@@ -5326,7 +5331,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-xs">🤝</div>
+            <Zap className="w-5 h-5 text-stone-700" />
             <div className="text-base font-semibold text-stone-900">AI-Assisted Manual</div>
           </div>
           <div className="text-sm text-stone-600">
@@ -5344,7 +5349,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-xs">✏️</div>
+            <Edit className="w-5 h-5 text-stone-700" />
             <div className="text-base font-semibold text-stone-900">Pure Manual</div>
           </div>
           <div className="text-sm text-stone-600">
@@ -5362,7 +5367,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs">📋</div>
+            <FileText className="w-5 h-5 text-stone-700" />
             <div className="text-base font-semibold text-stone-900">Use Template</div>
           </div>
           <div className="text-sm text-stone-600">
