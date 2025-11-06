@@ -219,9 +219,9 @@ function MainApp(){
 
           {/* How It Works */}
           <section className="mb-20">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
               {/* Step 1 */}
-              <div className="text-center">
+              <div className="text-center flex-1 max-w-xs">
                 <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-stone-700">1</span>
                 </div>
@@ -232,12 +232,12 @@ function MainApp(){
               </div>
 
               {/* Arrow 1 */}
-              <div className="hidden md:flex items-center justify-center -mt-4">
+              <div className="hidden md:flex items-center justify-center flex-shrink-0">
                 <ArrowRight className="h-8 w-8 text-stone-400" />
               </div>
 
               {/* Step 2 */}
-              <div className="text-center">
+              <div className="text-center flex-1 max-w-xs">
                 <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-stone-700">2</span>
                 </div>
@@ -247,13 +247,13 @@ function MainApp(){
                 </p>
               </div>
 
-              {/* Arrow 2 - points down on mobile, right on desktop */}
-              <div className="hidden md:flex items-center justify-center md:col-start-1 md:col-span-3 md:row-start-2 md:-mt-4">
-                <ArrowRight className="h-8 w-8 text-stone-400 rotate-90" />
+              {/* Arrow 2 */}
+              <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                <ArrowRight className="h-8 w-8 text-stone-400" />
               </div>
 
               {/* Step 3 */}
-              <div className="text-center md:col-start-2">
+              <div className="text-center flex-1 max-w-xs">
                 <div className="w-16 h-16 rounded-full bg-[#2d7a5f] flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-white">3</span>
                 </div>
