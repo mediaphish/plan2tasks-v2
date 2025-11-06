@@ -106,46 +106,38 @@ export function HeroAnimation() {
         </div>
 
         {/* Right Column */}
-        <div className="col-span-3 relative overflow-hidden flex items-center justify-center">
-          <div
-            className="absolute w-full h-full"
-            style={{
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              left: "50%",
-            }}
-          >
-            {SCREENSHOTS.map((shot, index) => {
-              const isActive = index === activeIndex;
-              const left = isActive ? "52%" : "74%";
-              const scale = isActive ? 1.08 : 0.92;
-              const rotate = isActive ? 5 : -5;
-              const zIndex = isActive ? 20 : 10;
+        <div className="col-span-3 relative overflow-hidden">
+          {SCREENSHOTS.map((shot, index) => {
+            const isActive = index === activeIndex;
+            const left = isActive ? "45%" : "65%";
+            const scale = isActive ? 1.1 : 0.9;
+            const rotate = isActive ? 5 : -5;
+            const zIndex = isActive ? 20 : 10;
 
-              return (
-                <div
-                  key={shot.id}
-                  className="absolute"
-                  style={{
-                    left,
-                    transform: `translate(-50%, -50%) scale(${scale}) rotateY(${rotate}deg)`,
-                    transformOrigin: "center",
-                    zIndex,
-                    maxWidth: isActive ? "560px" : "460px",
-                    maxHeight: isActive ? "460px" : "400px",
-                    transition: `all 800ms ${TRANSITION_EASING}`,
-                  }}
-                >
-                  <img
-                    src={shot.src}
-                    alt={shot.alt}
-                    className="w-full h-auto rounded-xl shadow-lg"
-                    loading={isActive ? "eager" : "lazy"}
-                  />
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <div
+                key={shot.id}
+                className="absolute"
+                style={{
+                  top: "50%",
+                  left,
+                  transform: `translate(-50%, -50%) translateY(-20px) scale(${scale}) rotateY(${rotate}deg)`,
+                  transformOrigin: "center",
+                  zIndex,
+                  maxWidth: "380px",
+                  maxHeight: "420px",
+                  transition: `all 800ms ${TRANSITION_EASING}`,
+                }}
+              >
+                <img
+                  src={shot.src}
+                  alt={shot.alt}
+                  className="w-full h-auto"
+                  loading={isActive ? "eager" : "lazy"}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 
