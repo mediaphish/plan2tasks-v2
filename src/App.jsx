@@ -136,7 +136,7 @@ function MainApp(){
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
   const urlUser = usp.get("user") || "";
-  const validViews = new Set(["dashboard","users","plan","settings","profile","templates","user-dashboard"]);
+  const validViews = new Set(["dashboard","users","plan","settings","profile","templates","user-dashboard","billing"]);
 
   const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
   const plannerEmail = (urlPE || storedPE);
@@ -236,7 +236,7 @@ function MainApp(){
               {loginStatus === "sent" ? (
                 <div className="text-center py-4">
                   <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                    <CheckCircle className="h-8 w-8 text-[#246650]" />
                   </div>
                   <h3 className="text-xl font-semibold text-stone-900 mb-2">Check your email</h3>
                   <p className="text-stone-600 mb-4">
@@ -929,7 +929,7 @@ function MainApp(){
               <div className="relative" ref={createDropdownRef}>
             <button 
                   onClick={() => setCreateDropdownOpen(!createDropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 bg-stone-700 text-white rounded-lg hover:bg-stone-600 transition-colors text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#246650] text-white rounded-lg hover:bg-[#1e5141] transition-colors text-sm font-medium"
             >
                   <Plus className="w-4 h-4" />
                   <span>Create</span>
@@ -1240,7 +1240,7 @@ function Toasts({ items, dismiss }){
         {items.map(t=>(
           <div key={t.id} className={cn(
             "relative rounded-xl border px-3 py-2 text-sm shadow-sm",
-            t.type==="ok" ? "border-green-300 bg-green-50 text-green-800" :
+            t.type==="ok" ? "border-green-300 bg-green-50 text-[#246650]" :
             t.type==="warn" ? "border-yellow-300 bg-yellow-50 text-yellow-800" :
             "border-red-300 bg-red-50 text-red-800"
           )}>
@@ -1955,7 +1955,7 @@ History
         <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-sm font-semibold">2</div>
               <div className="text-base font-semibold">Add Tasks with AI Assistance</div>
             </div>
             <div className="text-sm text-stone-600 ml-8">Create tasks manually with AI providing smart suggestions and recommendations.</div>
@@ -1983,7 +1983,7 @@ History
         <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-sm font-semibold">2</div>
               <div className="text-base font-semibold">Add Tasks</div>
             </div>
             <div className="text-sm text-stone-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
@@ -3300,7 +3300,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
             <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed Today</p>
             <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedToday || 0}</p>
             {aggregate?.trends?.today !== undefined && (
-              <p className={`text-sm text-green-600 ${aggregate.trends.today < 0 ? 'text-stone-500' : ''}`}>
+              <p className={`text-sm text-[#246650] ${aggregate.trends.today < 0 ? 'text-stone-500' : ''}`}>
                 {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
               </p>
             )}
@@ -3311,7 +3311,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
             <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed This Week</p>
             <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedThisWeek || 0}</p>
             {aggregate?.trends?.week !== undefined && (
-              <p className={`text-sm text-green-600 ${aggregate.trends.week < 0 ? 'text-stone-500' : ''}`}>
+              <p className={`text-sm text-[#246650] ${aggregate.trends.week < 0 ? 'text-stone-500' : ''}`}>
                 {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}% vs last week
               </p>
             )}
@@ -3332,7 +3332,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                 <p className="text-lg font-semibold text-stone-900 truncate mb-2">
                   {aggregate.mostActiveUser.email?.split('@')[0] || aggregate.mostActiveUser.email}
                 </p>
-                <p className="text-sm text-green-600">{aggregate.mostActiveUser.completions || 0} completions today</p>
+                <p className="text-sm text-[#246650]">{aggregate.mostActiveUser.completions || 0} completions today</p>
               </>
             ) : (
               <p className="text-base text-stone-600">No activity yet</p>
@@ -3392,7 +3392,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                       <td className="text-center py-4">
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-20 h-2 bg-stone-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-600" style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}></div>
+                            <div className="h-full bg-[#246650]" style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}></div>
                           </div>
                           <span className="text-lg font-semibold text-stone-900">{Math.round(user.completionRate || 0)}%</span>
                       </div>
@@ -3421,7 +3421,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                     className="flex gap-4 p-4 rounded-lg hover:bg-stone-50 transition-colors"
                   >
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-green-600" />
+                      <CheckCircle className="w-6 h-6 text-[#246650]" />
       </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-base font-semibold text-stone-900 mb-1">{activity.taskTitle}</p>
@@ -3690,8 +3690,8 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                   <td className="py-4 border-b border-stone-100 text-base text-stone-900">{r.email || "Unknown"}</td>
                   <td className="py-4 border-b border-stone-100">
                     {r.status==="connected" ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-[#246650] rounded-full text-sm font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#246650]"></span>
                         connected
                       </span>
                     ) : (
@@ -4225,7 +4225,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                   type="checkbox" 
                   checked={!!local.auto_archive_after_assign} 
                   onChange={(e)=>setLocal({...local, auto_archive_after_assign:(e.target.checked)})} 
-                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
+                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-[#246650]/20 focus:border-[#246650] checked:bg-[#246650] checked:border-[#246650] text-[#246650]"
                 />
                 <span className="text-sm font-medium text-stone-700">Auto-archive after assign</span>
               </label>
@@ -4237,7 +4237,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                   type="checkbox" 
                   checked={!!local.show_inbox_badge} 
                   onChange={(e)=>setLocal({...local, show_inbox_badge:(e.target.checked)})} 
-                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
+                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-[#246650]/20 focus:border-[#246650] checked:bg-[#246650] checked:border-[#246650] text-[#246650]"
                 />
                 <span className="text-sm font-medium text-stone-700">Show inbox badge</span>
               </label>
@@ -4250,7 +4250,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
               type="button"
               onClick={save} 
               disabled={saving} 
-              className="px-5 py-2.5 bg-blue-600 text-sm font-medium text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-5 py-2.5 bg-[#246650] text-sm font-medium text-white rounded-lg hover:bg-[#1e5141] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? "Saving…" : "Save"}
             </button>
@@ -4376,8 +4376,9 @@ function BillingView({ plannerEmail, onToast }) {
                     {billingStatus.userCount || 0} / {billingStatus.userLimit || 'Unlimited'} users
                   </div>
                 </div>
-                <div className="text-sm text-stone-600">
-                  Status: {billingStatus.subscription?.status || 'Active'}
+                <div className="text-sm">
+                  <span className="text-stone-600">Status: </span>
+                  <span className="text-[#246650] font-medium">{billingStatus.subscription?.status || 'Active'}</span>
                 </div>
               </div>
             </div>
@@ -5408,7 +5409,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
                    }`}
                  >
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤝</div>
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-xs">🤝</div>
               <div className="font-semibold text-sm">AI-Assisted Manual</div>
             </div>
             <div className="text-xs text-stone-600">
@@ -5466,8 +5467,8 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 
         {planningMode === "ai-assisted" && (
           <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="text-sm font-medium text-green-800 mb-1">AI-Assisted Manual</div>
-            <div className="text-xs text-green-600">
+            <div className="text-sm font-medium text-[#246650] mb-1">AI-Assisted Manual</div>
+            <div className="text-xs text-[#246650]">
               Create tasks manually with AI providing smart suggestions, gap analysis, and best practice recommendations.
             </div>
           </div>
@@ -5671,14 +5672,14 @@ What type of plan would you like to create? For example: "Create a workout plan"
     return (
       <div className="rounded-xl border border-stone-200 bg-green-50 p-4">
         <div className="text-center py-8">
-          <div className="text-green-600 mb-2">✅</div>
-          <div className="font-semibold text-green-800 mb-1">Plan Generated Successfully!</div>
-          <div className="text-sm text-green-600 mb-3">
+          <div className="text-[#246650] mb-2">✅</div>
+          <div className="font-semibold text-[#246650] mb-1">Plan Generated Successfully!</div>
+          <div className="text-sm text-[#246650] mb-3">
             Your AI-generated plan is ready for review and delivery.
           </div>
           <button
             onClick={() => setCurrentStep("welcome")}
-            className="px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-100"
+            className="px-4 py-2 text-sm font-medium text-[#246650] border border-green-300 rounded-xl hover:bg-green-100"
           >
             Start New Conversation
           </button>
@@ -5911,8 +5912,8 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
     <div className="space-y-4">
       {/* AI Assistance Indicator */}
       <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
-        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤖</div>
-        <div className="text-sm text-green-700">
+        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-xs">🤖</div>
+        <div className="text-sm text-[#246650]">
           <strong>AI Assistant Active:</strong> I'll provide smart suggestions as you create tasks
         </div>
       </div>
@@ -5931,7 +5932,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
             <button
               onClick={getAISuggestions}
               disabled={!taskTitle.trim() || isLoadingSuggestions}
-              className="px-3 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-50 disabled:opacity-50"
+              className="px-3 py-2 text-sm font-medium text-[#246650] border border-green-300 rounded-xl hover:bg-green-50 disabled:opacity-50"
             >
               {isLoadingSuggestions ? "..." : "Get AI Help"}
             </button>
@@ -6021,7 +6022,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
         </div>
         <button
           onClick={addTask}
-          className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium"
+          className="px-4 py-2 bg-[#246650] text-white rounded-xl hover:bg-[#1e5141] font-medium"
         >
           Add Task with AI Assistance
         </button>
@@ -6166,7 +6167,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
       <div className="rounded-xl border border-stone-200 bg-green-50 p-4">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">✅</div>
+            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-sm font-semibold">✅</div>
             <div className="text-base font-semibold">Generated Tasks</div>
           </div>
           <div className="text-sm text-stone-600">
@@ -6191,7 +6192,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
         <div className="flex gap-2">
           <button
             onClick={addTasksToPlan}
-            className="flex-1 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+            className="flex-1 rounded-xl bg-[#246650] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1e5141]"
           >
             Add {generatedTasks.length} Tasks to Plan
           </button>
@@ -6210,14 +6211,14 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
     return (
       <div className="rounded-xl border border-stone-200 bg-green-50 p-4">
         <div className="text-center">
-          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-lg mx-auto mb-2">✓</div>
-          <div className="font-semibold text-green-800 mb-1">Tasks Added Successfully!</div>
-          <div className="text-sm text-green-600 mb-3">
+          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-lg mx-auto mb-2">✓</div>
+          <div className="font-semibold text-[#246650] mb-1">Tasks Added Successfully!</div>
+          <div className="text-sm text-[#246650] mb-3">
             {generatedTasks.length} AI-generated tasks have been added to your plan.
           </div>
           <button
             onClick={resetGenerator}
-            className="px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-100"
+            className="px-4 py-2 text-sm font-medium text-[#246650] border border-green-300 rounded-xl hover:bg-green-100"
           >
             Generate More Tasks
           </button>
@@ -6731,7 +6732,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-stone-600">Status:</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-[#246650]">
                 Active
               </span>
             </div>
@@ -6748,7 +6749,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${connectionStatus?.isConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+              <div className={`w-3 h-3 rounded-full ${connectionStatus?.isConnected ? 'bg-[#246650]' : 'bg-yellow-500'}`}></div>
               <span className="text-sm font-medium">
                 {connectionStatus?.isConnected ? 'Connected' : 'Re-authorizing...'}
               </span>
@@ -6770,20 +6771,20 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-              <span className="text-green-600 font-semibold text-lg">✓</span>
+              <span className="text-[#246650] font-semibold text-lg">✓</span>
             </div>
             <h3 className="font-semibold text-stone-900">Connection Health</h3>
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-stone-600">API Status:</span>
-              <span className={`font-medium ${connectionStatus?.isConnected ? 'text-green-600' : 'text-stone-400'}`}>
+              <span className={`font-medium ${connectionStatus?.isConnected ? 'text-[#246650]' : 'text-stone-400'}`}>
                 {connectionStatus?.isConnected ? 'Healthy' : 'N/A'}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-stone-600">Connection:</span>
-              <span className={`font-medium ${connectionStatus?.status === 'connected' ? 'text-green-600' : 'text-stone-400'}`}>
+              <span className={`font-medium ${connectionStatus?.status === 'connected' ? 'text-[#246650]' : 'text-stone-400'}`}>
                 {connectionStatus?.status || 'Unknown'}
               </span>
             </div>
@@ -6809,12 +6810,12 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
               <div className="text-sm text-stone-700 mt-1">Tasks Pending</div>
             </div>
             <div className="p-4 bg-green-50 rounded-lg">
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-[#246650]">
                 {feedback.totalTasks > 0 
                   ? Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)
                   : 0}%
               </div>
-              <div className="text-sm text-green-700 mt-1">Completion Rate</div>
+              <div className="text-sm text-[#246650] mt-1">Completion Rate</div>
             </div>
           </div>
 
@@ -6826,13 +6827,13 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
                 {feedback.taskDetails.map((task, index) => (
                   <div key={index} className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg">
                     <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                      task.completed ? 'bg-green-500' : 
+                      task.completed ? 'bg-[#246650]' : 
                       task.found ? 'bg-yellow-500' : 'bg-red-500'
                     }`}></div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-stone-900 truncate">{task.title}</div>
                       <div className={`text-xs mt-0.5 ${
-                        task.completed ? 'text-green-700' : 
+                        task.completed ? 'text-[#246650]' : 
                         task.found ? 'text-yellow-700' : 'text-red-700'
                       }`}>
                         {task.completed ? '✓ Completed' : 
