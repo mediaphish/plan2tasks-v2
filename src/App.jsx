@@ -4501,8 +4501,6 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [availableTags, setAvailableTags] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -4524,15 +4522,6 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
       
       if (data.ok) {
         setTemplates(data.templates || []);
-        
-        // Extract unique tags
-        const allTags = new Set();
-        (data.templates || []).forEach(template => {
-          if (template.tags && Array.isArray(template.tags)) {
-            template.tags.forEach(tag => allTags.add(tag));
-          }
-        });
-        setAvailableTags(Array.from(allTags));
       } else {
         onToast?.("error", data.error || "Failed to fetch templates");
       }
@@ -4544,28 +4533,17 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
     }
   };
 
-  // Filter templates based on search and tags
+  // Filter templates based on search
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = !searchTerm || 
-      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+      (template.name || template.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesTags = selectedTags.length === 0 || 
-      (template.tags && selectedTags.every(tag => template.tags.includes(tag)));
-    
-    return matchesSearch && matchesTags;
+    return matchesSearch;
   });
 
-  const handleTagToggle = (tag) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
-  };
-
-  const handleDeleteTemplate = async (templateId) => {
+  const handleDeleteTemplate = async (templateId, e) => {
+    e.stopPropagation(); // Prevent card click
     if (!confirm("Are you sure you want to delete this template? This action cannot be undone.")) {
       return;
     }
@@ -4592,6 +4570,12 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
       console.error("Error deleting template:", error);
       onToast?.("error", "Failed to delete template");
     }
+  };
+
+  const handleEditTemplate = (template, e) => {
+    e.stopPropagation(); // Prevent card click
+    setEditingTemplate(template);
+    setShowCreateModal(true);
   };
 
   const fetchUsers = async () => {
@@ -4629,150 +4613,129 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
     setSelectedTemplate(null);
     setSelectedUser('');
     
-    onToast?.("ok", `Template "${selectedTemplate.title}" will be applied to ${selectedUser}`);
+    onToast?.("ok", `Template "${selectedTemplate.name || selectedTemplate.title}" will be applied to ${selectedUser}`);
   };
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">⏳</div>
-          <div className="text-sm text-gray-600">Loading templates...</div>
+          <div className="text-stone-500 mb-2">⏳</div>
+          <div className="text-sm text-stone-600">Loading templates...</div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <div className="text-sm font-semibold">Templates</div>
-          <div className="text-xs text-gray-600 mt-1">Manage your plan templates for quick reuse</div>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
-        >
-          + Create Template
-        </button>
+    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-stone-900 mb-2">Templates</h1>
+        <p className="text-lg text-stone-600">Manage your plan templates for quick reuse</p>
       </div>
 
-      {/* Search and Filter Controls */}
-      <div className="mb-6 space-y-3">
-        {/* Search Bar */}
+      {/* Search Bar */}
+      <div className="mb-6">
         <div className="relative">
           <input
             type="text"
             placeholder="Search templates by name or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+            className="w-full rounded-lg border border-stone-200 bg-white px-4 py-3 pr-10 text-base text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
           />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-            <div className="text-gray-400 text-sm">🔍</div>
-          </div>
+          <Search className="absolute right-3 top-3.5 h-5 w-5 text-stone-400" />
         </div>
-
-        {/* Tags Filter */}
-        {availableTags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <div className="text-xs text-gray-600 mr-2">Filter by tags:</div>
-            {availableTags.map(tag => (
-              <button
-                key={tag}
-                onClick={() => handleTagToggle(tag)}
-                className={`px-2 py-1 text-xs rounded-full border transition-colors ${
-                  selectedTags.includes(tag)
-                    ? "bg-purple-100 border-purple-300 text-purple-700"
-                    : "bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Templates Grid */}
+      {/* Template Cards Grid */}
       {filteredTemplates.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="text-gray-500 mb-2 text-2xl">📋</div>
-          <div className="font-semibold text-gray-700 mb-1 text-sm">No templates found</div>
-          <div className="text-xs text-gray-500 mb-3">
+        <div className="text-center py-12">
+          <div className="text-stone-400 mb-4 text-4xl">📋</div>
+          <h3 className="text-base font-semibold text-stone-900 mb-2">No templates found</h3>
+          <p className="text-sm text-stone-600 mb-6">
             {templates.length === 0 
               ? "You haven't created any templates yet. Create your first template to get started."
-              : "Try adjusting your search terms or tag filters."
+              : "Try adjusting your search terms."
             }
-          </div>
+          </p>
           {templates.length === 0 && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+              className="px-6 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors text-sm font-medium"
             >
               Create Your First Template
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTemplates.map(template => (
-            <div
-              key={template.id}
-              onClick={() => handleTemplateClick(template)}
-              className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow group cursor-pointer"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors text-sm">
-                  {template.title}
-                </h3>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setEditingTemplate(template)}
-                    className="opacity-0 group-hover:opacity-100 text-blue-400 hover:text-blue-600 transition-all text-xs"
-                    title="Edit template"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTemplate(template.id)}
-                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all text-xs"
-                    title="Delete template"
-                  >
-                    🗑️
-                  </button>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredTemplates.map(template => {
+            const templateName = template.name || template.title || "Untitled Template";
+            const taskCount = template.tasks?.length || template.itemsCount || 0;
+            
+            return (
+              <div
+                key={template.id}
+                onClick={() => handleTemplateClick(template)}
+                className="group rounded-lg border border-stone-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+              >
+                {/* Card Title */}
+                <h3 className="text-base font-semibold text-stone-900 mb-2">{templateName}</h3>
+                
+                {/* Card Description */}
+                {template.description && (
+                  <p className="text-sm text-stone-600 mb-4">{template.description}</p>
+                )}
+                
+                {/* Card Footer */}
+                <div className="flex items-center justify-between">
+                  {/* Task Count */}
+                  <span className="text-xs font-medium text-stone-500">{taskCount} {taskCount === 1 ? 'task' : 'tasks'}</span>
+                  
+                  {/* Action Buttons - Hidden until hover */}
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Edit Button */}
+                    <button
+                      onClick={(e) => handleEditTemplate(template, e)}
+                      className="rounded p-1.5 text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+                      title="Edit template"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                    
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => handleDeleteTemplate(template.id, e)}
+                      className="rounded p-1.5 text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+                      title="Delete template"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-              
-              {template.description && (
-                <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                  {template.description}
-                </p>
-              )}
-              
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{template.itemsCount || 0} tasks</span>
-                {template.tags && template.tags.length > 0 && (
-                  <div className="flex gap-1">
-                    {template.tags.slice(0, 2).map(tag => (
-                      <span key={tag} className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-xs">
-                        {tag}
-                      </span>
-                    ))}
-                    {template.tags.length > 2 && (
-                      <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                        +{template.tags.length - 2}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      {/* Floating Create Button */}
+      <button
+        onClick={() => {
+          setEditingTemplate(null);
+          setShowCreateModal(true);
+        }}
+        className="fixed bottom-8 right-8 rounded-lg bg-stone-900 px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-stone-800 hover:shadow-xl transition-all z-10"
+        type="button"
+      >
+        + Create Template
+      </button>
 
       {/* Create/Edit Template Modal */}
       {showCreateModal && (
@@ -4801,24 +4764,24 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
         }}>
           <div className="space-y-4">
             <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Template</div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="font-semibold text-sm">{selectedTemplate.title}</div>
+              <div className="text-sm font-medium text-stone-700 mb-2">Template</div>
+              <div className="p-3 bg-stone-50 rounded-lg">
+                <div className="font-semibold text-sm">{selectedTemplate.name || selectedTemplate.title}</div>
                 {selectedTemplate.description && (
-                  <div className="text-xs text-gray-600 mt-1">{selectedTemplate.description}</div>
+                  <div className="text-xs text-stone-600 mt-1">{selectedTemplate.description}</div>
                 )}
-                <div className="text-xs text-gray-500 mt-1">{selectedTemplate.itemsCount || 0} tasks</div>
+                <div className="text-xs text-stone-500 mt-1">{(selectedTemplate.tasks?.length || selectedTemplate.itemsCount || 0)} tasks</div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-stone-700 mb-1">
                 Select User *
               </label>
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 focus:border-transparent"
               >
                 <option value="">Choose a user...</option>
                 {users.map(user => (
@@ -4829,21 +4792,21 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
               </select>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
               <button
                 onClick={() => {
                   setShowAssignModal(false);
                   setSelectedTemplate(null);
                   setSelectedUser('');
                 }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-4 py-2 text-stone-600 hover:text-stone-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAssignTemplate}
                 disabled={!selectedUser}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-stone-900 text-white rounded-lg hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Assign Template
               </button>
@@ -4851,14 +4814,14 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
           </div>
         </Modal>
       )}
-    </div>
+    </main>
   );
 }
 
 /* ───────── Create Template Modal ───────── */
 function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast }) {
   const [formData, setFormData] = useState({
-    title: template?.title || '',
+    title: template?.name || template?.title || '',
     description: template?.description || '',
     tasks: template?.tasks || [],
     tags: template?.tags || []
