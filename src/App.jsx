@@ -3,7 +3,7 @@ import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
-  FileText, Layout, UserPlus, Zap, BarChart, ArrowRight
+  FileText, Layout, UserPlus, Zap, BarChart, ArrowRight, MessageCircle
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -1747,73 +1747,76 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
         <p className="text-lg text-stone-600">Create and manage plans for your users</p>
       </div>
 
-      {/* User Selection - Above tabs */}
-      <div className="mb-6 flex items-center gap-2">
-        <label className="text-sm font-medium text-stone-700">User:</label>
-        <select
-          value={selectedUserEmail || ""}
-          onChange={(e)=>{
-            const newUser = e.target.value;
-            setSelectedUserEmail(newUser);
-            onUserChange?.(newUser);
-          }}
-          className="rounded-lg border border-stone-200 px-3 py-2 text-sm min-w-[200px] bg-white text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
-          title={selectedUserEmail || "— Choose user —"}
-        >
-          <option value="">— Choose user —</option>
-          {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
-            {u.email}
-          </option>))}
-        </select>
-      </div>
-
-      {/* Sub-navigation Tabs */}
-      <div className="flex gap-1 mb-6">
-        <button
-          onClick={() => setActiveTab("plan")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "plan"
-              ? "text-stone-900 border-b-2 border-blue-600"
-              : "text-stone-600 hover:text-stone-900"
-          }`}
-        >
-          Plan
-        </button>
-        <button
-          onClick={() => setActiveTab("assigned")}
-          className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-            activeTab === "assigned"
-              ? "text-stone-900 border-b-2 border-blue-600"
-              : "text-stone-600 hover:text-stone-900"
-          }`}
-        >
-          Assigned
-          {newBundleCount > 0 && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-              {newBundleCount} New
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("notes")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "notes"
-              ? "text-stone-900 border-b-2 border-blue-600"
-              : "text-stone-600 hover:text-stone-900"
-          }`}
-        >
-          User Notes
-        </button>
-        <button
-          onClick={() => setActiveTab("history")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "history"
-              ? "text-stone-900 border-b-2 border-blue-600"
-              : "text-stone-600 hover:text-stone-900"
-          }`}
-        >
-          History
-        </button>
+      {/* Sub-navigation Bar */}
+      <div className="bg-white border-b border-stone-200 mb-6 flex items-center justify-between">
+        {/* Tabs on the left */}
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab("plan")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "plan"
+                ? "text-stone-900 border-b-2 border-[#2D3748]"
+                : "text-stone-600 border-b-2 border-transparent"
+            }`}
+          >
+            Plan
+          </button>
+          <button
+            onClick={() => setActiveTab("assigned")}
+            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              activeTab === "assigned"
+                ? "text-stone-900 border-b-2 border-[#2D3748]"
+                : "text-stone-600 border-b-2 border-transparent"
+            }`}
+          >
+            Assigned
+            {newBundleCount > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                {newBundleCount} New
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("notes")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "notes"
+                ? "text-stone-900 border-b-2 border-[#2D3748]"
+                : "text-stone-600 border-b-2 border-transparent"
+            }`}
+          >
+            User Notes
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "history"
+                ? "text-stone-900 border-b-2 border-[#2D3748]"
+                : "text-stone-600 border-b-2 border-transparent"
+            }`}
+          >
+            History
+          </button>
+        </div>
+        
+        {/* User dropdown on the right */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-stone-600">User:</label>
+          <select
+            value={selectedUserEmail || ""}
+            onChange={(e)=>{
+              const newUser = e.target.value;
+              setSelectedUserEmail(newUser);
+              onUserChange?.(newUser);
+            }}
+            className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-900 focus:border-[#2D3748] focus:outline-none focus:ring-2 focus:ring-[#2D3748]/20"
+            title={selectedUserEmail || "— Choose user —"}
+          >
+            <option value="">— Choose user —</option>
+            {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+              {u.email}
+            </option>))}
+          </select>
+        </div>
       </div>
 
 
@@ -1904,9 +1907,21 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
 
           {/* Full AI Planning Interface */}
           {planningMode === "full-ai" && (
-            <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
-              <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">AI Planning Assistant</h2>
-              <p className="text-base text-stone-600 mb-6">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</p>
+            <div className="rounded-lg border border-stone-200 bg-white shadow-sm overflow-hidden mb-6">
+              {/* Header */}
+              <div className="border-b border-stone-200 bg-[#2D3748]/5 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2D3748]">
+                    <MessageCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-stone-900">AI Planning Assistant</h3>
+                    <p className="text-sm text-stone-600">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Chat Content */}
               <ConversationalAI
                 userEmail={selectedUserEmail}
                 plannerEmail={plannerEmail}
@@ -5286,10 +5301,10 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         {/* Full AI Option */}
         <button
           onClick={() => onModeSelect("full-ai")}
-          className={`p-5 rounded-lg border text-left transition-all ${
+          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
             planningMode === "full-ai"
-              ? "border-2 border-blue-600"
-              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+              ? "border-2 border-[#2D3748]"
+              : "border border-stone-200"
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -5304,10 +5319,10 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         {/* AI-Assisted Manual Option */}
         <button
           onClick={() => onModeSelect("ai-assisted")}
-          className={`p-5 rounded-lg border text-left transition-all ${
+          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
             planningMode === "ai-assisted"
-              ? "border-2 border-blue-600"
-              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+              ? "border-2 border-[#2D3748]"
+              : "border border-stone-200"
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -5322,10 +5337,10 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         {/* Pure Manual Option */}
         <button
           onClick={() => onModeSelect("manual")}
-          className={`p-5 rounded-lg border text-left transition-all ${
+          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
             planningMode === "manual"
-              ? "border-2 border-blue-600"
-              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+              ? "border-2 border-[#2D3748]"
+              : "border border-stone-200"
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -5340,10 +5355,10 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         {/* Templates Option */}
         <button
           onClick={() => onModeSelect("templates")}
-          className={`p-5 rounded-lg border text-left transition-all ${
+          className={`bg-white p-5 rounded-lg shadow-sm text-left transition-all ${
             planningMode === "templates"
-              ? "border-2 border-blue-600"
-              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+              ? "border-2 border-[#2D3748]"
+              : "border border-stone-200"
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -5552,12 +5567,12 @@ What type of plan would you like to create? For example: "Create a workout plan"
   }
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white">
+    <>
       {/* Chat Messages */}
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="h-96 overflow-y-auto p-4 space-y-4 relative"
+        className="h-96 overflow-y-auto p-6 space-y-4 relative"
       >
         {messages.map((message) => (
           <div
@@ -5565,23 +5580,23 @@ What type of plan would you like to create? For example: "Create a workout plan"
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+              className={`max-w-xs lg:max-w-md rounded-lg ${
                 message.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-stone-100 text-gray-800'
+                  ? 'bg-blue-600 text-white p-4'
+                  : 'bg-stone-50 p-4'
               }`}
             >
-              <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+              <div className={`text-sm whitespace-pre-wrap ${message.type === 'user' ? 'text-white' : 'text-stone-700'}`}>{message.content}</div>
             </div>
           </div>
         ))}
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-stone-100 text-gray-800 px-4 py-2 rounded-lg">
+            <div className="bg-stone-50 p-4 rounded-lg">
               <div className="flex items-center gap-2">
-                <div className="animate-spin w-4 h-4 border-2 border-stone-300 border-t-gray-600 rounded-full"></div>
-                <span className="text-sm">AI is thinking...</span>
+                <div className="animate-spin w-4 h-4 border-2 border-stone-300 border-t-stone-600 rounded-full"></div>
+                <span className="text-sm text-stone-700">AI is thinking...</span>
               </div>
             </div>
           </div>
@@ -5594,7 +5609,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
         {showScrollButton && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2 shadow-lg hover:bg-blue-700 transition-colors"
+            className="absolute bottom-4 right-4 bg-[#2D3748] text-white rounded-full p-2 shadow-lg hover:bg-[#1A202C] transition-colors"
             title="Scroll to bottom"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5604,28 +5619,28 @@ What type of plan would you like to create? For example: "Create a workout plan"
         )}
       </div>
 
-
       {/* Input Area */}
-      <div className="border-t p-4">
-        <div className="flex gap-2">
+      <div className="border-t border-stone-200 p-6">
+        <div className="flex gap-3">
           <textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
-            className="flex-1 rounded-xl border border-stone-300 px-3 py-2 text-sm resize-none h-20"
+            className="flex-1 rounded-lg border border-stone-200 px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#2D3748]/20 focus:border-[#2D3748]"
             disabled={isLoading}
+            rows={3}
           />
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#8B6F47] px-6 py-3 text-sm font-medium text-white rounded-lg hover:bg-[#2D3748] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Send
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
