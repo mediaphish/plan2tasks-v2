@@ -143,10 +143,11 @@ function MainApp(){
   if (urlPE) { try { localStorage.setItem("plannerEmail", urlPE); } catch {} }
   const [view,setView]=useState(validViews.has(urlView) ? urlView : "dashboard");
   
-  // Login state for landing page
+  // Login state for landing page (only used when !plannerEmail)
+  // These are declared at the top level to avoid hooks violations
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
-  const [loginStatus, setLoginStatus] = useState(""); // "idle", "sending", "sent", "error"
+  const [loginStatus, setLoginStatus] = useState("idle"); // "idle", "sending", "sent", "error"
   const [loginError, setLoginError] = useState("");
 
   // Handle magic link request
@@ -212,8 +213,8 @@ function MainApp(){
           </div>
         </header>
 
-        {/* Login Modal */}
-        {loginOpen && (
+        {/* Login Modal - Only show when on landing page */}
+        {!plannerEmail && loginOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-xl">
               <div className="flex items-center justify-between mb-6">
@@ -226,6 +227,7 @@ function MainApp(){
                     setLoginEmail("");
                   }}
                   className="text-stone-400 hover:text-stone-600"
+                  type="button"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -683,6 +685,37 @@ function MainApp(){
       }
     }
   }, [plannerEmail]);
+
+  // Reset login state when plannerEmail changes (e.g., after magic link login)
+  useEffect(() => {
+    if (plannerEmail) {
+      // Clear login modal state when logged in
+      setLoginOpen(false);
+      setLoginStatus("idle");
+      setLoginError("");
+      setLoginEmail("");
+    }
+  }, [plannerEmail]);
+
+  // Ensure view respects URL parameter on initial load and after redirect
+  // This runs after plannerEmail is set (e.g., after magic link login)
+  useEffect(() => {
+    if (!plannerEmail) return;
+    
+    const currentUrlView = new URLSearchParams(window.location.search).get('view') || '';
+    if (validViews.has(currentUrlView.toLowerCase())) {
+      // URL has a valid view - use it
+      setView(currentUrlView.toLowerCase());
+    } else if (currentUrlView === '' && plannerEmail) {
+      // If no view in URL but planner is logged in, default to dashboard
+      setView("dashboard");
+      // Update URL without triggering navigation
+      const url = new URL(window.location.href);
+      url.searchParams.set("view", "dashboard");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [plannerEmail]);
+
   const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
   const [prefs,setPrefs]=useState({});
   const [inviteOpen,setInviteOpen]=useState(false);
@@ -728,7 +761,11 @@ function MainApp(){
       const r=await fetch(`/api/prefs/get?${qs.toString()}`);
       if (r.ok){ const j=await r.json(); const p=j.prefs||j;
         setPrefs(p||{});
-        if (!validViews.has(urlView)) setView((p&&p.default_view) || "dashboard");
+        // Only set default view if URL doesn't have a view parameter
+        const currentUrlView = new URLSearchParams(window.location.search).get('view') || '';
+        if (!validViews.has(currentUrlView.toLowerCase())) {
+          setView((p&&p.default_view) || "dashboard");
+        }
       }
     }catch(e){/* noop */}
   })(); },[plannerEmail]);
@@ -972,11 +1009,15 @@ function MainApp(){
                     <button 
                       onClick={()=>{
                         setProfileOpen(false);
+                        // Clear all state
                         localStorage.removeItem("plannerEmail");
+                        // Clear URL params and redirect
                         window.location.href = "/";
                       }}
                       className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left"
+                      type="button"
                     >
+                      <LogOut className="inline h-4 w-4 mr-2" />
                       Logout
                     </button>
                   </div>
