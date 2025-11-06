@@ -3,7 +3,8 @@ import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
-  FileText, Layout, UserPlus, Zap, BarChart, ArrowRight, MessageCircle
+  FileText, Layout, UserPlus, Zap, BarChart, ArrowRight, MessageCircle,
+  CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -191,7 +192,7 @@ function MainApp(){
     return (
       <div className="min-h-screen bg-[#F5F3F0]">
         {/* Header */}
-        <header className="bg-[#1A1A1A] w-full">
+        <header className="bg-[#1A1A1A] border-b border-stone-800 w-full">
           <div className="max-w-7xl mx-auto px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -929,7 +930,7 @@ function MainApp(){
               <div className="relative" ref={createDropdownRef}>
             <button 
                   onClick={() => setCreateDropdownOpen(!createDropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#246650] text-white rounded-lg hover:bg-[#1e5141] transition-colors text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
             >
                   <Plus className="w-4 h-4" />
                   <span>Create</span>
@@ -1481,7 +1482,7 @@ function InboxDrawer({ plannerEmail, onClose }){
 
         <div className="mt-3 flex items-center justify-between">
           <div className="text-xs text-stone-500">Search your inbox items to add to a plan.</div>
-          <button onClick={onClose} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Done</button>
+          <button onClick={onClose} className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">Done</button>
         </div>
       </div>
     </div>
@@ -2490,7 +2491,7 @@ function TaskEditor({ planStartDate, onAdd }){
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <button onClick={generate} className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-3 sm:px-4 py-2 text-sm font-semibold text-white hover:bg-black">
+        <button onClick={generate} className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
           <Plus className="h-4 w-4" /> Add to Plan
         </button>
         <div className="text-[11px] sm:text-xs text-stone-500 flex items-center gap-2">
@@ -2811,7 +2812,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                 )}
               </span>
             </label>
-            <button onClick={pushNow} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
+            <button onClick={pushNow} className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
               Deliver to {selectedUserEmail || 'User'}
             </button>
           </div>
@@ -3060,7 +3061,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
                     <div className="flex justify-end gap-2">
                       <button 
                         onClick={()=>onReviewBundle?.(b)}
-                        className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         title="Edit bundle"
                       >
                         Review
@@ -3188,7 +3189,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
             <div className="text-red-600 mb-4">Error loading dashboard: {error}</div>
             <button
               onClick={loadMetrics}
-              className="px-4 py-2 bg-stone-900 text-white rounded-lg hover:bg-black"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
             >
               Retry
             </button>
@@ -3226,43 +3227,57 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
         {/* SECTION 2: METRIC CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Tasks Completed Today */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6">
+          <div className="bg-white rounded-xl border border-stone-200 p-6 relative">
+            <div className="absolute top-6 right-6 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            </div>
             <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed Today</p>
-            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedToday || 0}</p>
+            <p className="text-4xl font-bold text-stone-900 mb-2">{aggregate?.completedToday || 0}</p>
             {aggregate?.trends?.today !== undefined && (
-              <p className={`text-sm text-[#246650] ${aggregate.trends.today < 0 ? 'text-stone-500' : ''}`}>
-                {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
-              </p>
+              <div className="flex items-center gap-1 text-sm text-green-600">
+                <TrendingUp className="w-4 h-4" />
+                <span>{Math.abs(aggregate.trends.today)}% vs yesterday</span>
+              </div>
             )}
         </div>
 
           {/* Tasks Completed This Week */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6">
+          <div className="bg-white rounded-xl border border-stone-200 p-6 relative">
+            <div className="absolute top-6 right-6 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-blue-600" />
+            </div>
             <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed This Week</p>
-            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedThisWeek || 0}</p>
+            <p className="text-4xl font-bold text-stone-900 mb-2">{aggregate?.completedThisWeek || 0}</p>
             {aggregate?.trends?.week !== undefined && (
-              <p className={`text-sm text-[#246650] ${aggregate.trends.week < 0 ? 'text-stone-500' : ''}`}>
-                {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}% vs last week
-              </p>
+              <div className="flex items-center gap-1 text-sm text-green-600">
+                <TrendingUp className="w-4 h-4" />
+                <span>{Math.abs(aggregate.trends.week)}% vs last week</span>
+              </div>
             )}
           </div>
 
           {/* Average Completion Rate */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6">
+          <div className="bg-white rounded-xl border border-stone-200 p-6 relative">
+            <div className="absolute top-6 right-6 w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+              <BarChart className="w-5 h-5 text-purple-600" />
+            </div>
             <p className="text-sm font-medium text-stone-600 mb-3">Average Completion Rate</p>
-            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.averageCompletionRate || 0}%</p>
+            <p className="text-4xl font-bold text-stone-900 mb-2">{aggregate?.averageCompletionRate || 0}%</p>
             <p className="text-sm text-stone-600">Across all users</p>
           </div>
 
           {/* Most Active User */}
-          <div className="bg-white rounded-lg border border-stone-200 p-6">
+          <div className="bg-white rounded-xl border border-stone-200 p-6 relative">
+            <div className="absolute top-6 right-6 w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-orange-600" />
+            </div>
             <p className="text-sm font-medium text-stone-600 mb-3">Most Active User</p>
             {aggregate?.mostActiveUser ? (
               <>
                 <p className="text-lg font-semibold text-stone-900 truncate mb-2">
                   {aggregate.mostActiveUser.email?.split('@')[0] || aggregate.mostActiveUser.email}
                 </p>
-                <p className="text-sm text-[#246650]">{aggregate.mostActiveUser.completions || 0} completions today</p>
+                <p className="text-sm text-green-600">{aggregate.mostActiveUser.completions || 0} completions today</p>
               </>
             ) : (
               <p className="text-base text-stone-600">No activity yet</p>
@@ -3298,7 +3313,11 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
               </tr>
             </thead>
             <tbody>
-                  {sortedUsers.map((user) => (
+                  {sortedUsers.map((user, idx) => {
+                    // Cycle through avatar colors
+                    const avatarColors = ['bg-blue-500', 'bg-purple-500', 'bg-orange-500'];
+                    const avatarColor = avatarColors[idx % avatarColors.length];
+                    return (
                     <tr
                       key={user.userEmail}
                       onClick={() => onNavigate("plan", user.userEmail)}
@@ -3306,33 +3325,34 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                     >
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-700 font-semibold">
+                          <div className={`w-10 h-10 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold text-sm`}>
                             {user.userEmail?.charAt(0).toUpperCase() || '?'}
                           </div>
-                          <span className="text-base text-stone-900">{user.userEmail}</span>
+                          <span className="text-sm text-stone-900">{user.userEmail}</span>
                           {!user.isConnected && (
-                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-orange-100 text-orange-600">
                               Not Connected
                             </span>
                         )}
                       </div>
                     </td>
-                      <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.today || 0}</td>
-                      <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.thisWeek || 0}</td>
+                      <td className="text-center text-sm text-stone-900 py-4">{user.today || 0}</td>
+                      <td className="text-center text-sm text-stone-900 py-4">{user.thisWeek || 0}</td>
                       <td className="text-center py-4">
                         <div className="flex items-center justify-center gap-2">
-                          <div className="w-20 h-2 bg-stone-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#246650]" style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}></div>
+                          <div className="w-16 h-2 bg-stone-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}></div>
                           </div>
-                          <span className="text-lg font-semibold text-stone-900">{Math.round(user.completionRate || 0)}%</span>
+                          <span className="text-sm font-medium text-stone-900">{Math.round(user.completionRate || 0)}%</span>
                       </div>
                     </td>
-                      <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.activePlans || 0}</td>
+                      <td className="text-center text-sm text-stone-900 py-4">{user.activePlans || 0}</td>
                       <td className="text-right text-sm text-stone-600 py-4">
                         {user.lastActivity ? formatDistanceToNow(new Date(user.lastActivity), { addSuffix: true }) : 'Never'}
                   </td>
                 </tr>
-                  ))}
+                  );
+                  })}
             </tbody>
           </table>
             )}
@@ -3343,19 +3363,19 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
             <h2 className="!text-2xl !font-bold text-stone-900 mb-2">Live Activity</h2>
             <p className="text-base text-stone-600 mb-8">Recent completions</p>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               {activityFeed && activityFeed.length > 0 ? (
                 activityFeed.map((activity, index) => (
                   <div
                     key={index}
-                    className="flex gap-4 p-4 rounded-lg hover:bg-stone-50 transition-colors"
+                    className="flex gap-4 p-4 rounded-lg hover:bg-stone-50 transition-colors border border-stone-100"
                   >
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-[#246650]" />
-      </div>
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-base font-semibold text-stone-900 mb-1">{activity.taskTitle}</p>
-                      <p className="text-sm text-stone-600 mb-1">{activity.userEmail}</p>
+                      <p className="text-base font-semibold text-stone-900">{activity.taskTitle}</p>
+                      <p className="text-sm text-stone-600">{activity.userEmail}</p>
                       <p className="text-xs text-stone-500">{activity.bundleTitle} • {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}</p>
                     </div>
                   </div>
@@ -3363,7 +3383,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
               ) : (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
-                    <CheckCircle className="h-8 w-8 text-stone-400" />
+                    <CheckCircle2 className="h-8 w-8 text-stone-400" />
                   </div>
                   <div className="text-base font-medium text-stone-900 mb-2">No recent completions</div>
                   <div className="text-sm text-stone-500 text-center">Task completions will appear here</div>
@@ -3894,8 +3914,8 @@ function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToas
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <button onClick={maybeClose} className="rounded-xl border px-3 py-2 text-sm hover:bg-stone-50">Cancel</button>
-        <button onClick={doSave} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Save</button>
+        <button onClick={maybeClose} className="px-4 py-2 border border-stone-200 text-stone-700 rounded-lg font-medium hover:bg-stone-50 transition-colors">Cancel</button>
+        <button onClick={doSave} className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">Save</button>
       </div>
     </Modal>
   );
@@ -4006,8 +4026,8 @@ function SendInviteModal({ plannerEmail, onClose, onToast }){
           </label>
 
           <div className="flex gap-2">
-            <button disabled={!email || loading} onClick={doPreview} className="rounded-xl border px-3 py-2 text-sm hover:bg-stone-50 disabled:opacity-50">Preview</button>
-            <button disabled={!email || loading} onClick={doSend} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">Send Invite</button>
+            <button disabled={!email || loading} onClick={doPreview} className="px-4 py-2 border border-stone-200 text-stone-700 rounded-lg font-medium hover:bg-stone-50 transition-colors disabled:opacity-50">Preview</button>
+            <button disabled={!email || loading} onClick={doSend} className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50">Send Invite</button>
           </div>
 
           {!!previewUrl && (
@@ -4505,7 +4525,7 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
             <button
               onClick={saveUserNotes}
               disabled={isSaving || !notes.trim()}
-              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? "Saving..." : "Save Notes"}
             </button>
@@ -4750,7 +4770,7 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
           setEditingTemplate(null);
           setShowCreateModal(true);
         }}
-        className="fixed bottom-8 right-8 rounded-lg bg-stone-900 px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-stone-800 hover:shadow-xl transition-all z-10"
+        className="fixed bottom-8 right-8 rounded-lg bg-green-600 px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-green-700 hover:shadow-xl transition-all z-10"
         type="button"
       >
         + Create Template
@@ -5897,7 +5917,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
           {tasks.length > 0 && (
             <button
               onClick={optimizeDeadlines}
-              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
             >
               Optimize Deadlines
             </button>
@@ -5905,7 +5925,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
         </div>
         <button
           onClick={addTask}
-          className="px-4 py-2 bg-[#246650] text-white rounded-xl hover:bg-[#1e5141] font-medium"
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
         >
           Add Task with AI Assistance
         </button>
@@ -6035,7 +6055,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
             <button
               onClick={generateTasks}
               disabled={isLoading || !userPrompt.trim()}
-              className="flex-1 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               {isLoading ? "Generating..." : "Generate Tasks"}
             </button>
@@ -6559,7 +6579,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         <div className="text-stone-500">No user selected</div>
         <button
           onClick={() => onNavigate?.("users")}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
         >
           Back to Users
         </button>
