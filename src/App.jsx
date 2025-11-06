@@ -146,17 +146,42 @@ function MainApp(){
   // Login state for landing page
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
+  const [loginStatus, setLoginStatus] = useState(""); // "idle", "sending", "sent", "error"
+  const [loginError, setLoginError] = useState("");
 
-  // Handle login
-  const handleLogin = (e) => {
+  // Handle magic link request
+  const handleMagicLinkRequest = async (e) => {
     e.preventDefault();
-    if (loginEmail && loginEmail.includes("@")) {
-      try {
-        localStorage.setItem("plannerEmail", loginEmail);
-        window.location.href = `/?plannerEmail=${encodeURIComponent(loginEmail)}&view=dashboard`;
-      } catch (err) {
-        console.error("Failed to save planner email:", err);
+    setLoginError("");
+    
+    if (!loginEmail || !loginEmail.includes("@")) {
+      setLoginError("Please enter a valid email address");
+      return;
+    }
+
+    setLoginStatus("sending");
+
+    try {
+      const response = await fetch("/api/auth/send-magic-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: loginEmail }),
+      });
+
+      const data = await response.json();
+
+      if (data.ok) {
+        setLoginStatus("sent");
+      } else {
+        setLoginStatus("error");
+        setLoginError(data.error || "Failed to send magic link. Please try again.");
       }
+    } catch (err) {
+      console.error("Magic link request error:", err);
+      setLoginStatus("error");
+      setLoginError("Network error. Please try again.");
     }
   };
 
@@ -194,47 +219,91 @@ function MainApp(){
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-stone-900">Log in to Plan2Tasks</h2>
                 <button
-                  onClick={() => setLoginOpen(false)}
+                  onClick={() => {
+                    setLoginOpen(false);
+                    setLoginStatus("idle");
+                    setLoginError("");
+                    setLoginEmail("");
+                  }}
                   className="text-stone-400 hover:text-stone-600"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <form onSubmit={handleLogin}>
-                <div className="mb-6">
-                  <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-2">
-                    Planner Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="your.email@example.com"
-                    required
-                    className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#2d7a5f] focus:border-transparent text-base"
-                    autoFocus
-                  />
-                  <p className="mt-2 text-sm text-stone-600">
-                    Enter the email address you use to access Plan2Tasks.
+
+              {loginStatus === "sent" ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-stone-900 mb-2">Check your email</h3>
+                  <p className="text-stone-600 mb-4">
+                    We've sent a magic link to <strong>{loginEmail}</strong>
                   </p>
-                </div>
-                <div className="flex gap-3">
+                  <p className="text-sm text-stone-500 mb-6">
+                    Click the link in the email to sign in. The link will expire in 15 minutes.
+                  </p>
                   <button
-                    type="button"
-                    onClick={() => setLoginOpen(false)}
-                    className="flex-1 px-4 py-3 border border-stone-300 text-stone-700 rounded-lg font-medium hover:bg-stone-50 transition-colors"
+                    onClick={() => {
+                      setLoginStatus("idle");
+                      setLoginEmail("");
+                    }}
+                    className="text-sm text-[#2d7a5f] hover:underline"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-3 bg-[#2d7a5f] text-white rounded-lg font-medium hover:bg-[#236049] transition-colors"
-                  >
-                    Log in
+                    Use a different email
                   </button>
                 </div>
-              </form>
+              ) : (
+                <form onSubmit={handleMagicLinkRequest}>
+                  <div className="mb-6">
+                    <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-2">
+                      Planner Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={loginEmail}
+                      onChange={(e) => {
+                        setLoginEmail(e.target.value);
+                        setLoginError("");
+                      }}
+                      placeholder="your.email@example.com"
+                      required
+                      disabled={loginStatus === "sending"}
+                      className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#2d7a5f] focus:border-transparent text-base disabled:bg-stone-100 disabled:cursor-not-allowed"
+                      autoFocus
+                    />
+                    <p className="mt-2 text-sm text-stone-600">
+                      We'll send you a secure magic link to sign in.
+                    </p>
+                    {loginError && (
+                      <p className="mt-2 text-sm text-red-600">{loginError}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginOpen(false);
+                        setLoginStatus("idle");
+                        setLoginError("");
+                        setLoginEmail("");
+                      }}
+                      className="flex-1 px-4 py-3 border border-stone-300 text-stone-700 rounded-lg font-medium hover:bg-stone-50 transition-colors"
+                      disabled={loginStatus === "sending"}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loginStatus === "sending"}
+                      className="flex-1 px-4 py-3 bg-[#2d7a5f] text-white rounded-lg font-medium hover:bg-[#236049] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loginStatus === "sending" ? "Sending..." : "Send Magic Link"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
