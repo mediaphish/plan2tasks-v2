@@ -14,7 +14,6 @@ const SCREENSHOTS = [
     description:
       "Monitor task completions, user engagement, and activity across all your users in one unified view.",
     primaryCtaLabel: "Get Started",
-    secondaryCtaLabel: "Start Your Free Trial",
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
     icon: BarChart3,
@@ -27,7 +26,6 @@ const SCREENSHOTS = [
     description:
       "Create comprehensive plans through conversation with our AI assistant. Choose from multiple planning approaches.",
     primaryCtaLabel: "Start Your Free Trial",
-    secondaryCtaLabel: "Get Started",
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
     icon: MessageSquare,
@@ -103,29 +101,24 @@ export function HeroAnimation() {
               >
                 {SCREENSHOTS[activeIndex].primaryCtaLabel}
               </a>
-              <a
-                href="/signup"
-                className="px-6 py-3 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors"
-              >
-                {SCREENSHOTS[activeIndex].secondaryCtaLabel}
-              </a>
             </div>
           </div>
         </div>
 
         {/* Right Column */}
-        <div className="col-span-3 relative overflow-hidden">
+        <div className="col-span-3 relative overflow-hidden flex items-center justify-center">
           <div
-            className="absolute w-full"
+            className="absolute w-full h-full"
             style={{
               top: "50%",
-              transform: "translateY(-50%)",
+              transform: "translate(-50%, -50%)",
+              left: "50%",
             }}
           >
             {SCREENSHOTS.map((shot, index) => {
               const isActive = index === activeIndex;
-              const left = isActive ? "45%" : "65%";
-              const scale = isActive ? 1.1 : 0.9;
+              const left = isActive ? "52%" : "74%";
+              const scale = isActive ? 1.08 : 0.92;
               const rotate = isActive ? 5 : -5;
               const zIndex = isActive ? 20 : 10;
 
@@ -135,11 +128,11 @@ export function HeroAnimation() {
                   className="absolute"
                   style={{
                     left,
-                    transform: `translateX(-50%) scale(${scale}) rotateY(${rotate}deg)`,
+                    transform: `translate(-50%, -50%) scale(${scale}) rotateY(${rotate}deg)`,
                     transformOrigin: "center",
                     zIndex,
-                    maxWidth: "440px",
-                    maxHeight: "460px",
+                    maxWidth: isActive ? "560px" : "460px",
+                    maxHeight: isActive ? "460px" : "400px",
                     transition: `all 800ms ${TRANSITION_EASING}`,
                   }}
                 >
