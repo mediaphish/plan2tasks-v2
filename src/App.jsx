@@ -91,7 +91,7 @@ function TimeSelect({ value, onChange }){
     <select
       value={value || ""}
       onChange={(e)=>onChange(e.target.value)}
-      className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-10"
+      className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm h-10"
     >
       {TIME_OPTIONS.map(opt=>(
         <option key={opt.value || "none"} value={opt.value}>{opt.label}</option>
@@ -1347,7 +1347,7 @@ function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-base sm:text-lg font-semibold">Inbox — New Bundles</div>
+        <div className="text-base font-semibold">Inbox — New Bundles</div>
         <div className="flex items-center gap-3">
           <label htmlFor="inboxUserSelect" className="text-sm">Assign to:</label>
           <select
@@ -1381,10 +1381,10 @@ function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={5} className="py-4 text-center text-gray-500">Loading {status.toUpperCase()}…</td></tr>
+              <tr><td colSpan={5} className="py-4 text-center text-stone-500">Loading {status.toUpperCase()}…</td></tr>
             )}
             {!loading && rows.length===0 && (
-              <tr><td colSpan={5} className="py-4 text-center text-gray-500">No bundles.</td></tr>
+              <tr><td colSpan={5} className="py-4 text-center text-stone-500">No bundles.</td></tr>
             )}
             {!loading && rows.map(b=>(
               <tr key={b.id} className="border-t align-top">
@@ -1396,12 +1396,12 @@ function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
                   <div className="flex gap-1.5">
                     <a
                       href={`/review.html?inboxId=${encodeURIComponent(b.id)}`}
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
                     >Review</a>
                     <button
                       disabled={status!=="new"}
                       onClick={()=>assignBundle(b.id)}
-                      className={cn("rounded-lg border px-2 py-1 text-xs", status==="assigned" ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50")}
+                      className={cn("rounded-lg border px-2 py-1 text-xs", status==="assigned" ? "opacity-60 cursor-not-allowed" : "hover:bg-stone-50")}
                     >
                       Assign
                     </button>
@@ -1440,18 +1440,18 @@ function InboxDrawer({ plannerEmail, onClose }){
       <div className="mx-auto max-w-2xl rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
         <div className="mb-2 flex items-center justify-between">
           <div className="text-sm font-semibold">Inbox</div>
-          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-stone-100" aria-label="Close"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="mb-2 flex gap-2">
-          <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search..." className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
-          <button onClick={search} className="rounded-xl border px-2 py-1 text-sm hover:bg-gray-50"><Search className="h-4 w-4" /></button>
+          <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search..." className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm" />
+          <button onClick={search} className="rounded-xl border px-2 py-1 text-sm hover:bg-stone-50"><Search className="h-4 w-4" /></button>
         </div>
 
         <div className="max-h-[50vh] overflow-auto rounded-lg border">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr className="text-left text-gray-500">
+            <thead className="bg-stone-50">
+              <tr className="text-left text-stone-500">
                 <th className="py-1.5 px-2">Pick</th>
                 <th className="py-1.5 px-2">Title</th>
                 <th className="py-1.5 px-2">Notes</th>
@@ -1462,19 +1462,19 @@ function InboxDrawer({ plannerEmail, onClose }){
                 <tr key={r.id} className="border-t">
                   <td className="py-1.5 px-2"><input type="checkbox" checked={!!sel[r.id]} onChange={()=>setSel(s=>({ ...s, [r.id]: !s[r.id] }))} /></td>
                   <td className="py-1.5 px-2">{r.title}</td>
-                  <td className="py-1.5 px-2 text-gray-500">{r.notes||"—"}</td>
+                  <td className="py-1.5 px-2 text-stone-500">{r.notes||"—"}</td>
                 </tr>
               ))}
               {(!items||items.length===0) && (
-                <tr><td colSpan={3} className="py-4 text-center text-gray-500">{loading?"Searching…":"No results"}</td></tr>
+                <tr><td colSpan={3} className="py-4 text-center text-stone-500">{loading?"Searching…":"No results"}</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <div className="text-xs text-gray-500">Search your inbox items to add to a plan.</div>
-          <button onClick={onClose} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Done</button>
+          <div className="text-xs text-stone-500">Search your inbox items to add to a plan.</div>
+          <button onClick={onClose} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Done</button>
         </div>
       </div>
     </div>
@@ -1493,7 +1493,7 @@ function Modal({ title, onClose, children }){
       <div className="mx-auto max-w-lg rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
         <div className="mb-2 flex items-center justify-between">
           <div className="text-sm font-semibold">{title}</div>
-          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-stone-100" aria-label="Close"><X className="h-4 w-4" /></button>
         </div>
         {children}
       </div>
@@ -1534,7 +1534,7 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
         </div>
         <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(new Date(init.getFullYear(), init.getMonth(), 1))}>Jump to current</button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1">
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-stone-500 mb-1">
         {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><div key={d}>{d}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
@@ -1543,8 +1543,8 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
             onClick={()=>onPick?.(fmtYMDLocal(c))}
             className={cn(
               "rounded-lg border px-2 py-2 text-sm",
-              c.getMonth()===vm.getMonth() ? "bg-white hover:bg-gray-50" : "bg-gray-50 text-gray-400",
-              same(c, parseYMDLocal(selectedDate)||new Date(0)) ? "border-gray-800 ring-1 ring-gray-700" : "border-gray-300"
+              c.getMonth()===vm.getMonth() ? "bg-white hover:bg-stone-50" : "bg-stone-50 text-stone-400",
+              same(c, parseYMDLocal(selectedDate)||new Date(0)) ? "border-stone-800 ring-1 ring-gray-700" : "border-stone-300"
             )}
           >
             {c.getDate()}
@@ -1741,8 +1741,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("plan")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "plan"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
+                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
             }`}
           >
             Plan
@@ -1751,8 +1751,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("assigned")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
               activeTab === "assigned"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
+                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
             }`}
           >
             Assigned
@@ -1766,8 +1766,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("notes")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "notes"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
+                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
             }`}
           >
             User Notes
@@ -1776,8 +1776,8 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
               activeTab === "history"
-                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
-                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
+                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
             }`}
           >
 History
@@ -1786,7 +1786,7 @@ History
         
         {/* User Selection - Floating on Gray Background */}
         <div className="flex items-center gap-2 pb-2">
-          <label className="text-sm font-medium text-gray-700">User:</label>
+          <label className="text-sm font-medium text-stone-700">User:</label>
           <select
             value={selectedUserEmail || ""}
             onChange={(e)=>{
@@ -1794,7 +1794,7 @@ History
               setSelectedUserEmail(newUser);
               onUserChange?.(newUser);
             }}
-            className="rounded-xl border border-gray-300 px-3 py-2 text-sm min-w-[200px] bg-white"
+            className="rounded-xl border border-stone-300 px-3 py-2 text-sm min-w-[200px] bg-white"
             title={selectedUserEmail || "— Choose user —"}
           >
             <option value="">— Choose user —</option>
@@ -1819,13 +1819,13 @@ History
 
           {/* Templates View Interface - Show first when templates mode is selected */}
           {planningMode === "templates" && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+            <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">1</div>
-                  <div className="text-base sm:text-lg font-semibold">Choose a Template</div>
+                  <div className="text-base font-semibold">Choose a Template</div>
                 </div>
-                <div className="text-sm text-gray-600 ml-8">
+                <div className="text-sm text-stone-600 ml-8">
                   {selectedUserEmail ? (
                     <>Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></>
                   ) : (
@@ -1867,14 +1867,14 @@ History
 
           {/* Plan Setup Section - Only show for AI-Assisted and Manual modes, but NOT when template is applied */}
           {!isTemplateMode && planningMode !== "full-ai" && planningMode !== "templates" && (
-            <div data-section="plan-setup" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+            <div data-section="plan-setup" className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
-                  <div className="text-base sm:text-lg font-semibold">Plan Setup</div>
+                  <div className="text-base font-semibold">Plan Setup</div>
                 </div>
-                <div className="text-sm text-gray-600 ml-8">Configure your plan details and settings</div>
-                {!!msg && <div className="mt-2 ml-8 text-xs text-gray-600">{msg}</div>}
+                <div className="text-sm text-stone-600 ml-8">Configure your plan details and settings</div>
+                {!!msg && <div className="mt-2 ml-8 text-xs text-stone-600">{msg}</div>}
               </div>
 
               <div className="ml-8 space-y-4">
@@ -1882,21 +1882,21 @@ History
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <label className="block">
                     <div className="mb-1 text-sm font-medium">Plan Name</div>
-                    <input value={plan.title} onChange={(e)=>{setPlan({...plan, title:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
+                    <input value={plan.title} onChange={(e)=>{setPlan({...plan, title:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
                   </label>
                   <label className="block md:col-span-2">
                     <div className="mb-1 text-sm font-medium">Plan Description</div>
-                    <input value={plan.description} onChange={(e)=>{setPlan({...plan, description:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
+                    <input value={plan.description} onChange={(e)=>{setPlan({...plan, description:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
                   </label>
                   <label className="block">
                     <div className="mb-1 text-sm font-medium">Timezone</div>
-                    <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                    <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
                       {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
                     </select>
                   </label>
                   <div className="block">
                     <div className="mb-1 text-sm font-medium">Plan start date</div>
-                    <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap w-full justify-start">
+                    <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm hover:bg-stone-50 whitespace-nowrap w-full justify-start">
                       <Calendar className="h-4 w-4" /> {planDateText}
                     </button>
                   </div>
@@ -1908,13 +1908,13 @@ History
 
           {/* Full AI Planning Interface */}
           {planningMode === "full-ai" && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+            <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">💬</div>
-                  <div className="text-base sm:text-lg font-semibold">AI Planning Assistant</div>
+                  <div className="text-base font-semibold">AI Planning Assistant</div>
                 </div>
-                <div className="text-sm text-gray-600 ml-8">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</div>
+                <div className="text-sm text-stone-600 ml-8">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</div>
               </div>
 
               <div className="ml-8">
@@ -1945,13 +1945,13 @@ History
       {/* Tasks Section - Different behavior based on planning mode */}
       {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
       {!isTemplateMode && planningMode === "ai-assisted" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
-              <div className="text-base sm:text-lg font-semibold">Add Tasks with AI Assistance</div>
+              <div className="text-base font-semibold">Add Tasks with AI Assistance</div>
             </div>
-            <div className="text-sm text-gray-600 ml-8">Create tasks manually with AI providing smart suggestions and recommendations.</div>
+            <div className="text-sm text-stone-600 ml-8">Create tasks manually with AI providing smart suggestions and recommendations.</div>
           </div>
 
           <div className="ml-8">
@@ -1973,13 +1973,13 @@ History
 
       {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
       {!isTemplateMode && planningMode === "manual" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
-              <div className="text-base sm:text-lg font-semibold">Add Tasks</div>
+              <div className="text-base font-semibold">Add Tasks</div>
             </div>
-            <div className="text-sm text-gray-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
+            <div className="text-sm text-stone-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
           </div>
 
           <div className="ml-8">
@@ -1996,17 +1996,17 @@ History
 
       {/* Deliver Section - Enhanced for template mode */}
       {tasks.length>0 && (
-        <div data-section="delivery" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+        <div data-section="delivery" className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">
                 {isTemplateMode ? "✓" : "3"}
               </div>
-              <div className="text-base sm:text-lg font-semibold">
+              <div className="text-base font-semibold">
                 {isTemplateMode ? "Review & Deliver Template" : "Deliver to User"}
               </div>
             </div>
-            <div className="text-sm text-gray-600 ml-8">
+            <div className="text-sm text-stone-600 ml-8">
               {isTemplateMode 
                 ? "Review the template plan below. Edit plan details or tasks if needed, then deliver to the selected user's Google Tasks."
                 : "Review your plan and deliver tasks to the selected user's Google Tasks."
@@ -2015,27 +2015,27 @@ History
           </div>
 
           {/* Plan Details - Editable */}
-          <div className="ml-8 mb-6 p-4 bg-gray-50 rounded-xl">
-            <div className="text-sm font-medium text-gray-700 mb-3">Plan Details</div>
+          <div className="ml-8 mb-6 p-4 bg-stone-50 rounded-xl">
+            <div className="text-sm font-medium text-stone-700 mb-3">Plan Details</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div>
                 <label className="block">
-                  <span className="font-medium text-gray-600">Plan Name:</span>
+                  <span className="font-medium text-stone-600">Plan Name:</span>
                   <input
                     value={plan.title}
                     onChange={(e) => setPlan({...plan, title: e.target.value})}
-                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full mt-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
                     placeholder="Enter plan name"
                   />
                 </label>
               </div>
               <div>
                 <label className="block">
-                  <span className="font-medium text-gray-600">Start Date:</span>
+                  <span className="font-medium text-stone-600">Start Date:</span>
                   <button
                     type="button"
                     onClick={() => setPlanDateOpen(true)}
-                    className="w-full mt-1 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 justify-start"
+                    className="w-full mt-1 inline-flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm hover:bg-stone-50 justify-start"
                   >
                     <Calendar className="h-4 w-4" /> {planDateText}
                   </button>
@@ -2043,11 +2043,11 @@ History
               </div>
               <div className="md:col-span-2">
                 <label className="block">
-                  <span className="font-medium text-gray-600">Description:</span>
+                  <span className="font-medium text-stone-600">Description:</span>
                   <textarea
                     value={plan.description}
                     onChange={(e) => setPlan({...plan, description: e.target.value})}
-                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full mt-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
                     placeholder="Enter plan description"
                     rows="2"
                   />
@@ -2055,11 +2055,11 @@ History
               </div>
               <div>
                 <label className="block">
-                  <span className="font-medium text-gray-600">Timezone:</span>
+                  <span className="font-medium text-stone-600">Timezone:</span>
                   <select
                     value={plan.timezone}
                     onChange={(e) => setPlan({...plan, timezone: e.target.value})}
-                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full mt-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
                   >
                     {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
                   </select>
@@ -2090,13 +2090,13 @@ History
 
       {/* Assigned Tab Content */}
       {activeTab === "assigned" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
-            <div className="text-base sm:text-lg font-semibold">Assigned Bundles</div>
+            <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-sm font-semibold">📦</div>
+            <div className="text-base font-semibold">Assigned Bundles</div>
           </div>
-          <div className="text-sm text-gray-600 ml-8">Review and work with bundles assigned to this user.</div>
+          <div className="text-sm text-stone-600 ml-8">Review and work with bundles assigned to this user.</div>
         </div>
 
         <div className="ml-8">
@@ -2156,13 +2156,13 @@ History
 
       {/* User Notes Tab Content */}
       {activeTab === "notes" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
-              <div className="text-base sm:text-lg font-semibold">User Notes</div>
+              <div className="text-base font-semibold">User Notes</div>
             </div>
-            <div className="text-sm text-gray-600 ml-8">
+            <div className="text-sm text-stone-600 ml-8">
               {selectedUserEmail ? (
                 <>AI context and rules for <strong>{selectedUserEmail}</strong></>
               ) : (
@@ -2179,7 +2179,7 @@ History
                 onToast={onToast}
               />
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-stone-500">
                 <div className="text-4xl mb-2">👤</div>
                 <div className="font-semibold mb-1">No User Selected</div>
                 <div className="text-sm">Choose a user from the dropdown above to view and edit their notes</div>
@@ -2191,13 +2191,13 @@ History
 
       {/* History Tab Content */}
       {activeTab === "history" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
-              <div className="text-base sm:text-lg font-semibold">Plan History</div>
+              <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-sm font-semibold">📋</div>
+              <div className="text-base font-semibold">Plan History</div>
             </div>
-            <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
+            <div className="text-sm text-stone-600 ml-8">View and restore previously delivered plans for this user.</div>
           </div>
 
           <div className="ml-8">
@@ -2374,23 +2374,23 @@ function TaskEditor({ planStartDate, onAdd }){
   const taskDateText = format(parseYMDLocal(taskDate||planStartDate)||new Date(),"EEE MMM d, yyyy");
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-2 sm:p-3">
+    <div className="rounded-xl border border-stone-200 bg-stone-50 p-2 sm:p-3">
       <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2 sm:gap-3">
         <label className="block">
           <div className="mb-1 text-sm font-medium">Task title</div>
-          <input value={title} onChange={(e)=>setTitle(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder='e.g., "Workout" or "Read 20 pages"' />
+          <input value={title} onChange={(e)=>setTitle(e.target.value)} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm" placeholder='e.g., "Workout" or "Read 20 pages"' />
         </label>
 
         <label className="block">
           <div className="mb-1 text-sm font-medium">Notes (optional)</div>
-          <input value={notes} onChange={(e)=>setNotes(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <input value={notes} onChange={(e)=>setNotes(e.target.value)} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm" />
         </label>
       </div>
 
       <div className="mt-2 grid grid-cols-1 sm:grid-cols-[repeat(3,minmax(0,1fr))] gap-2 sm:gap-3">
         <div className="block min-w-0">
           <div className="mb-1 text-sm font-medium">Task date</div>
-          <button type="button" onClick={()=>setTaskDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap overflow-hidden h-10">
+          <button type="button" onClick={()=>setTaskDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm hover:bg-stone-50 whitespace-nowrap overflow-hidden h-10">
             <Calendar className="h-4 w-4 shrink-0" /> <span className="truncate">{taskDateText}</span>
           </button>
         </div>
@@ -2402,7 +2402,7 @@ function TaskEditor({ planStartDate, onAdd }){
 
         <label className="block min-w-0">
           <div className="mb-1 text-sm font-medium">Duration (mins)</div>
-          <input type="number" min={15} step={15} value={dur} onChange={(e)=>setDur(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-10" />
+          <input type="number" min={15} step={15} value={dur} onChange={(e)=>setDur(e.target.value)} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm h-10" />
         </label>
       </div>
 
@@ -2417,10 +2417,10 @@ function TaskEditor({ planStartDate, onAdd }){
       )}
 
       {/* Recurrence */}
-      <div className="mt-2 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+      <div className="mt-2 rounded-xl border border-stone-200 bg-white p-3 sm:p-4">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
           <div className="text-sm font-medium">Repeat</div>
-          <select value={repeat} onChange={(e)=>setRepeat(e.target.value)} className="rounded-xl border border-gray-300 px-3 py-2 text-sm">
+          <select value={repeat} onChange={(e)=>setRepeat(e.target.value)} className="rounded-xl border border-stone-300 px-3 py-2 text-sm">
             <option value="none">Doesn't repeat</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -2436,7 +2436,7 @@ function TaskEditor({ planStartDate, onAdd }){
             {repeat === "daily" && (
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <span className="text-sm">Every</span>
-                <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-stone-300 px-2 py-1 text-sm" />
                 <span className="text-sm">day(s)</span>
               </div>
             )}
@@ -2446,7 +2446,7 @@ function TaskEditor({ planStartDate, onAdd }){
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="text-sm">Every</span>
-                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-stone-300 px-2 py-1 text-sm" />
                   <span className="text-sm">week(s) on:</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -2462,12 +2462,12 @@ function TaskEditor({ planStartDate, onAdd }){
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="text-sm">Every</span>
-                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-stone-300 px-2 py-1 text-sm" />
                   <span className="text-sm">month(s)</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="text-sm">Pattern:</span>
-                  <select value={monthlyMode} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded-xl border border-gray-300 px-2 py-1 text-sm">
+                  <select value={monthlyMode} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded-xl border border-stone-300 px-2 py-1 text-sm">
                     <option value="dom">Same day of month</option>
                     <option value="dow">Same weekday pattern</option>
                   </select>
@@ -2480,7 +2480,7 @@ function TaskEditor({ planStartDate, onAdd }){
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="text-sm">Every</span>
-                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-stone-300 px-2 py-1 text-sm" />
                   <span className="text-sm">week(s) on:</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -2492,12 +2492,12 @@ function TaskEditor({ planStartDate, onAdd }){
             )}
 
             {/* End conditions - show for all repeat types except none */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 border-t border-gray-100">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 border-t border-stone-100">
               <div className="text-sm font-medium">Ends</div>
               <select
                 value={endMode}
                 onChange={(e)=>setEndMode(e.target.value)}
-                className="rounded-xl border border-gray-300 px-2 py-1 text-sm"
+                className="rounded-xl border border-stone-300 px-2 py-1 text-sm"
               >
                 <option value="horizon">No end date</option>
                 <option value="until">On date</option>
@@ -2511,7 +2511,7 @@ function TaskEditor({ planStartDate, onAdd }){
                     min={1}
                     value={count}
                     onChange={(e)=>setCount(e.target.value)}
-                    className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+                    className="w-16 rounded-xl border border-stone-300 px-2 py-1 text-sm"
                   />
                   <span className="text-sm">occurrence(s)</span>
                 </>
@@ -2532,7 +2532,7 @@ function TaskEditor({ planStartDate, onAdd }){
                     min={1}
                     value={horizonMonths}
                     onChange={(e)=>setHorizonMonths(e.target.value)}
-                    className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+                    className="w-16 rounded-xl border border-stone-300 px-2 py-1 text-sm"
                   />
                 </>
               )}
@@ -2542,10 +2542,10 @@ function TaskEditor({ planStartDate, onAdd }){
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <button onClick={generate} className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-3 sm:px-4 py-2 text-sm font-semibold text-white hover:bg-black">
+        <button onClick={generate} className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-3 sm:px-4 py-2 text-sm font-semibold text-white hover:bg-black">
           <Plus className="h-4 w-4" /> Add to Plan
         </button>
-        <div className="text-[11px] sm:text-xs text-gray-500 flex items-center gap-2">
+        <div className="text-[11px] sm:text-xs text-stone-500 flex items-center gap-2">
           <Info className="h-3.5 w-3.5" /> Times are optional; recurrence supported above.
         </div>
       </div>
@@ -2558,7 +2558,7 @@ function UntilDatePicker({ value, setValue, planStartDate }){
   const label = value ? format(parseYMDLocal(value)||new Date(),"MMM d, yyyy") : "Pick date";
   return (
     <>
-      <button type="button" onClick={()=>setOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50">
+      <button type="button" onClick={()=>setOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50">
         <Calendar className="h-4 w-4" />
         {label}
       </button>
@@ -2575,7 +2575,7 @@ function UntilDatePicker({ value, setValue, planStartDate }){
   );
 }
 
-function pill(on){ return cn("rounded-full border px-2 py-1 text-xs sm:text-sm", on?"border-gray-800 bg-gray-900 text-white":"border-gray-300 bg-white hover:bg-gray-50"); }
+function pill(on){ return cn("rounded-full border px-2 py-1 text-xs sm:text-sm", on?"border-stone-800 bg-stone-900 text-white":"border-stone-300 bg-white hover:bg-stone-50"); }
 
 /* ───────── Preview / Deliver ───────── */
 function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTasks, replaceMode, setReplaceMode, msg, setMsg, onToast, onPushed }){
@@ -2710,7 +2710,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-gray-200 p-3 sm:p-4">
+    <div className="mt-4 rounded-xl border border-stone-200 p-3 sm:p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="text-sm font-semibold">Preview & Deliver</div>
         <label className="inline-flex items-center gap-2 text-xs whitespace-nowrap">
@@ -2719,16 +2719,16 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
         </label>
       </div>
 
-      {!!msg && <div className="mb-2 text-xs sm:text-sm text-gray-500">{msg}</div>}
+      {!!msg && <div className="mb-2 text-xs sm:text-sm text-stone-500">{msg}</div>}
 
       {total===0 ? (
-        <div className="text-sm text-gray-500">No tasks yet.</div>
+        <div className="text-sm text-stone-500">No tasks yet.</div>
       ) : (
         <>
           <div className="mb-3 rounded-lg border overflow-x-auto">
             <table className="w-full min-w-[640px] text-xs sm:text-sm">
-              <thead className="bg-gray-50">
-                <tr className="text-left text-gray-500">
+              <thead className="bg-stone-50">
+                <tr className="text-left text-stone-500">
                   <th className="py-1.5 px-2">Title</th>
                   <th className="py-1.5 px-2">Offset</th>
                   <th className="py-1.5 px-2">Time</th>
@@ -2744,14 +2744,14 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                     <td className="py-1.5 px-2">{String(t.dayOffset||0)}</td>
                     <td className="py-1.5 px-2">{t.time?to12hDisplay(t.time):"—"}</td>
                     <td className="py-1.5 px-2">{t.durationMins||"—"}</td>
-                    <td className="py-1.5 px-2 text-gray-500 truncate max-w-[200px]">{t.notes||"—"}</td>
+                    <td className="py-1.5 px-2 text-stone-500 truncate max-w-[200px]">{t.notes||"—"}</td>
                     <td className="py-1.5 px-2">
                       <div className="flex flex-nowrap items-center justify-end gap-1.5 whitespace-nowrap">
-                        <button onClick={()=>editTask(t)} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-gray-50" title="Edit">
+                        <button onClick={()=>editTask(t)} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-stone-50" title="Edit">
                           <Edit className="h-3.5 w-3.5" />
                           <span className="sr-only">Edit</span>
                         </button>
-                        <button onClick={()=>setTasks(prev=>prev.filter(x=>x.id!==t.id))} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-gray-50" title="Remove">
+                        <button onClick={()=>setTasks(prev=>prev.filter(x=>x.id!==t.id))} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-stone-50" title="Remove">
                           <Trash2 className="h-3.5 w-3.5" />
                           <span className="sr-only">Remove</span>
                         </button>
@@ -2780,7 +2780,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                   <input
                     value={editTaskData.title}
                     onChange={(e) => setEditTaskData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
                     placeholder="Enter task title"
                   />
                 </div>
@@ -2792,7 +2792,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                     min="0"
                     value={editTaskData.dayOffset}
                     onChange={(e) => setEditTaskData(prev => ({ ...prev, dayOffset: parseInt(e.target.value) || 0 }))}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
                     placeholder="0"
                   />
                 </div>
@@ -2813,7 +2813,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                     step="15"
                     value={editTaskData.durationMins}
                     onChange={(e) => setEditTaskData(prev => ({ ...prev, durationMins: parseInt(e.target.value) || 60 }))}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
                     placeholder="60"
                   />
                 </div>
@@ -2824,7 +2824,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                 <textarea
                   value={editTaskData.notes}
                   onChange={(e) => setEditTaskData(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-20 resize-none"
+                  className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm h-20 resize-none"
                   placeholder="Add any notes for this task"
                 />
               </div>
@@ -2838,7 +2838,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                 </button>
                 <button
                   onClick={cancelEdit}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-stone-600 border border-stone-300 rounded-xl hover:bg-stone-50"
                 >
                   Cancel
                 </button>
@@ -2852,18 +2852,18 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
                 type="checkbox" 
                 checked={saveAsTemplate} 
                 onChange={(e)=>setSaveAsTemplate(e.target.checked)} 
-                className="rounded border-gray-300"
+                className="rounded border-stone-300"
               />
               <span>
                 Save as Template
                 {saveAsTemplate && (
-                  <span className="ml-1 text-xs text-gray-500">
+                  <span className="ml-1 text-xs text-stone-500">
                     (will save "{plan.title}" to your template library)
                   </span>
                 )}
               </span>
             </label>
-            <button onClick={pushNow} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
+            <button onClick={pushNow} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
               Deliver to {selectedUserEmail || 'User'}
             </button>
           </div>
@@ -2912,10 +2912,10 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   const totalItems = total;
 
   return (
-    <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+    <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-3 sm:p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <div className="text-sm font-semibold">History</div>
-        <div className="text-xs text-gray-500">{filteredItems.length} of {totalItems} item(s)</div>
+        <div className="text-xs text-stone-500">{filteredItems.length} of {totalItems} item(s)</div>
       </div>
 
       {/* Search and Controls */}
@@ -2927,7 +2927,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
             placeholder="Search history..."
             value={searchQuery}
             onChange={(e)=>setSearchQuery(e.target.value)}
-            className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            className="flex-1 rounded-xl border border-stone-300 px-3 py-2 text-sm"
           />
         </div>
 
@@ -2935,11 +2935,11 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         {/* Page Size Selector */}
         <div className="flex items-center justify-end gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Show:</span>
+            <span className="text-xs text-stone-500">Show:</span>
             <select 
               value={pageSize} 
               onChange={(e)=>setPageSize(Number(e.target.value))}
-              className="rounded-lg border border-gray-300 px-2 py-1 text-xs"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-xs"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -2970,7 +2970,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
                   </div>
                 </td>
                 <td className="py-1.5 px-2">
-                  <span className="text-gray-600 text-xs">History</span>
+                  <span className="text-stone-600 text-xs">History</span>
                 </td>
                 <td className="py-1.5 px-2">{item.startDate}</td>
                 <td className="py-1.5 px-2">{item.itemsCount||"—"}</td>
@@ -2982,7 +2982,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
                         tasks:item.tasks, 
                         mode:item.mode 
                       })} 
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
                     >
                       Restore
                     </button>
@@ -2991,7 +2991,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
               </tr>
             ))}
             {filteredItems.length === 0 && (
-              <tr><td colSpan={5} className="py-6 text-center text-gray-500">
+              <tr><td colSpan={5} className="py-6 text-center text-stone-500">
                 No history yet
               </td></tr>
             )}
@@ -3062,14 +3062,14 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
 
   if (!userEmail) {
     return (
-      <div className="text-sm text-gray-500 py-4 text-center">
+      <div className="text-sm text-stone-500 py-4 text-center">
         Select a user to view their assigned bundles
       </div>
     );
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+    <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-3 sm:p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="text-sm font-semibold">Assigned Bundles</div>
@@ -3079,7 +3079,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
             </span>
           )}
         </div>
-        <div className="text-xs text-gray-500">{bundles.length} bundle(s)</div>
+        <div className="text-xs text-stone-500">{bundles.length} bundle(s)</div>
       </div>
 
       <div className="rounded-lg border overflow-x-auto">
@@ -3095,9 +3095,9 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="py-6 text-center text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={5} className="py-6 text-center text-stone-500">Loading...</td></tr>
             ) : bundles.length === 0 ? (
-              <tr><td colSpan={5} className="py-6 text-center text-gray-500">No assigned bundles</td></tr>
+              <tr><td colSpan={5} className="py-6 text-center text-stone-500">No assigned bundles</td></tr>
             ) : bundles.map(b=>{
               const isNew = !b.reviewed_at;
               return (
@@ -3119,14 +3119,14 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
                     <div className="flex justify-end gap-1">
                     <button 
                       onClick={()=>onReviewBundle?.(b)}
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
                       title="Edit bundle"
                     >
                       ✏️
                     </button>
        <button 
          onClick={()=>deleteBundle(b.id)}
-         className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
+         className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50 text-stone-600"
          title="Delete bundle"
        >
          🗑️
@@ -3140,7 +3140,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
         </table>
       </div>
 
-      <div className="mt-2 text-xs text-gray-500">
+      <div className="mt-2 text-xs text-stone-500">
         Click "Review" to edit tasks before pushing to Google Tasks, or "Archive" to remove from assigned list.
       </div>
     </div>
@@ -3236,7 +3236,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
       <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
-            <div className="text-gray-500">Loading dashboard...</div>
+            <div className="text-stone-500">Loading dashboard...</div>
           </div>
         </div>
       </div>
@@ -3251,7 +3251,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
             <div className="text-red-600 mb-4">Error loading dashboard: {error}</div>
             <button
               onClick={loadMetrics}
-              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black"
+              className="px-4 py-2 bg-stone-900 text-white rounded-lg hover:bg-black"
             >
               Retry
             </button>
@@ -3265,7 +3265,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
     return (
       <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-gray-500">No dashboard data available</div>
+          <div className="text-stone-500">No dashboard data available</div>
         </div>
       </div>
     );
@@ -3906,7 +3906,7 @@ function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToas
 
   return (
     <Modal title={`Categories`} onClose={maybeClose}>
-      <div className="text-xs text-gray-500 mb-2">User: <b className="text-gray-700">{userEmail}</b></div>
+      <div className="text-xs text-stone-500 mb-2">User: <b className="text-stone-700">{userEmail}</b></div>
 
       <div className="mb-2 flex items-center gap-2">
         <div className="relative w-full">
@@ -3914,25 +3914,25 @@ function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToas
             value={search}
             onChange={(e)=>setSearch(e.target.value)}
             placeholder="Search categories (partial match)…"
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm pr-8"
+            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm pr-8"
             onKeyDown={(e)=>{ if (e.key==="Enter" && canQuickAdd) { e.preventDefault(); addFromQuery(); } }}
           />
           {search && (
             <button
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-stone-500 hover:bg-stone-100"
               onClick={()=>setSearch("")}
               aria-label="Clear search"
             >×</button>
           )}
         </div>
         {canQuickAdd && (
-          <button onClick={addFromQuery} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap">Add “{search.trim()}”</button>
+          <button onClick={addFromQuery} className="rounded-xl border px-3 py-2 text-sm hover:bg-stone-50 whitespace-nowrap">Add “{search.trim()}”</button>
         )}
       </div>
 
       <div className="mb-3 max-h-[40vh] overflow-auto rounded-xl border p-2">
         {filtered.length===0 ? (
-          <div className="p-2 text-sm text-gray-500">No categories yet.</div>
+          <div className="p-2 text-sm text-stone-500">No categories yet.</div>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {filtered.map(c=>{
@@ -3945,7 +3945,7 @@ function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToas
                   onClick={()=>toggle(c)}
                   className={cn(
                     "max-w-[180px] truncate rounded-full border px-2.5 py-1 text-xs",
-                    checked ? "border-gray-800 bg-gray-900 text-white" : "border-gray-300 bg-white hover:bg-gray-50"
+                    checked ? "border-stone-800 bg-stone-900 text-white" : "border-stone-300 bg-white hover:bg-stone-50"
                   )}
                 >
                   {c}
@@ -3957,8 +3957,8 @@ function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToas
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <button onClick={maybeClose} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50">Cancel</button>
-        <button onClick={doSave} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Save</button>
+        <button onClick={maybeClose} className="rounded-xl border px-3 py-2 text-sm hover:bg-stone-50">Cancel</button>
+        <button onClick={doSave} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Save</button>
       </div>
     </Modal>
   );
@@ -4053,7 +4053,7 @@ function SendInviteModal({ plannerEmail, onClose, onToast }){
       <div className="mx-auto max-w-lg rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
         <div className="mb-2 flex items-center justify-between">
           <div className="text-sm font-semibold">Send Invite</div>
-          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-stone-100" aria-label="Close"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="space-y-3">
@@ -4064,19 +4064,19 @@ function SendInviteModal({ plannerEmail, onClose, onToast }){
               value={email}
               onChange={(e)=>setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
             />
           </label>
 
           <div className="flex gap-2">
-            <button disabled={!email || loading} onClick={doPreview} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50">Preview</button>
-            <button disabled={!email || loading} onClick={doSend} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">Send Invite</button>
+            <button disabled={!email || loading} onClick={doPreview} className="rounded-xl border px-3 py-2 text-sm hover:bg-stone-50 disabled:opacity-50">Preview</button>
+            <button disabled={!email || loading} onClick={doSend} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">Send Invite</button>
           </div>
 
           {!!previewUrl && (
-            <div className="rounded-lg border bg-gray-50 p-2 text-xs break-all">
-              <div className="mb-1 font-semibold text-gray-700">Preview URL</div>
-              <div className="text-gray-700">{previewUrl}</div>
+            <div className="rounded-lg border bg-stone-50 p-2 text-xs break-all">
+              <div className="mb-1 font-semibold text-stone-700">Preview URL</div>
+              <div className="text-stone-700">{previewUrl}</div>
             </div>
           )}
 
@@ -4087,7 +4087,7 @@ function SendInviteModal({ plannerEmail, onClose, onToast }){
             </div>
           )}
 
-          <div className="text-[11px] text-gray-500">
+          <div className="text-[11px] text-stone-500">
             Invite CTA opens Google OAuth and returns a “Connected” confirmation (no route back to app for users).
           </div>
         </div>
@@ -4219,13 +4219,13 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
 
   return (
     <>
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-3 text-sm font-semibold">Settings</div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="block">
           <div className="mb-1 text-sm font-medium">Default view</div>
-          <select value={local.default_view} onChange={(e)=>setLocal({...local, default_view:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+          <select value={local.default_view} onChange={(e)=>setLocal({...local, default_view:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
             <option value="users">Users</option>
             <option value="plan">Plan</option>
           </select>
@@ -4233,14 +4233,14 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
 
         <label className="block">
           <div className="mb-1 text-sm font-medium">Default timezone</div>
-          <select value={local.default_timezone} onChange={(e)=>setLocal({...local, default_timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+          <select value={local.default_timezone} onChange={(e)=>setLocal({...local, default_timezone:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
             {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
           </select>
         </label>
 
         <label className="block">
           <div className="mb-1 text-sm font-medium">Default push mode</div>
-          <select value={local.default_push_mode} onChange={(e)=>setLocal({...local, default_push_mode:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+          <select value={local.default_push_mode} onChange={(e)=>setLocal({...local, default_push_mode:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
             <option value="append">Append</option>
             <option value="replace">Replace</option>
           </select>
@@ -4248,7 +4248,7 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
 
         <label className="block">
           <div className="mb-1 text-sm font-medium">Default planning mode</div>
-          <select value={local.default_planning_mode} onChange={(e)=>setLocal({...local, default_planning_mode:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+          <select value={local.default_planning_mode} onChange={(e)=>setLocal({...local, default_planning_mode:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
             <option value="full-ai">Full AI Planning</option>
             <option value="ai-assisted">AI-Assisted Manual</option>
             <option value="manual">Pure Manual</option>
@@ -4268,22 +4268,22 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
       </div>
 
       <div className="mt-3">
-        <button onClick={save} disabled={saving} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
           {saving ? "Saving…" : "Save"}
         </button>
       </div>
     </div>
 
     {/* Billing Section */}
-    <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+    <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
       <div className="mb-3 text-sm font-semibold">Billing & Subscription</div>
       
       {billingLoading ? (
-        <div className="text-sm text-gray-500">Loading billing status...</div>
+        <div className="text-sm text-stone-500">Loading billing status...</div>
       ) : billingStatus ? (
         <div className="space-y-4">
           {/* Current Plan */}
-          <div className="rounded-lg border border-gray-200 p-3">
+          <div className="rounded-lg border border-stone-200 p-3">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium">
@@ -4292,11 +4292,11 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                    billingStatus.subscription.plan_tier === 'professional' ? 'Professional Plan' :
                    billingStatus.subscription.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-stone-500">
                   {billingStatus.userCount} / {billingStatus.userLimit} users
                 </div>
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-stone-500">
                 Status: {billingStatus.subscription.status}
               </div>
             </div>
@@ -4307,9 +4307,9 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
             <div className="space-y-3">
               <div className="text-sm font-medium">Upgrade your plan:</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="rounded-lg border border-gray-200 p-3">
+                <div className="rounded-lg border border-stone-200 p-3">
                   <div className="text-sm font-medium">Starter</div>
-                  <div className="text-xs text-gray-500">Up to 10 users</div>
+                  <div className="text-xs text-stone-500">Up to 10 users</div>
                   <div className="text-sm font-semibold">$9.99/month</div>
                   <button 
                     onClick={() => createSubscription('starter-monthly')}
@@ -4319,9 +4319,9 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                     Subscribe
                   </button>
                 </div>
-                <div className="rounded-lg border border-gray-200 p-3">
+                <div className="rounded-lg border border-stone-200 p-3">
                   <div className="text-sm font-medium">Professional</div>
-                  <div className="text-xs text-gray-500">Up to 50 users</div>
+                  <div className="text-xs text-stone-500">Up to 50 users</div>
                   <div className="text-sm font-semibold">$24.99/month</div>
                   <button 
                     onClick={() => createSubscription('professional-monthly')}
@@ -4331,9 +4331,9 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
                     Subscribe
                   </button>
                 </div>
-                <div className="rounded-lg border border-gray-200 p-3">
+                <div className="rounded-lg border border-stone-200 p-3">
                   <div className="text-sm font-medium">Business</div>
-                  <div className="text-xs text-gray-500">Up to 100 users</div>
+                  <div className="text-xs text-stone-500">Up to 100 users</div>
                   <div className="text-sm font-semibold">$49.99/month</div>
                   <button 
                     onClick={() => createSubscription('business-monthly')}
@@ -4443,8 +4443,8 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
   if (isLoading) {
     return (
       <div className="text-center py-4">
-        <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
-        <div className="text-sm text-gray-600">Loading user notes...</div>
+        <div className="animate-spin w-6 h-6 border-2 border-stone-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
+        <div className="text-sm text-stone-600">Loading user notes...</div>
       </div>
     );
   }
@@ -4452,34 +4452,34 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
   return (
     <>
       {lastUpdated && (
-        <div className="text-xs text-gray-500 mb-4">
+        <div className="text-xs text-stone-500 mb-4">
           Last updated: {new Date(lastUpdated).toLocaleString()}
         </div>
       )}
         <div className="mb-3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-stone-700 mb-1">
             Notes & Context
           </label>
-          <div className="text-xs text-gray-500 mb-2">
+          <div className="text-xs text-stone-500 mb-2">
             These notes are automatically considered by AI in all planning sessions for this user.
           </div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-32"
+            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm resize-none h-32"
             placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-stone-500">
             {notes.length} characters
           </div>
           <div className="flex gap-2">
             <button
               onClick={loadUserNotes}
               disabled={isSaving}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              className="px-3 py-1.5 text-sm font-medium text-stone-700 border border-stone-300 rounded-lg hover:bg-stone-50 disabled:opacity-50"
             >
               Reload
             </button>
@@ -4918,27 +4918,27 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
       <div className="space-y-4">
         {/* Template Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-stone-700 mb-1">
             Template Name *
           </label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
             placeholder="e.g., Weekly Planning Template"
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-stone-700 mb-1">
             Description
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
             rows={3}
             placeholder="Describe what this template is used for..."
           />
@@ -4946,7 +4946,7 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
 
         {/* Tags */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-stone-700 mb-1">
             Tags
           </label>
           <div className="space-y-2">
@@ -4956,12 +4956,12 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                 placeholder="Add a tag..."
               />
               <button
                 onClick={handleAddTag}
-                className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-3 py-2 bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors"
               >
                 Add
               </button>
@@ -4990,7 +4990,7 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
         {/* Tasks */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-stone-700">
               Tasks
             </label>
             <button
@@ -5002,19 +5002,19 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
           </div>
           
           {formData.tasks.length === 0 ? (
-            <div className="text-center py-4 text-gray-500 text-sm">
+            <div className="text-center py-4 text-stone-500 text-sm">
               No tasks yet. Click "Add Task" to get started.
             </div>
           ) : (
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {formData.tasks.map(task => (
-                <div key={task.id} className="border border-gray-200 rounded-lg p-3">
+                <div key={task.id} className="border border-stone-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <input
                       type="text"
                       value={task.title}
                       onChange={(e) => handleUpdateTask(task.id, 'title', e.target.value)}
-                      className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
+                      className="flex-1 px-2 py-1 text-base border border-stone-300 rounded focus:ring-1 focus:ring-stone-900 text-stone-900 placeholder:text-stone-400"
                       placeholder="Task title..."
                     />
                     <button
@@ -5028,7 +5028,7 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
                     type="text"
                     value={task.description || ''}
                     onChange={(e) => handleUpdateTask(task.id, 'description', e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
+                    className="w-full px-2 py-1 text-sm border border-stone-300 rounded focus:ring-1 focus:ring-purple-500"
                     placeholder="Task description (optional)..."
                   />
                 </div>
@@ -5041,7 +5041,7 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
         <div className="flex justify-end gap-3 pt-4 border-t">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-4 py-2 text-stone-600 hover:text-gray-800 transition-colors"
           >
             Cancel
           </button>
@@ -5152,8 +5152,8 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 mb-2">⏳</div>
-        <div className="text-sm text-gray-600">Loading templates...</div>
+        <div className="text-stone-500 mb-2">⏳</div>
+        <div className="text-sm text-stone-600">Loading templates...</div>
       </div>
     );
   }
@@ -5169,17 +5169,17 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
             placeholder="Search templates by name or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-            <div className="text-gray-400 text-sm">🔍</div>
+            <div className="text-stone-400 text-sm">🔍</div>
           </div>
         </div>
 
         {/* Tags Filter */}
         {availableTags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            <div className="text-sm text-gray-600 mr-2">Filter by tags:</div>
+            <div className="text-sm text-stone-600 mr-2">Filter by tags:</div>
             {availableTags.map(tag => (
               <button
                 key={tag}
@@ -5187,7 +5187,7 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
                 className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                   selectedTags.includes(tag)
                     ? "bg-purple-100 border-purple-300 text-purple-700"
-                    : "bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200"
+                    : "bg-stone-100 border-stone-300 text-stone-600 hover:bg-stone-200"
                 }`}
               >
                 {tag}
@@ -5200,9 +5200,9 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
       {/* Templates Grid */}
       {filteredTemplates.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">📋</div>
-          <div className="font-semibold text-gray-700 mb-1">No templates found</div>
-          <div className="text-sm text-gray-500">
+          <div className="text-stone-500 mb-2">📋</div>
+          <div className="font-semibold text-stone-700 mb-1">No templates found</div>
+          <div className="text-sm text-stone-500">
             {templates.length === 0 
               ? "You haven't created any templates yet. Create a plan and save it as a template to get started."
               : "Try adjusting your search terms or tag filters."
@@ -5214,7 +5214,7 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
           {filteredTemplates.map(template => (
             <div
               key={template.id}
-              className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer group"
+              className="border border-stone-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer group"
               onClick={() => onTemplateSelect(template)}
             >
               <div className="flex items-start justify-between mb-2">
@@ -5234,12 +5234,12 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
               </div>
               
               {template.description && (
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                <p className="text-sm text-stone-600 mb-3 line-clamp-2">
                   {template.description}
                 </p>
               )}
               
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-stone-500">
                 <span>{template.itemsCount || 0} tasks</span>
                 {template.tags && template.tags.length > 0 && (
                   <div className="flex gap-1">
@@ -5249,7 +5249,7 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
                       </span>
                     ))}
                     {template.tags.length > 2 && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                      <span className="px-2 py-1 bg-stone-100 text-stone-600 rounded">
                         +{template.tags.length - 2}
                       </span>
                     )}
@@ -5269,24 +5269,24 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 
   if (!selectedUserEmail) {
     return (
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">👤</div>
-          <div className="font-semibold text-gray-700 mb-1">Choose a User First</div>
-          <div className="text-sm text-gray-500">Select a user to begin planning</div>
+          <div className="text-stone-500 mb-2">👤</div>
+          <div className="font-semibold text-stone-700 mb-1">Choose a User First</div>
+          <div className="text-sm text-stone-500">Select a user to begin planning</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">🤖</div>
           <div className="text-base sm:text-lg font-semibold">How would you like to create this plan?</div>
         </div>
-        <div className="text-sm text-gray-600 ml-8">Choose your planning approach for <strong>{selectedUserEmail}</strong></div>
+        <div className="text-sm text-stone-600 ml-8">Choose your planning approach for <strong>{selectedUserEmail}</strong></div>
       </div>
 
              <div className="ml-8 space-y-3">
@@ -5298,14 +5298,14 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
                    className={`p-4 rounded-xl border-2 text-left transition-all ${
                      planningMode === "full-ai"
                        ? "border-blue-500 bg-blue-50"
-                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                       : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
                    }`}
                  >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
               <div className="font-semibold text-sm">Full AI Planning</div>
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-stone-600">
               Conversational AI creates your entire plan through research and dialogue
             </div>
           </button>
@@ -5316,14 +5316,14 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
                    className={`p-4 rounded-xl border-2 text-left transition-all ${
                      planningMode === "ai-assisted"
                        ? "border-blue-500 bg-blue-50"
-                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                       : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
                    }`}
                  >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤝</div>
               <div className="font-semibold text-sm">AI-Assisted Manual</div>
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-stone-600">
               You create tasks manually with smart AI suggestions and recommendations
             </div>
           </button>
@@ -5334,14 +5334,14 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
             className={`p-4 rounded-xl border-2 text-left transition-all ${
               planningMode === "manual"
                 ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
             }`}
           >
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-xs">✏️</div>
+              <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-xs">✏️</div>
               <div className="font-semibold text-sm">Pure Manual</div>
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-stone-600">
               Traditional task creation without AI assistance
             </div>
           </button>
@@ -5352,14 +5352,14 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
             className={`p-4 rounded-xl border-2 text-left transition-all ${
               planningMode === "templates"
                 ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
             }`}
           >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs">📋</div>
               <div className="font-semibold text-sm">Use Template</div>
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-stone-600">
               Select from your saved plan templates
             </div>
           </button>
@@ -5386,9 +5386,9 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
         )}
 
         {planningMode === "manual" && (
-          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="mt-3 p-3 bg-stone-50 border border-stone-200 rounded-lg">
             <div className="text-sm font-medium text-gray-800 mb-1">Pure Manual</div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-stone-600">
               Complete control over task creation without AI assistance. Perfect when you prefer full manual control.
             </div>
           </div>
@@ -5581,7 +5581,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
 
   if (currentStep === "plan-ready") {
     return (
-      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+      <div className="rounded-xl border border-stone-200 bg-green-50 p-4">
         <div className="text-center py-8">
           <div className="text-green-600 mb-2">✅</div>
           <div className="font-semibold text-green-800 mb-1">Plan Generated Successfully!</div>
@@ -5600,7 +5600,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
+    <div className="rounded-xl border border-stone-200 bg-white">
       {/* Chat Messages */}
       <div 
         ref={messagesContainerRef}
@@ -5616,7 +5616,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.type === 'user'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-800'
+                  : 'bg-stone-100 text-gray-800'
               }`}
             >
               <div className="text-sm whitespace-pre-wrap">{message.content}</div>
@@ -5626,9 +5626,9 @@ What type of plan would you like to create? For example: "Create a workout plan"
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
+            <div className="bg-stone-100 text-gray-800 px-4 py-2 rounded-lg">
               <div className="flex items-center gap-2">
-                <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                <div className="animate-spin w-4 h-4 border-2 border-stone-300 border-t-gray-600 rounded-full"></div>
                 <span className="text-sm">AI is thinking...</span>
               </div>
             </div>
@@ -5661,7 +5661,7 @@ What type of plan would you like to create? For example: "Create a workout plan"
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
-            className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-20"
+            className="flex-1 rounded-xl border border-stone-300 px-3 py-2 text-sm resize-none h-20"
             disabled={isLoading}
           />
           <button
@@ -5837,7 +5837,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
             <input
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
-              className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              className="flex-1 rounded-xl border border-stone-300 px-3 py-2 text-sm"
               placeholder="e.g., Morning workout"
             />
             <button
@@ -5856,7 +5856,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
             type="number"
             value={taskDayOffset}
             onChange={(e) => setTaskDayOffset(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
             placeholder="0"
             min="0"
           />
@@ -5868,7 +5868,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
             type="time"
             value={taskTime}
             onChange={(e) => setTaskTime(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
           />
         </label>
 
@@ -5878,7 +5878,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
             type="number"
             value={taskDuration}
             onChange={(e) => setTaskDuration(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
             placeholder="60"
             min="15"
           />
@@ -5889,7 +5889,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
           <textarea
             value={taskNotes}
             onChange={(e) => setTaskNotes(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
             placeholder="Additional details or context..."
             rows="2"
           />
@@ -5906,7 +5906,7 @@ function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, o
           <div className="space-y-2">
             {aiSuggestions.map((suggestion, idx) => (
               <div key={idx} className="flex items-start gap-2 p-2 bg-white border border-blue-200 rounded-lg">
-                <div className="flex-1 text-sm text-gray-700">{suggestion}</div>
+                <div className="flex-1 text-sm text-stone-700">{suggestion}</div>
                 <button
                   onClick={() => applySuggestion({ title: suggestion })}
                   className="px-2 py-1 text-xs font-medium text-blue-700 border border-blue-300 rounded hover:bg-blue-50"
@@ -6028,13 +6028,13 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
 
   if (currentStep === "welcome") {
     return (
-      <div className="rounded-xl border border-gray-200 bg-blue-50 p-4">
+      <div className="rounded-xl border border-stone-200 bg-blue-50 p-4">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">🤖</div>
             <div className="text-base font-semibold">AI Task Generator</div>
           </div>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-stone-600">
             Hi! Let's create a plan for <strong>{userEmail}</strong>. What should we call this plan?
           </div>
         </div>
@@ -6045,7 +6045,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
             <input 
               value={planTitle} 
               readOnly
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-gray-50"
+              className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm bg-stone-50"
             />
           </div>
           
@@ -6055,7 +6055,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
               value={userPrompt}
               onChange={(e) => setUserPrompt(e.target.value)}
               placeholder="e.g., Create a workout plan for someone who wants to get in shape, or Generate a study schedule for exam preparation..."
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-20 resize-none"
+              className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm h-20 resize-none"
             />
           </div>
 
@@ -6075,13 +6075,13 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
 
   if (currentStep === "preview" && showPreview) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+      <div className="rounded-xl border border-stone-200 bg-green-50 p-4">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">✅</div>
             <div className="text-base font-semibold">Generated Tasks</div>
           </div>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-stone-600">
             Review the tasks below. You can add them to your plan or generate new ones.
           </div>
         </div>
@@ -6091,7 +6091,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
             <div key={i} className="flex items-center gap-2 p-2 bg-white rounded-lg border">
               <div className="flex-1">
                 <div className="font-medium text-sm">{task.title}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-stone-500">
                   Day {task.dayOffset} • {task.time || 'No time'} • {task.durationMins || 60} min
                   {task.notes && ` • ${task.notes}`}
                 </div>
@@ -6109,7 +6109,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
           </button>
           <button
             onClick={resetGenerator}
-            className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium text-stone-600 border border-stone-300 rounded-xl hover:bg-stone-50"
           >
             Generate New
           </button>
@@ -6120,7 +6120,7 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
 
   if (currentStep === "complete") {
     return (
-      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+      <div className="rounded-xl border border-stone-200 bg-green-50 p-4">
         <div className="text-center">
           <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-lg mx-auto mb-2">✓</div>
           <div className="font-semibold text-green-800 mb-1">Tasks Added Successfully!</div>
@@ -6289,17 +6289,17 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
       {/* Standard Panel Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-stone-200 mb-6">
+        <div className="px-6 py-4 border-b border-stone-200">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Edit Profile</h1>
-              <p className="text-sm text-gray-600 mt-1">Manage your planner profile and business information</p>
+              <h1 className="text-lg font-semibold text-stone-900">Edit Profile</h1>
+              <p className="text-sm text-stone-600 mt-1">Manage your planner profile and business information</p>
             </div>
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => { setView("users"); updateQueryView("users"); }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-md hover:bg-stone-50"
               >
                 Cancel
               </button>
@@ -6320,40 +6320,40 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   Planner Name
                 </label>
                 <input
                   type="text"
                   value={formData.planner_name}
                   onChange={(e) => handleInputChange('planner_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   Company Name
                 </label>
                 <input
                   type="text"
                   value={formData.company_name}
                   onChange={(e) => handleInputChange('company_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your company"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-stone-700 mb-1">
                 Business Description
               </label>
               <textarea
                 value={formData.business_description}
                 onChange={(e) => handleInputChange('business_description', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 placeholder="Describe your business..."
               />
@@ -6361,27 +6361,27 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   Phone
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="(555) 123-4567"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   Website
                 </label>
                 <input
                   type="url"
                   value={formData.website_url}
                   onChange={(e) => handleInputChange('website_url', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://yourwebsite.com"
                 />
               </div>
@@ -6390,36 +6390,36 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
             {/* Social Media */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   LinkedIn Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     linkedin.com/in/
                   </span>
                   <input
                     type="text"
                     value={formData.linkedin_username}
                     onChange={(e) => handleInputChange('linkedin_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="username"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   Instagram Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     instagram.com/
                   </span>
                   <input
                     type="text"
                     value={formData.instagram_username}
                     onChange={(e) => handleInputChange('instagram_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="username"
                   />
                 </div>
@@ -6428,36 +6428,36 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   Facebook Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     facebook.com/
                   </span>
                   <input
                     type="text"
                     value={formData.facebook_username}
                     onChange={(e) => handleInputChange('facebook_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="username"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   Twitter Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     twitter.com/
                   </span>
                   <input
                     type="text"
                     value={formData.twitter_username}
                     onChange={(e) => handleInputChange('twitter_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="username"
                   />
                 </div>
@@ -6574,7 +6574,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
   if (!userEmail) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500">No user selected</div>
+        <div className="text-stone-500">No user selected</div>
         <button
           onClick={() => onNavigate?.("users")}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -6588,7 +6588,7 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500">Loading user dashboard...</div>
+        <div className="text-stone-500">Loading user dashboard...</div>
       </div>
     );
   }
@@ -6598,19 +6598,19 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Dashboard</h1>
-          <p className="text-sm text-gray-600 mt-1">{userEmail}</p>
+          <h1 className="text-2xl font-bold text-stone-900">User Dashboard</h1>
+          <p className="text-sm text-stone-600 mt-1">{userEmail}</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={loadUserData}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+            className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50 text-sm"
           >
             🔄 Refresh
           </button>
           <button
             onClick={() => onNavigate?.("users")}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+            className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50 text-sm"
           >
             ← Back to Users
           </button>
@@ -6620,19 +6620,19 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
       {/* User Profile & Connection Status */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* User Profile Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
               {userData?.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{userData?.name || 'Unknown'}</h3>
-              <p className="text-xs text-gray-500">{userEmail}</p>
+              <h3 className="font-semibold text-stone-900">{userData?.name || 'Unknown'}</h3>
+              <p className="text-xs text-stone-500">{userEmail}</p>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-600">Status:</span>
+              <span className="text-stone-600">Status:</span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Active
               </span>
@@ -6641,12 +6641,12 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         </div>
 
         {/* Google Tasks Connection Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
               <span className="text-blue-600 font-semibold text-sm">GT</span>
             </div>
-            <h3 className="font-semibold text-gray-900">Google Tasks</h3>
+            <h3 className="font-semibold text-stone-900">Google Tasks</h3>
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -6656,12 +6656,12 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
               </span>
             </div>
             {connectionStatus?.isConnected && connectionStatus?.lastSync && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-stone-500">
                 Last sync: {new Date(connectionStatus.lastSync).toLocaleString()}
               </div>
             )}
             {!connectionStatus?.isConnected && (
-              <div className="text-xs text-gray-500 mt-2">
+              <div className="text-xs text-stone-500 mt-2">
                 User has been notified to re-authorize their Google account
               </div>
             )}
@@ -6669,23 +6669,23 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
         </div>
 
         {/* Connection Health Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
               <span className="text-green-600 font-semibold text-lg">✓</span>
             </div>
-            <h3 className="font-semibold text-gray-900">Connection Health</h3>
+            <h3 className="font-semibold text-stone-900">Connection Health</h3>
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">API Status:</span>
-              <span className={`font-medium ${connectionStatus?.isConnected ? 'text-green-600' : 'text-gray-400'}`}>
+              <span className="text-stone-600">API Status:</span>
+              <span className={`font-medium ${connectionStatus?.isConnected ? 'text-green-600' : 'text-stone-400'}`}>
                 {connectionStatus?.isConnected ? 'Healthy' : 'N/A'}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Connection:</span>
-              <span className={`font-medium ${connectionStatus?.status === 'connected' ? 'text-green-600' : 'text-gray-400'}`}>
+              <span className="text-stone-600">Connection:</span>
+              <span className={`font-medium ${connectionStatus?.status === 'connected' ? 'text-green-600' : 'text-stone-400'}`}>
                 {connectionStatus?.status || 'Unknown'}
               </span>
             </div>
@@ -6695,8 +6695,8 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
 
       {/* Task Completion Overview */}
       {connectionStatus?.isConnected && feedback && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">📊 Task Completion Overview</h2>
+        <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-stone-900 mb-6">📊 Task Completion Overview</h2>
           
           {/* Completion Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -6704,11 +6704,11 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
               <div className="text-3xl font-bold text-blue-600">{feedback.tasksCompleted || 0}</div>
               <div className="text-sm text-blue-700 mt-1">Tasks Completed</div>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-3xl font-bold text-gray-600">
+            <div className="p-4 bg-stone-50 rounded-lg">
+              <div className="text-3xl font-bold text-stone-600">
                 {(feedback.totalTasks || 0) - (feedback.tasksCompleted || 0)}
               </div>
-              <div className="text-sm text-gray-700 mt-1">Tasks Pending</div>
+              <div className="text-sm text-stone-700 mt-1">Tasks Pending</div>
             </div>
             <div className="p-4 bg-green-50 rounded-lg">
               <div className="text-3xl font-bold text-green-600">
@@ -6723,16 +6723,16 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
           {/* Task Details */}
           {feedback.taskDetails && feedback.taskDetails.length > 0 && (
             <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700 mb-3">Task Details:</div>
+              <div className="text-sm font-medium text-stone-700 mb-3">Task Details:</div>
               <div className="space-y-2">
                 {feedback.taskDetails.map((task, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div key={index} className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg">
                     <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
                       task.completed ? 'bg-green-500' : 
                       task.found ? 'bg-yellow-500' : 'bg-red-500'
                     }`}></div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">{task.title}</div>
+                      <div className="text-sm font-medium text-stone-900 truncate">{task.title}</div>
                       <div className={`text-xs mt-0.5 ${
                         task.completed ? 'text-green-700' : 
                         task.found ? 'text-yellow-700' : 'text-red-700'
@@ -6748,8 +6748,8 @@ function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
           )}
 
           {/* Last Checked */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="text-xs text-gray-500">
+          <div className="mt-4 pt-4 border-t border-stone-200">
+            <div className="text-xs text-stone-500">
               Last checked: {new Date(feedback.lastChecked).toLocaleString()}
             </div>
           </div>
