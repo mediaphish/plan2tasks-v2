@@ -7,6 +7,7 @@ import {
   CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb, Edit3, Send, Sparkles
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { HeroAnimation } from "./components/HeroAnimation.jsx";
 
 
 const APP_VERSION = "2025-09-02 · C4";
@@ -338,26 +339,13 @@ function MainApp(){
               </div>
             </div>
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-8 py-16">
-          {/* Hero Section - The Problem */}
-          <section className="text-center mb-20 max-w-4xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold text-stone-900 mb-6 leading-tight">
-              Stop Wondering If Your Plans Are Working
-            </h1>
-            <p className="text-xl text-stone-600 max-w-3xl mx-auto leading-relaxed mb-8">
-              You spend hours creating perfect task plans for your clients or team. But once you send them, it's a black hole. Are they using it? Are they making progress? You have no idea.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button className="bg-[#2d7a5f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors text-lg">
-                Start Your Free Trial
-              </button>
-              <button className="border-2 border-stone-300 text-stone-700 px-8 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors text-lg">
-                Schedule a Demo
-              </button>
-            </div>
-          </section>
+        {/* Hero Animation */}
+        <section className="mx-auto max-w-7xl px-6 lg:px-8 pt-16 lg:pt-24 pb-16 lg:pb-24">
+          <HeroAnimation />
+        </section>
 
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-8 pb-16">
           {/* Two-Way Street - The Solution */}
           <section className="text-center mb-20 max-w-3xl mx-auto">
             <h2 className="text-4xl font-bold text-stone-900 mb-4">
@@ -618,9 +606,6 @@ function MainApp(){
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                 <button className="bg-[#2d7a5f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors text-lg">
                   Start Your Free Trial
-                </button>
-                <button className="border-2 border-stone-300 text-stone-700 px-8 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors text-lg">
-                  Schedule a Demo
                 </button>
               </div>
               <p className="text-sm text-stone-500">
