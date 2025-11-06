@@ -1117,6 +1117,13 @@ function MainApp(){
           />
         )}
 
+        {view==="billing" && (
+          <BillingView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+
         {view==="inbox" && (
           <InboxViewIntegrated
             plannerEmail={plannerEmail}
@@ -4109,8 +4116,6 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     };
   });
   const [saving,setSaving]=useState(false);
-  const [billingStatus, setBillingStatus] = useState(null);
-  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(()=>{ setLocal({
     default_view: prefs.default_view || "users",
@@ -4121,7 +4126,146 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     show_inbox_badge: !!prefs.show_inbox_badge,
   }); },[prefs]);
 
-  // Load billing status
+  async function save(){
+    setSaving(true);
+    try{
+      const body={ plannerEmail, prefs: local };
+      const r=await fetch("/api/prefs/set",{ method:"POST", headers:{"Content-Type":"application/json" }, body: JSON.stringify(body) });
+      const j=await r.json();
+      if (!r.ok || j.error) throw new Error(j.error||"Save failed");
+      onChange?.(local);
+      onToast?.("ok","Settings saved");
+    }catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+    setSaving(false);
+  }
+
+  return (
+    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-stone-900 mb-2">Settings</h1>
+        <p className="text-lg text-stone-600">Manage your application preferences</p>
+      </div>
+
+      {/* Settings Form Panel */}
+      <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+        <form className="space-y-6">
+          {/* Row 1: Default view and Default timezone */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">
+                Default view
+              </label>
+              <select 
+                value={local.default_view} 
+                onChange={(e)=>setLocal({...local, default_view:e.target.value})} 
+                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900 text-base text-stone-900"
+              >
+                <option value="dashboard">Dashboard</option>
+                <option value="users">Users</option>
+                <option value="plan">Plan</option>
+                <option value="templates">Templates</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">
+                Default timezone
+              </label>
+              <select 
+                value={local.default_timezone} 
+                onChange={(e)=>setLocal({...local, default_timezone:e.target.value})} 
+                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900 text-base text-stone-900"
+              >
+                {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Row 2: Default push mode and Default planning mode */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">
+                Default push mode
+              </label>
+              <select 
+                value={local.default_push_mode} 
+                onChange={(e)=>setLocal({...local, default_push_mode:e.target.value})} 
+                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900 text-base text-stone-900"
+              >
+                <option value="append">Append</option>
+                <option value="replace">Replace</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">
+                Default planning mode
+              </label>
+              <select 
+                value={local.default_planning_mode} 
+                onChange={(e)=>setLocal({...local, default_planning_mode:e.target.value})} 
+                className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900 text-base text-stone-900"
+              >
+                <option value="full-ai">Full AI Planning</option>
+                <option value="ai-assisted">AI-Assisted Manual</option>
+                <option value="manual">Pure Manual</option>
+                <option value="templates">Use Template</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 3: Auto-archive after assign and Show inbox badge */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  checked={!!local.auto_archive_after_assign} 
+                  onChange={(e)=>setLocal({...local, auto_archive_after_assign:(e.target.checked)})} 
+                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
+                />
+                <span className="text-sm font-medium text-stone-700">Auto-archive after assign</span>
+              </label>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  checked={!!local.show_inbox_badge} 
+                  onChange={(e)=>setLocal({...local, show_inbox_badge:(e.target.checked)})} 
+                  className="w-4 h-4 border border-stone-300 rounded focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
+                />
+                <span className="text-sm font-medium text-stone-700">Show inbox badge</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex items-center justify-end pt-6">
+            <button 
+              type="button"
+              onClick={save} 
+              disabled={saving} 
+              className="px-5 py-2.5 bg-blue-600 text-sm font-medium text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+/* ───────── Billing View ───────── */
+function BillingView({ plannerEmail, onToast }) {
+  const [billingStatus, setBillingStatus] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+
   useEffect(() => {
     loadBillingStatus();
   }, [plannerEmail]);
@@ -4202,183 +4346,127 @@ function SettingsView({ plannerEmail, prefs, onChange, onToast }){
     setBillingLoading(false);
   }
 
-  async function save(){
-    setSaving(true);
-    try{
-      const body={ plannerEmail, prefs: local };
-      const r=await fetch("/api/prefs/set",{ method:"POST", headers:{"Content-Type":"application/json" }, body: JSON.stringify(body) });
-      const j=await r.json();
-      if (!r.ok || j.error) throw new Error(j.error||"Save failed");
-      onChange?.(local);
-      onToast?.("ok","Settings saved");
-    }catch(e){
-      onToast?.("error", String(e.message||e));
-    }
-    setSaving(false);
-  }
+  const currentPlanTier = billingStatus?.subscription?.plan_tier || 'free';
 
   return (
-    <>
-    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
-      <div className="mb-3 text-sm font-semibold">Settings</div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Default view</div>
-          <select value={local.default_view} onChange={(e)=>setLocal({...local, default_view:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
-            <option value="users">Users</option>
-            <option value="plan">Plan</option>
-          </select>
-        </label>
-
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Default timezone</div>
-          <select value={local.default_timezone} onChange={(e)=>setLocal({...local, default_timezone:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
-            {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
-          </select>
-        </label>
-
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Default push mode</div>
-          <select value={local.default_push_mode} onChange={(e)=>setLocal({...local, default_push_mode:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
-            <option value="append">Append</option>
-            <option value="replace">Replace</option>
-          </select>
-        </label>
-
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Default planning mode</div>
-          <select value={local.default_planning_mode} onChange={(e)=>setLocal({...local, default_planning_mode:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
-            <option value="full-ai">Full AI Planning</option>
-            <option value="ai-assisted">AI-Assisted Manual</option>
-            <option value="manual">Pure Manual</option>
-            <option value="templates">Use Template</option>
-          </select>
-        </label>
-
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Auto-archive after assign</div>
-          <input type="checkbox" checked={!!local.auto_archive_after_assign} onChange={(e)=>setLocal({...local, auto_archive_after_assign:(e.target.checked)})} />
-        </label>
-
-        <label className="block">
-          <div className="mb-1 text-sm font-medium">Show inbox badge</div>
-          <input type="checkbox" checked={!!local.show_inbox_badge} onChange={(e)=>setLocal({...local, show_inbox_badge:(e.target.checked)})} />
-        </label>
+    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-stone-900 mb-2">Billing</h1>
+        <p className="text-lg text-stone-600">Manage your subscription and billing</p>
       </div>
 
-      <div className="mt-3">
-        <button onClick={save} disabled={saving} className="rounded-xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </div>
-    </div>
+      {/* Billing Panel */}
+      <div className="bg-white rounded-xl border border-stone-200 p-8">
+        {billingLoading ? (
+          <div className="text-sm text-stone-500">Loading billing status...</div>
+        ) : billingStatus ? (
+          <div className="space-y-6">
+            {/* Current Plan Status */}
+            <div className="rounded-lg border border-stone-200 p-4 bg-stone-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-base font-semibold text-stone-900 mb-1">
+                    {currentPlanTier === 'free' ? 'Free Plan' : 
+                     currentPlanTier === 'starter' ? 'Starter Plan' :
+                     currentPlanTier === 'professional' ? 'Professional Plan' :
+                     currentPlanTier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
+                  </div>
+                  <div className="text-sm text-stone-600">
+                    {billingStatus.userCount || 0} / {billingStatus.userLimit || 'Unlimited'} users
+                  </div>
+                </div>
+                <div className="text-sm text-stone-600">
+                  Status: {billingStatus.subscription?.status || 'Active'}
+                </div>
+              </div>
+            </div>
 
-    {/* Billing Section */}
-    <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
-      <div className="mb-3 text-sm font-semibold">Billing & Subscription</div>
-      
-      {billingLoading ? (
-        <div className="text-sm text-stone-500">Loading billing status...</div>
-      ) : billingStatus ? (
-        <div className="space-y-4">
-          {/* Current Plan */}
-          <div className="rounded-lg border border-stone-200 p-3">
-            <div className="flex items-center justify-between">
+            {/* Upgrade Options - Only show if on Free Plan */}
+            {currentPlanTier === 'free' && (
               <div>
-                <div className="text-sm font-medium">
-                  {billingStatus.subscription.plan_tier === 'free' ? 'Free Plan' : 
-                   billingStatus.subscription.plan_tier === 'starter' ? 'Starter Plan' :
-                   billingStatus.subscription.plan_tier === 'professional' ? 'Professional Plan' :
-                   billingStatus.subscription.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
+                <h2 className="text-base font-semibold text-stone-900 mb-4">Upgrade your plan</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Starter Plan */}
+                  <div className="bg-white border border-stone-200 rounded-lg p-6">
+                    <div className="text-lg font-semibold text-stone-900 mb-2">Starter</div>
+                    <div className="text-sm text-stone-600 mb-4">Up to 10 users</div>
+                    <div className="text-2xl font-bold text-stone-900 mb-4">$9.99</div>
+                    <button 
+                      onClick={() => createSubscription('starter-monthly')}
+                      disabled={billingLoading}
+                      className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Subscribe
+                    </button>
+                  </div>
+
+                  {/* Professional Plan */}
+                  <div className="bg-white border border-stone-200 rounded-lg p-6">
+                    <div className="text-lg font-semibold text-stone-900 mb-2">Professional</div>
+                    <div className="text-sm text-stone-600 mb-4">Up to 50 users</div>
+                    <div className="text-2xl font-bold text-stone-900 mb-4">$24.99</div>
+                    <button 
+                      onClick={() => createSubscription('professional-monthly')}
+                      disabled={billingLoading}
+                      className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Subscribe
+                    </button>
+                  </div>
+
+                  {/* Business Plan */}
+                  <div className="bg-white border border-stone-200 rounded-lg p-6">
+                    <div className="text-lg font-semibold text-stone-900 mb-2">Business</div>
+                    <div className="text-sm text-stone-600 mb-4">Up to 100 users</div>
+                    <div className="text-2xl font-bold text-stone-900 mb-4">$49.99</div>
+                    <button 
+                      onClick={() => createSubscription('business-monthly')}
+                      disabled={billingLoading}
+                      className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Subscribe
+                    </button>
+                  </div>
                 </div>
-                <div className="text-xs text-stone-500">
-                  {billingStatus.userCount} / {billingStatus.userLimit} users
+
+                {/* Enterprise Contact */}
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-stone-600">
+                    Need more than 100 users?{' '}
+                    <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+                  </p>
                 </div>
               </div>
-              <div className="text-xs text-stone-500">
-                Status: {billingStatus.subscription.status}
+            )}
+
+            {/* Manage Billing - Show if not on Free Plan */}
+            {currentPlanTier !== 'free' && (
+              <div>
+                <button 
+                  onClick={openPortal}
+                  disabled={billingLoading}
+                  className="px-4 py-2 bg-stone-900 text-sm font-medium text-white rounded-lg hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Manage Billing
+                </button>
               </div>
-            </div>
+            )}
           </div>
-
-          {/* Upgrade Options */}
-          {billingStatus.subscription.plan_tier === 'free' && (
-            <div className="space-y-3">
-              <div className="text-sm font-medium">Upgrade your plan:</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="rounded-lg border border-stone-200 p-3">
-                  <div className="text-sm font-medium">Starter</div>
-                  <div className="text-xs text-stone-500">Up to 10 users</div>
-                  <div className="text-sm font-semibold">$9.99/month</div>
-                  <button 
-                    onClick={() => createSubscription('starter-monthly')}
-                    disabled={billingLoading}
-                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Subscribe
-                  </button>
-                </div>
-                <div className="rounded-lg border border-stone-200 p-3">
-                  <div className="text-sm font-medium">Professional</div>
-                  <div className="text-xs text-stone-500">Up to 50 users</div>
-                  <div className="text-sm font-semibold">$24.99/month</div>
-                  <button 
-                    onClick={() => createSubscription('professional-monthly')}
-                    disabled={billingLoading}
-                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Subscribe
-                  </button>
-                </div>
-                <div className="rounded-lg border border-stone-200 p-3">
-                  <div className="text-sm font-medium">Business</div>
-                  <div className="text-xs text-stone-500">Up to 100 users</div>
-                  <div className="text-sm font-semibold">$49.99/month</div>
-                  <button 
-                    onClick={() => createSubscription('business-monthly')}
-                    disabled={billingLoading}
-                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Subscribe
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Manage Billing */}
-          {billingStatus.subscription.plan_tier !== 'free' && (
-            <div>
-              <button 
-                onClick={openPortal}
-                disabled={billingLoading}
-                className="rounded-lg bg-stone-900 px-3 py-2 text-sm text-white hover:bg-stone-800 disabled:opacity-50"
-              >
-                Manage Billing
-              </button>
-            </div>
-          )}
-
-          {/* Enterprise Contact */}
-          <div className="text-xs text-stone-500">
-            Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+        ) : (
+          <div>
+            <div className="text-sm text-stone-600 mb-4">Set up billing to manage your subscription</div>
+            <button 
+              onClick={createCustomer}
+              disabled={billingLoading}
+              className="px-4 py-2 bg-blue-600 text-sm font-medium text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Set Up Billing
+            </button>
           </div>
-        </div>
-      ) : (
-        <div>
-          <div className="text-sm text-stone-500 mb-3">Set up billing to manage your subscription</div>
-          <button 
-            onClick={createCustomer}
-            disabled={billingLoading}
-            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            Set Up Billing
-          </button>
-        </div>
-      )}
-    </div>
-    </>
+        )}
+      </div>
+    </main>
   );
 }
 
