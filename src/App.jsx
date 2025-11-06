@@ -1740,202 +1740,183 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
   },[onToast]);
 
   return (
-    <div>
-      {/* Folder Tabs Navigation - Floating on Gray Background */}
-      <div className="flex items-center justify-between px-4">
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab("plan")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
-              activeTab === "plan"
-                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
-                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
-            }`}
-          >
-            Plan
-          </button>
-          <button
-            onClick={() => setActiveTab("assigned")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
-              activeTab === "assigned"
-                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
-                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
-            }`}
-          >
-            Assigned
-            {newBundleCount > 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                {newBundleCount} New
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("notes")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
-              activeTab === "notes"
-                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
-                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
-            }`}
-          >
-            User Notes
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
-              activeTab === "history"
-                ? "bg-white text-stone-900 border-stone-300 border-b-white -mt-1"
-                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-50"
-            }`}
-          >
-History
-          </button>
-        </div>
-        
-        {/* User Selection - Floating on Gray Background */}
-        <div className="flex items-center gap-2 pb-2">
-          <label className="text-sm font-medium text-stone-700">User:</label>
-          <select
-            value={selectedUserEmail || ""}
-            onChange={(e)=>{
-              const newUser = e.target.value;
-              setSelectedUserEmail(newUser);
-              onUserChange?.(newUser);
-            }}
-            className="rounded-xl border border-stone-300 px-3 py-2 text-sm min-w-[200px] bg-white"
-            title={selectedUserEmail || "— Choose user —"}
-          >
-            <option value="">— Choose user —</option>
-            {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
-              {u.email}
-            </option>))}
-          </select>
-        </div>
-        
+    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-stone-900 mb-2">Plan Management</h1>
+        <p className="text-lg text-stone-600">Create and manage plans for your users</p>
+      </div>
+
+      {/* User Selection - Above tabs */}
+      <div className="mb-6 flex items-center gap-2">
+        <label className="text-sm font-medium text-stone-700">User:</label>
+        <select
+          value={selectedUserEmail || ""}
+          onChange={(e)=>{
+            const newUser = e.target.value;
+            setSelectedUserEmail(newUser);
+            onUserChange?.(newUser);
+          }}
+          className="rounded-lg border border-stone-200 px-3 py-2 text-sm min-w-[200px] bg-white text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
+          title={selectedUserEmail || "— Choose user —"}
+        >
+          <option value="">— Choose user —</option>
+          {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+            {u.email}
+          </option>))}
+        </select>
+      </div>
+
+      {/* Sub-navigation Tabs */}
+      <div className="flex gap-1 mb-6">
+        <button
+          onClick={() => setActiveTab("plan")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "plan"
+              ? "text-stone-900 border-b-2 border-blue-600"
+              : "text-stone-600 hover:text-stone-900"
+          }`}
+        >
+          Plan
+        </button>
+        <button
+          onClick={() => setActiveTab("assigned")}
+          className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+            activeTab === "assigned"
+              ? "text-stone-900 border-b-2 border-blue-600"
+              : "text-stone-600 hover:text-stone-900"
+          }`}
+        >
+          Assigned
+          {newBundleCount > 0 && (
+            <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+              {newBundleCount} New
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("notes")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "notes"
+              ? "text-stone-900 border-b-2 border-blue-600"
+              : "text-stone-600 hover:text-stone-900"
+          }`}
+        >
+          User Notes
+        </button>
+        <button
+          onClick={() => setActiveTab("history")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "history"
+              ? "text-stone-900 border-b-2 border-blue-600"
+              : "text-stone-600 hover:text-stone-900"
+          }`}
+        >
+          History
+        </button>
       </div>
 
 
       {/* Plan Tab Content */}
       {activeTab === "plan" && (
         <>
-            {/* AI Decision Interface */}
+          {/* Planning Approach Cards Panel */}
+          <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
             <AIPlanningDecision
               selectedUserEmail={selectedUserEmail}
               onModeSelect={(mode) => setPlanningMode(mode)}
               planningMode={planningMode}
             />
+          </div>
 
           {/* Templates View Interface - Show first when templates mode is selected */}
           {planningMode === "templates" && (
-            <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">1</div>
-                  <div className="text-base font-semibold">Choose a Template</div>
-                </div>
-                <div className="text-sm text-stone-600 ml-8">
-                  {selectedUserEmail ? (
-                    <>Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></>
-                  ) : (
-                    <>Browse your saved plan templates. Select a user first to apply a template.</>
-                  )}
-                </div>
-              </div>
-
-              <div className="ml-8">
-                <TemplatesView
-                  plannerEmail={plannerEmail}
-                  selectedUserEmail={selectedUserEmail}
-                  onTemplateSelect={(template) => {
-                    if (!selectedUserEmail) {
-                      onToast?.("error", "Please select a user first before applying a template");
-                      return;
-                    }
-                    
-                    // Set local flag to indicate template is applied
-                    setLocalTemplateApplied(true);
-                    
-                    // Set plan and tasks directly
-                    setPlan({
-                      title: template.title,
-                      description: template.description,
-                      startDate: new Date().toISOString().split('T')[0],
-                      timezone: "America/Chicago"
-                    });
-                    setTasks(template.tasks || []);
-                    setPlanningMode("ai-assisted"); // Switch to review mode - keeps fields editable
-                    onToast?.("ok", `Applied template: ${template.title}`);
-                    // NO auto-scroll - let user scroll freely
-                  }}
-                  onToast={onToast}
-                />
-              </div>
+            <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+              <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Choose a Template</h2>
+              <p className="text-base text-stone-600 mb-6">
+                {selectedUserEmail ? (
+                  <>Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></>
+                ) : (
+                  <>Browse your saved plan templates. Select a user first to apply a template.</>
+                )}
+              </p>
+              <TemplatesView
+                plannerEmail={plannerEmail}
+                selectedUserEmail={selectedUserEmail}
+                onTemplateSelect={(template) => {
+                  if (!selectedUserEmail) {
+                    onToast?.("error", "Please select a user first before applying a template");
+                    return;
+                  }
+                  
+                  // Set local flag to indicate template is applied
+                  setLocalTemplateApplied(true);
+                  
+                  // Set plan and tasks directly
+                  setPlan({
+                    title: template.title,
+                    description: template.description,
+                    startDate: new Date().toISOString().split('T')[0],
+                    timezone: "America/Chicago"
+                  });
+                  setTasks(template.tasks || []);
+                  setPlanningMode("ai-assisted"); // Switch to review mode - keeps fields editable
+                  onToast?.("ok", `Applied template: ${template.title}`);
+                  // NO auto-scroll - let user scroll freely
+                }}
+                onToast={onToast}
+              />
             </div>
           )}
 
           {/* Plan Setup Section - Only show for AI-Assisted and Manual modes, but NOT when template is applied */}
           {!isTemplateMode && planningMode !== "full-ai" && planningMode !== "templates" && (
-            <div data-section="plan-setup" className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
-                  <div className="text-base font-semibold">Plan Setup</div>
+            <div data-section="plan-setup" className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+              <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Plan Setup</h2>
+              <p className="text-base text-stone-600 mb-6">Configure your plan details and settings</p>
+              {!!msg && <div className="mb-4 text-sm text-stone-600">{msg}</div>}
+              
+              {/* Plan Details */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <label className="block">
+                  <div className="mb-2 text-sm font-medium text-stone-700">Plan Name</div>
+                  <input value={plan.title} onChange={(e)=>{setPlan({...plan, title:e.target.value}); clearTemplateData();}} className="w-full rounded-lg border border-stone-200 px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900" placeholder="e.g., Week of Sep 1" />
+                </label>
+                <label className="block md:col-span-2">
+                  <div className="mb-2 text-sm font-medium text-stone-700">Plan Description</div>
+                  <input value={plan.description} onChange={(e)=>{setPlan({...plan, description:e.target.value}); clearTemplateData();}} className="w-full rounded-lg border border-stone-200 px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900" placeholder="Brief description of this plan template" />
+                </label>
+                <label className="block">
+                  <div className="mb-2 text-sm font-medium text-stone-700">Timezone</div>
+                  <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-lg border border-stone-200 px-3 py-2 text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900">
+                    {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+                  </select>
+                </label>
+                <div className="block">
+                  <div className="mb-2 text-sm font-medium text-stone-700">Plan start date</div>
+                  <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-base text-stone-900 hover:bg-stone-50 whitespace-nowrap w-full justify-start focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900">
+                    <Calendar className="h-4 w-4" /> {planDateText}
+                  </button>
                 </div>
-                <div className="text-sm text-stone-600 ml-8">Configure your plan details and settings</div>
-                {!!msg && <div className="mt-2 ml-8 text-xs text-stone-600">{msg}</div>}
-              </div>
-
-              <div className="ml-8 space-y-4">
-                {/* Plan Details */}
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <label className="block">
-                    <div className="mb-1 text-sm font-medium">Plan Name</div>
-                    <input value={plan.title} onChange={(e)=>{setPlan({...plan, title:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
-                  </label>
-                  <label className="block md:col-span-2">
-                    <div className="mb-1 text-sm font-medium">Plan Description</div>
-                    <input value={plan.description} onChange={(e)=>{setPlan({...plan, description:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
-                  </label>
-                  <label className="block">
-                    <div className="mb-1 text-sm font-medium">Timezone</div>
-                    <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm">
-                      {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
-                    </select>
-                  </label>
-                  <div className="block">
-                    <div className="mb-1 text-sm font-medium">Plan start date</div>
-                    <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm hover:bg-stone-50 whitespace-nowrap w-full justify-start">
-                      <Calendar className="h-4 w-4" /> {planDateText}
-                    </button>
-                  </div>
-                </div>
-
               </div>
             </div>
           )}
 
           {/* Full AI Planning Interface */}
           {planningMode === "full-ai" && (
-            <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">💬</div>
-                  <div className="text-base font-semibold">AI Planning Assistant</div>
-                </div>
-                <div className="text-sm text-stone-600 ml-8">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</div>
-              </div>
-
-              <div className="ml-8">
-                <ConversationalAI
-                  userEmail={selectedUserEmail}
-                  plannerEmail={plannerEmail}
-                  onPlanGenerated={(generatedPlan) => {
-                    setPlan(generatedPlan.plan);
-                    setTasks(generatedPlan.tasks);
-                    onToast?.("ok", "AI has generated your complete plan!");
-                  }}
-                  onToast={onToast}
-                />
-              </div>
+            <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+              <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">AI Planning Assistant</h2>
+              <p className="text-base text-stone-600 mb-6">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</p>
+              <ConversationalAI
+                userEmail={selectedUserEmail}
+                plannerEmail={plannerEmail}
+                onPlanGenerated={(generatedPlan) => {
+                  setPlan(generatedPlan.plan);
+                  setTasks(generatedPlan.tasks);
+                  onToast?.("ok", "AI has generated your complete plan!");
+                }}
+                onToast={onToast}
+              />
             </div>
           )}
 
@@ -1952,97 +1933,74 @@ History
       {/* Tasks Section - Different behavior based on planning mode */}
       {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
       {!isTemplateMode && planningMode === "ai-assisted" && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-sm font-semibold">2</div>
-              <div className="text-base font-semibold">Add Tasks with AI Assistance</div>
-            </div>
-            <div className="text-sm text-stone-600 ml-8">Create tasks manually with AI providing smart suggestions and recommendations.</div>
-          </div>
-
-          <div className="ml-8">
-            <AIAssistedTaskEditor
-              planStartDate={plan.startDate}
-              userEmail={selectedUserEmail}
-              plannerEmail={plannerEmail}
-              tasks={tasks}
-              setTasks={setTasks}
-              onAdd={(items)=>{
-                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
-                onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
-              }}
-              onToast={onToast}
-            />
-          </div>
+        <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Add Tasks with AI Assistance</h2>
+          <p className="text-base text-stone-600 mb-6">Create tasks manually with AI providing smart suggestions and recommendations.</p>
+          <AIAssistedTaskEditor
+            planStartDate={plan.startDate}
+            userEmail={selectedUserEmail}
+            plannerEmail={plannerEmail}
+            tasks={tasks}
+            setTasks={setTasks}
+            onAdd={(items)=>{
+              setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+              onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+            }}
+            onToast={onToast}
+          />
         </div>
       )}
 
       {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
       {!isTemplateMode && planningMode === "manual" && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-sm font-semibold">2</div>
-              <div className="text-base font-semibold">Add Tasks</div>
-            </div>
-            <div className="text-sm text-stone-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
-          </div>
-
-          <div className="ml-8">
-            <TaskEditor
-              planStartDate={plan.startDate}
-              onAdd={(items)=>{
-                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
-                onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
-              }}
-            />
-          </div>
+        <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Add Tasks</h2>
+          <p className="text-base text-stone-600 mb-6">Create tasks for your plan. Add multiple tasks to build a complete schedule.</p>
+          <TaskEditor
+            planStartDate={plan.startDate}
+            onAdd={(items)=>{
+              setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+              onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+            }}
+          />
         </div>
       )}
 
       {/* Deliver Section - Enhanced for template mode */}
       {tasks.length>0 && (
-        <div data-section="delivery" className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">
-                {isTemplateMode ? "✓" : "3"}
-            </div>
-              <div className="text-base font-semibold">
-                {isTemplateMode ? "Review & Deliver Template" : "Deliver to User"}
-              </div>
-            </div>
-            <div className="text-sm text-stone-600 ml-8">
-              {isTemplateMode 
-                ? "Review the template plan below. Edit plan details or tasks if needed, then deliver to the selected user's Google Tasks."
-                : "Review your plan and deliver tasks to the selected user's Google Tasks."
-              }
-            </div>
-          </div>
+        <div data-section="delivery" className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">
+            {isTemplateMode ? "Review & Deliver Template" : "Deliver to User"}
+          </h2>
+          <p className="text-base text-stone-600 mb-6">
+            {isTemplateMode 
+              ? "Review the template plan below. Edit plan details or tasks if needed, then deliver to the selected user's Google Tasks."
+              : "Review your plan and deliver tasks to the selected user's Google Tasks."
+            }
+          </p>
 
           {/* Plan Details - Editable */}
-          <div className="ml-8 mb-6 p-4 bg-stone-50 rounded-xl">
+          <div className="mb-6 p-4 bg-stone-50 rounded-xl">
             <div className="text-sm font-medium text-stone-700 mb-3">Plan Details</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block">
-                  <span className="font-medium text-stone-600">Plan Name:</span>
+                  <span className="text-sm font-medium text-stone-700 mb-2 block">Plan Name:</span>
                   <input
                     value={plan.title}
                     onChange={(e) => setPlan({...plan, title: e.target.value})}
-                    className="w-full mt-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
                     placeholder="Enter plan name"
                   />
                 </label>
               </div>
               <div>
                 <label className="block">
-                  <span className="font-medium text-stone-600">Start Date:</span>
+                  <span className="text-sm font-medium text-stone-700 mb-2 block">Start Date:</span>
                   <button
                     type="button"
                     onClick={() => setPlanDateOpen(true)}
-                    className="w-full mt-1 inline-flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm hover:bg-stone-50 justify-start"
+                    className="w-full inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-base text-stone-900 hover:bg-stone-50 justify-start focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
                   >
                     <Calendar className="h-4 w-4" /> {planDateText}
                   </button>
@@ -2050,11 +2008,11 @@ History
               </div>
               <div className="md:col-span-2">
                 <label className="block">
-                  <span className="font-medium text-stone-600">Description:</span>
+                  <span className="text-sm font-medium text-stone-700 mb-2 block">Description:</span>
                   <textarea
                     value={plan.description}
                     onChange={(e) => setPlan({...plan, description: e.target.value})}
-                    className="w-full mt-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
                     placeholder="Enter plan description"
                     rows="2"
                   />
@@ -2062,11 +2020,11 @@ History
               </div>
               <div>
                 <label className="block">
-                  <span className="font-medium text-stone-600">Timezone:</span>
+                  <span className="text-sm font-medium text-stone-700 mb-2 block">Timezone:</span>
                   <select
                     value={plan.timezone}
                     onChange={(e) => setPlan({...plan, timezone: e.target.value})}
-                    className="w-full mt-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-stone-200 px-3 py-2 text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
                   >
                     {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
                   </select>
@@ -2075,21 +2033,19 @@ History
             </div>
           </div>
 
-          <div className="ml-8">
-            <ComposerPreview
-              plannerEmail={plannerEmail}
-              selectedUserEmail={selectedUserEmail}
-              plan={plan}
-              tasks={tasks}
-              setTasks={setTasks}
-              replaceMode={replaceMode}
-              setReplaceMode={setReplaceMode}
-              msg={msg}
-              setMsg={setMsg}
-              onToast={onToast}
-              onPushed={()=>{ /* can reload history */ }}
-            />
-          </div>
+          <ComposerPreview
+            plannerEmail={plannerEmail}
+            selectedUserEmail={selectedUserEmail}
+            plan={plan}
+            tasks={tasks}
+            setTasks={setTasks}
+            replaceMode={replaceMode}
+            setReplaceMode={setReplaceMode}
+            msg={msg}
+            setMsg={setMsg}
+            onToast={onToast}
+            onPushed={()=>{ /* can reload history */ }}
+          />
         </div>
       )}
         </>
@@ -2097,16 +2053,8 @@ History
 
       {/* Assigned Tab Content */}
       {activeTab === "assigned" && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-sm font-semibold">📦</div>
-            <div className="text-base font-semibold">Assigned Bundles</div>
-          </div>
-          <div className="text-sm text-stone-600 ml-8">Review and work with bundles assigned to this user.</div>
-        </div>
-
-        <div className="ml-8">
+        <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Assigned Bundles</h2>
           <AssignedBundlesPanel 
             plannerEmail={plannerEmail} 
             userEmail={selectedUserEmail} 
@@ -2156,63 +2104,36 @@ History
             }}
           />
         </div>
-
-        {/* Task Feedback Section - REMOVED per Prompt 2: Broken section that showed "Not Found" errors */}
-      </div>
       )}
 
       {/* User Notes Tab Content */}
       {activeTab === "notes" && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
-              <div className="text-base font-semibold">User Notes</div>
+        <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">User Notes</h2>
+          {selectedUserEmail ? (
+            <UserNotesManager
+              userEmail={selectedUserEmail}
+              plannerEmail={plannerEmail}
+              onToast={onToast}
+            />
+          ) : (
+            <div className="text-center py-8 text-stone-500">
+              <div className="text-4xl mb-2">👤</div>
+              <div className="font-semibold mb-1">No User Selected</div>
+              <div className="text-sm">Choose a user from the dropdown above to view and edit their notes</div>
             </div>
-            <div className="text-sm text-stone-600 ml-8">
-              {selectedUserEmail ? (
-                <>AI context and rules for <strong>{selectedUserEmail}</strong></>
-              ) : (
-                "Select a user to view and edit their notes"
-              )}
-            </div>
-          </div>
-
-          <div className="ml-8">
-            {selectedUserEmail ? (
-              <UserNotesManager
-                userEmail={selectedUserEmail}
-                plannerEmail={plannerEmail}
-                onToast={onToast}
-              />
-            ) : (
-              <div className="text-center py-8 text-stone-500">
-                <div className="text-4xl mb-2">👤</div>
-                <div className="font-semibold mb-1">No User Selected</div>
-                <div className="text-sm">Choose a user from the dropdown above to view and edit their notes</div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       )}
 
       {/* History Tab Content */}
       {activeTab === "history" && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-sm font-semibold">📋</div>
-              <div className="text-base font-semibold">Plan History</div>
-            </div>
-            <div className="text-sm text-stone-600 ml-8">View and restore previously delivered plans for this user.</div>
-          </div>
-
-          <div className="ml-8">
-            <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
-          </div>
+        <div className="bg-white rounded-xl border border-stone-200 p-8 mb-6">
+          <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Plan History</h2>
+          <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
         </div>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -2919,34 +2840,30 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
   const totalItems = total;
 
   return (
-    <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-3 sm:p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm font-semibold">History</div>
-        <div className="text-xs text-stone-500">{filteredItems.length} of {totalItems} item(s)</div>
-      </div>
-
+    <>
       {/* Search and Controls */}
-      <div className="mb-4 space-y-3">
+      <div className="mb-6 space-y-6">
         {/* Search Box */}
-        <div className="flex gap-2">
+        <div>
           <input
             type="text"
             placeholder="Search history..."
             value={searchQuery}
             onChange={(e)=>setSearchQuery(e.target.value)}
-            className="flex-1 rounded-xl border border-stone-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-stone-200 px-4 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
           />
         </div>
 
         {/* Filter Controls and Page Size */}
         {/* Page Size Selector */}
-        <div className="flex items-center justify-end gap-4">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-stone-600">{filteredItems.length} of {totalItems} item(s)</div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-stone-500">Show:</span>
+            <span className="text-sm text-stone-600">Show:</span>
             <select 
               value={pageSize} 
               onChange={(e)=>setPageSize(Number(e.target.value))}
-              className="rounded-lg border border-stone-300 px-2 py-1 text-xs"
+              className="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-900"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -2957,31 +2874,29 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         </div>
       </div>
 
-      <div className="rounded-lg border overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="rounded-lg border border-stone-200 overflow-x-auto">
+        <table className="w-full">
           <thead className="bg-stone-50">
-            <tr className="text-left text-stone-500">
-              <th className="py-1.5 px-2">Title</th>
-              <th className="py-1.5 px-2">Type</th>
-              <th className="py-1.5 px-2">Start</th>
-              <th className="py-1.5 px-2">Items</th>
-              <th className="py-1.5 px-2 text-right">Actions</th>
+            <tr className="text-left border-b border-stone-200">
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Title</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Type</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Start</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Items</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredItems.map(item=>(
-              <tr key={`history-${item.id}`} className="border-t">
-                <td className="py-1.5 px-2">
+              <tr key={`history-${item.id}`} className="border-b border-stone-100 hover:bg-stone-50">
+                <td className="py-4 px-4 text-base text-stone-900">
                   <div className="flex items-center gap-2">
                     {item.title}
                   </div>
                 </td>
-                <td className="py-1.5 px-2">
-                  <span className="text-stone-600 text-xs">History</span>
-                </td>
-                <td className="py-1.5 px-2">{item.startDate}</td>
-                <td className="py-1.5 px-2">{item.itemsCount||"—"}</td>
-                <td className="py-1.5 px-2">
+                <td className="py-4 px-4 text-base text-stone-600">History</td>
+                <td className="py-4 px-4 text-base text-stone-900">{item.startDate}</td>
+                <td className="py-4 px-4 text-base text-stone-900">{item.itemsCount||"—"}</td>
+                <td className="py-4 px-4">
                   <div className="flex justify-end">
                     <button 
                       onClick={()=>onPrefill?.({ 
@@ -2989,7 +2904,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
                         tasks:item.tasks, 
                         mode:item.mode 
                       })} 
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
+                      className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50"
                     >
                       Restore
                     </button>
@@ -2998,7 +2913,7 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
               </tr>
             ))}
             {filteredItems.length === 0 && (
-              <tr><td colSpan={5} className="py-6 text-center text-stone-500">
+              <tr><td colSpan={5} className="py-8 text-center text-stone-500 text-base">
                 No history yet
               </td></tr>
             )}
@@ -3006,12 +2921,12 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
         </table>
       </div>
 
-      <div className="mt-2 flex items-center justify-end gap-2">
-        <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-lg border px-2 py-1 text-xs"><ChevronLeft className="h-3 w-3" /></button>
-        <div className="text-xs">Page {page}</div>
-        <button onClick={()=>setPage(p=>p+1)} className="rounded-lg border px-2 py-1 text-xs"><ChevronRight className="h-3 w-3" /></button>
+      <div className="mt-6 flex items-center justify-end gap-2">
+        <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50"><ChevronLeft className="h-4 w-4" /></button>
+        <div className="text-sm text-stone-600">Page {page}</div>
+        <button onClick={()=>setPage(p=>p+1)} className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50"><ChevronRight className="h-4 w-4" /></button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -3076,68 +2991,67 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-3 sm:p-4 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
+    <>
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="text-sm font-semibold">Assigned Bundles</div>
           {bundles.filter(b => !b.reviewed_at).length > 0 && (
-            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 border border-red-200">
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
               {bundles.filter(b => !b.reviewed_at).length} new
             </span>
           )}
         </div>
-        <div className="text-xs text-stone-500">{bundles.length} bundle(s)</div>
+        <div className="text-sm text-stone-600">{bundles.length} bundle(s)</div>
       </div>
 
-      <div className="rounded-lg border overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="rounded-lg border border-stone-200 overflow-x-auto">
+        <table className="w-full">
           <thead className="bg-stone-50">
-            <tr className="text-left text-stone-500">
-              <th className="py-1.5 px-2">Title</th>
-              <th className="py-1.5 px-2">Start Date</th>
-              <th className="py-1.5 px-2">Timezone</th>
-              <th className="py-1.5 px-2">Tasks</th>
-              <th className="py-1.5 px-2 text-right">Actions</th>
+            <tr className="text-left border-b border-stone-200">
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Title</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Start Date</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Timezone</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Tasks</th>
+              <th className="py-4 px-4 text-sm font-semibold text-stone-700 uppercase tracking-wide text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="py-6 text-center text-stone-500">Loading...</td></tr>
+              <tr><td colSpan={5} className="py-8 text-center text-stone-500 text-base">Loading...</td></tr>
             ) : bundles.length === 0 ? (
-              <tr><td colSpan={5} className="py-6 text-center text-stone-500">No assigned bundles</td></tr>
+              <tr><td colSpan={5} className="py-8 text-center text-stone-500 text-base">No assigned bundles</td></tr>
             ) : bundles.map(b=>{
               const isNew = !b.reviewed_at;
               return (
-                <tr key={b.id} className={`border-t ${isNew ? 'bg-blue-50' : ''}`}>
-                  <td className="py-1.5 px-2">
+                <tr key={b.id} className={`border-b border-stone-100 hover:bg-stone-50 ${isNew ? 'bg-blue-50' : ''}`}>
+                  <td className="py-4 px-4 text-base text-stone-900">
                     <div className="flex items-center gap-2">
                       {b.title || "Untitled Bundle"}
                       {isNew && (
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
                           New
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="py-1.5 px-2">{b.start_date || b.startDate || "—"}</td>
-                  <td className="py-1.5 px-2">{b.timezone || "—"}</td>
-                  <td className="py-1.5 px-2">{b.tasks?.length || 0}</td>
-                  <td className="py-1.5 px-2">
-                    <div className="flex justify-end gap-1">
-                    <button 
-                      onClick={()=>onReviewBundle?.(b)}
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50"
-                      title="Edit bundle"
-                    >
-                      ✏️
-                    </button>
-       <button 
-         onClick={()=>deleteBundle(b.id)}
-         className="rounded-lg border px-2 py-1 text-xs hover:bg-stone-50 text-stone-600"
-         title="Delete bundle"
-       >
-         🗑️
-       </button>
+                  <td className="py-4 px-4 text-base text-stone-900">{b.start_date || b.startDate || "—"}</td>
+                  <td className="py-4 px-4 text-base text-stone-900">{b.timezone || "—"}</td>
+                  <td className="py-4 px-4 text-base text-stone-900">{b.tasks?.length || 0}</td>
+                  <td className="py-4 px-4">
+                    <div className="flex justify-end gap-2">
+                      <button 
+                        onClick={()=>onReviewBundle?.(b)}
+                        className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        title="Edit bundle"
+                      >
+                        Review
+                      </button>
+                      <button 
+                        onClick={()=>deleteBundle(b.id)}
+                        className="px-3 py-1.5 text-sm font-medium border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50"
+                        title="Delete bundle"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -3146,11 +3060,7 @@ function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle
           </tbody>
         </table>
       </div>
-
-      <div className="mt-2 text-xs text-stone-500">
-        Click "Review" to edit tasks before pushing to Google Tasks, or "Archive" to remove from assigned list.
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -5358,141 +5268,94 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 
   if (!selectedUserEmail) {
     return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
-        <div className="text-center py-8">
-          <div className="text-stone-500 mb-2">👤</div>
-          <div className="font-semibold text-stone-700 mb-1">Choose a User First</div>
-          <div className="text-sm text-stone-500">Select a user to begin planning</div>
-        </div>
+      <div className="text-center py-8">
+        <div className="text-stone-500 mb-2">👤</div>
+        <div className="font-semibold text-stone-700 mb-1">Choose a User First</div>
+        <div className="text-sm text-stone-500">Select a user to begin planning</div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">🤖</div>
-          <div className="text-base sm:text-lg font-semibold">How would you like to create this plan?</div>
-        </div>
-        <div className="text-sm text-stone-600 ml-8">Choose your planning approach for <strong>{selectedUserEmail}</strong></div>
+    <>
+      <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">How would you like to create this plan?</h2>
+      <p className="text-base text-stone-600 mb-6">Choose your planning approach for <strong>{selectedUserEmail}</strong></p>
+      
+      {/* Planning Mode Options */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Full AI Option */}
+        <button
+          onClick={() => onModeSelect("full-ai")}
+          className={`p-5 rounded-lg border text-left transition-all ${
+            planningMode === "full-ai"
+              ? "border-2 border-blue-600"
+              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
+            <div className="text-base font-semibold text-stone-900">Full AI Planning</div>
+          </div>
+          <div className="text-sm text-stone-600">
+            Conversational AI creates your entire plan through research and dialogue
+          </div>
+        </button>
+
+        {/* AI-Assisted Manual Option */}
+        <button
+          onClick={() => onModeSelect("ai-assisted")}
+          className={`p-5 rounded-lg border text-left transition-all ${
+            planningMode === "ai-assisted"
+              ? "border-2 border-blue-600"
+              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-xs">🤝</div>
+            <div className="text-base font-semibold text-stone-900">AI-Assisted Manual</div>
+          </div>
+          <div className="text-sm text-stone-600">
+            You create tasks manually with smart AI suggestions and recommendations
+          </div>
+        </button>
+
+        {/* Pure Manual Option */}
+        <button
+          onClick={() => onModeSelect("manual")}
+          className={`p-5 rounded-lg border text-left transition-all ${
+            planningMode === "manual"
+              ? "border-2 border-blue-600"
+              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-xs">✏️</div>
+            <div className="text-base font-semibold text-stone-900">Pure Manual</div>
+          </div>
+          <div className="text-sm text-stone-600">
+            Traditional task creation without AI assistance
+          </div>
+        </button>
+
+        {/* Templates Option */}
+        <button
+          onClick={() => onModeSelect("templates")}
+          className={`p-5 rounded-lg border text-left transition-all ${
+            planningMode === "templates"
+              ? "border-2 border-blue-600"
+              : "border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs">📋</div>
+            <div className="text-base font-semibold text-stone-900">Use Template</div>
+          </div>
+          <div className="text-sm text-stone-600">
+            Select from your saved plan templates
+          </div>
+        </button>
       </div>
-
-             <div className="ml-8 space-y-3">
-               {/* Planning Mode Options */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Full AI Option */}
-                 <button
-                   onClick={() => onModeSelect("full-ai")}
-                   className={`p-4 rounded-xl border-2 text-left transition-all ${
-                     planningMode === "full-ai"
-                       ? "border-blue-500 bg-blue-50"
-                       : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-                   }`}
-                 >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
-              <div className="font-semibold text-sm">Full AI Planning</div>
-            </div>
-            <div className="text-xs text-stone-600">
-              Conversational AI creates your entire plan through research and dialogue
-            </div>
-          </button>
-
-          {/* AI-Assisted Manual Option */}
-                 <button
-                   onClick={() => onModeSelect("ai-assisted")}
-                   className={`p-4 rounded-xl border-2 text-left transition-all ${
-                     planningMode === "ai-assisted"
-                       ? "border-blue-500 bg-blue-50"
-                       : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-                   }`}
-                 >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-[#246650] text-xs">🤝</div>
-              <div className="font-semibold text-sm">AI-Assisted Manual</div>
-            </div>
-            <div className="text-xs text-stone-600">
-              You create tasks manually with smart AI suggestions and recommendations
-            </div>
-          </button>
-
-          {/* Pure Manual Option */}
-          <button
-            onClick={() => onModeSelect("manual")}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              planningMode === "manual"
-                ? "border-blue-500 bg-blue-50"
-                : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-xs">✏️</div>
-              <div className="font-semibold text-sm">Pure Manual</div>
-            </div>
-            <div className="text-xs text-stone-600">
-              Traditional task creation without AI assistance
-            </div>
-          </button>
-
-          {/* Templates Option */}
-          <button
-            onClick={() => onModeSelect("templates")}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              planningMode === "templates"
-                ? "border-blue-500 bg-blue-50"
-                : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs">📋</div>
-              <div className="font-semibold text-sm">Use Template</div>
-            </div>
-            <div className="text-xs text-stone-600">
-              Select from your saved plan templates
-            </div>
-          </button>
-        </div>
-
-        {/* Mode Description */}
-        {planningMode === "full-ai" && (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="text-sm font-medium text-blue-800 mb-1">Full AI Planning</div>
-            <div className="text-xs text-blue-600">
-              AI will research, analyze user notes, and create a complete plan through conversation. 
-              You'll review and refine the final plan before delivery.
-            </div>
-          </div>
-        )}
-
-        {planningMode === "ai-assisted" && (
-          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="text-sm font-medium text-[#246650] mb-1">AI-Assisted Manual</div>
-            <div className="text-xs text-[#246650]">
-              Create tasks manually with AI providing smart suggestions, gap analysis, and best practice recommendations.
-            </div>
-          </div>
-        )}
-
-        {planningMode === "manual" && (
-          <div className="mt-3 p-3 bg-stone-50 border border-stone-200 rounded-lg">
-            <div className="text-sm font-medium text-gray-800 mb-1">Pure Manual</div>
-            <div className="text-xs text-stone-600">
-              Complete control over task creation without AI assistance. Perfect when you prefer full manual control.
-            </div>
-          </div>
-        )}
-
-        {planningMode === "templates" && (
-          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="text-sm font-medium text-purple-800 mb-1">Use Template</div>
-            <div className="text-xs text-purple-600">
-              Select from your saved plan templates to quickly create plans for your users. Perfect for recurring workflows.
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    </>
   );
 }
 
