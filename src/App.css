@@ -1,9 +1,3 @@
-/* src/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* src/App.css */
+/* No font overrides - using Tailwind defaults */
 
-/* Optional: small defaults if Tailwind isn't active yet
-:root { color-scheme: light; }
-body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-*/
