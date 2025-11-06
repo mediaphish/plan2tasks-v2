@@ -136,6 +136,6715 @@ function MainApp(){
   if (urlPE) { try { localStorage.setItem("plannerEmail", urlPE); } catch {} }
   const [view,setView]=useState(validViews.has(urlView) ? urlView : "dashboard");
   
+  // Login state for landing page
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+
+  // Handle login
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (loginEmail && loginEmail.includes("@")) {
+      try {
+        localStorage.setItem("plannerEmail", loginEmail);
+        window.location.href = `/?plannerEmail=${encodeURIComponent(loginEmail)}&view=dashboard`;
+      } catch (err) {
+        console.error("Failed to save planner email:", err);
+      }
+    }
+  };
+
+  // Show landing page if no planner email
+  if (!plannerEmail) {
+    return (
+      <div className="min-h-screen bg-[#F5F3F0]">
+        {/* Header */}
+        <header className="bg-[#1A1A1A] w-full">
+          <div className="max-w-7xl mx-auto px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-8 brightness-0 invert" />
+                <span className="text-xl font-bold text-white">Plan2Tasks</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setLoginOpen(true)}
+                  className="text-white/80 hover:text-white font-medium"
+                >
+                  Log in
+                </button>
+                <button className="bg-[#2d7a5f] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#236049] transition-colors">
+                  Get Started
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Login Modal */}
+        {loginOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-xl">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-stone-900">Log in to Plan2Tasks</h2>
+                <button
+                  onClick={() => setLoginOpen(false)}
+                  className="text-stone-400 hover:text-stone-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <form onSubmit={handleLogin}>
+                <div className="mb-6">
+                  <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-2">
+                    Planner Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="your.email@example.com"
+                    required
+                    className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#2d7a5f] focus:border-transparent text-base"
+                    autoFocus
+                  />
+                  <p className="mt-2 text-sm text-stone-600">
+                    Enter the email address you use to access Plan2Tasks.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLoginOpen(false)}
+                    className="flex-1 px-4 py-3 border border-stone-300 text-stone-700 rounded-lg font-medium hover:bg-stone-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-[#2d7a5f] text-white rounded-lg font-medium hover:bg-[#236049] transition-colors"
+                  >
+                    Log in
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Hero Bar - Benefits */}
+        <div className="bg-white border-b border-stone-200">
+          <div className="max-w-7xl mx-auto px-8 py-4">
+            <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide text-center mb-4">
+              TRUSTED BY COACHES, CONSULTANTS, AND TEAM LEADERS
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">Create Plans in Minutes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">Instant Delivery</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">Track Progress</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
+                <span className="text-sm text-stone-700">No App Required</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-8 py-16">
+          {/* Hero Section - The Problem */}
+          <section className="text-center mb-20 max-w-4xl mx-auto">
+            <h1 className="text-5xl md:text-6xl font-bold text-stone-900 mb-6 leading-tight">
+              Stop Wondering If Your Plans Are Working
+            </h1>
+            <p className="text-xl text-stone-600 max-w-3xl mx-auto leading-relaxed mb-8">
+              You spend hours creating perfect task plans for your clients or team. But once you send them, it's a black hole. Are they using it? Are they making progress? You have no idea.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button className="bg-[#2d7a5f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors text-lg">
+                Start Your Free Trial
+              </button>
+              <button className="border-2 border-stone-300 text-stone-700 px-8 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors text-lg">
+                Schedule a Demo
+              </button>
+            </div>
+          </section>
+
+          {/* Two-Way Street - The Solution */}
+          <section className="text-center mb-20 max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold text-stone-900 mb-4">
+              The Two-Way Street That Changes Everything
+            </h2>
+            <p className="text-lg text-stone-600 leading-relaxed">
+              Plan2Tasks creates a feedback loop between you and your users. You plan, they execute, you see results.
+            </p>
+          </section>
+
+          {/* How It Works */}
+          <section className="mb-20">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+              {/* Step 1 */}
+              <div className="text-center flex-1 max-w-xs">
+                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-stone-700">1</span>
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Create Your Plan</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Use natural language or AI to outline tasks. Organize by categories, set priorities, add context.
+                </p>
+              </div>
+
+              {/* Arrow 1 */}
+              <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                <ArrowRight className="h-8 w-8 text-stone-400" />
+              </div>
+
+              {/* Step 2 */}
+              <div className="text-center flex-1 max-w-xs">
+                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-stone-700">2</span>
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Assign to Users</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Choose recipients and send. Tasks appear instantly in their Google Tasks—no new app required.
+                </p>
+              </div>
+
+              {/* Arrow 2 */}
+              <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                <ArrowRight className="h-8 w-8 text-stone-400" />
+              </div>
+
+              {/* Step 3 */}
+              <div className="text-center flex-1 max-w-xs">
+                <div className="w-16 h-16 rounded-full bg-[#2d7a5f] flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-white">3</span>
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Track Completions</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  See real-time completion data on your dashboard. Know who's engaged and what's working.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Dashboard Screenshot - The Proof */}
+          <section className="mb-20">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-stone-900 mb-4">
+                See Exactly What's Happening
+              </h2>
+              <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
+                Your dashboard shows real-time completion data from all your users. Finally, proof that your plans are working.
+              </p>
+            </div>
+            
+            {/* Dashboard Screenshot Placeholder */}
+            <div className="bg-white border border-stone-200 rounded-xl p-8 mb-8">
+              <div className="aspect-[16/10] bg-gradient-to-br from-stone-50 to-stone-100 rounded-lg border-2 border-dashed border-stone-300 flex items-center justify-center">
+                <div className="text-center">
+                  <BarChart className="h-16 w-16 text-stone-400 mx-auto mb-4" />
+                  <p className="text-stone-500 font-medium">Dashboard Screenshot</p>
+                  <p className="text-sm text-stone-400 mt-2">Placeholder for actual dashboard screenshot</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Three Metric Callouts */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="font-semibold text-stone-900 mb-2">Real-Time Updates</h3>
+                <p className="text-sm text-stone-600">Completion data syncs automatically</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
+                  <Users className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="font-semibold text-stone-900 mb-2">User Engagement</h3>
+                <p className="text-sm text-stone-600">See who's active and who needs support</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
+                  <BarChart className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="font-semibold text-stone-900 mb-2">Activity Feed</h3>
+                <p className="text-sm text-stone-600">Track recent completions across all users</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Feature Cards */}
+          <section className="mb-20">
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Card 1 */}
+              <div className="bg-green-50 border border-green-100 p-6 rounded-xl">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-[#2d7a5f]" />
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Create Plans Instantly</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Use AI or templates to build task plans in minutes. No spreadsheets, no complex project management tools.
+                </p>
+              </div>
+
+              {/* Card 2 */}
+              <div className="bg-amber-50 border border-amber-100 p-6 rounded-xl">
+                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-amber-700" />
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">Deliver to Google Tasks</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Tasks appear instantly in your users' Google Tasks. No new app to learn, no friction, just work. Also supports ICS file delivery via email for non-Google users.
+                </p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="bg-purple-50 border border-purple-100 p-6 rounded-xl">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <BarChart className="h-6 w-6 text-purple-700" />
+                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">See Real Completion Data</h3>
+                <p className="text-base text-stone-600 leading-relaxed">
+                  Watch task completions flow back in real-time. Know who's engaged, who needs help, and what's working.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Target Audience */}
+          <section className="mb-20 text-center max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold text-stone-900 mb-4">
+              Built for People Who Plan for Others
+            </h2>
+            <p className="text-lg text-stone-600 leading-relaxed mb-8">
+              Whether you're a coach, consultant, trainer, or team leader—if you create plans for others, this is for you.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6 text-left">
+              <div className="flex gap-4">
+                <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-stone-900 mb-2">No New App for Your Users</h3>
+                  <p className="text-base text-stone-600 leading-relaxed">
+                    Tasks go straight to Google Tasks. Your users don't need to learn anything new or download another app.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-stone-900 mb-2">AI-Powered Planning</h3>
+                  <p className="text-base text-stone-600 leading-relaxed">
+                    Describe what needs to be done in plain English. AI structures it into actionable tasks automatically.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Pricing */}
+          <section className="mb-20">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-stone-900 mb-2">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="text-lg text-stone-600">Start free, scale as you grow</p>
+            </div>
+
+            {/* Callout Box */}
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-6 mb-8 max-w-4xl mx-auto">
+              <p className="text-base text-stone-700 leading-relaxed">
+                <strong>Every Plan Includes:</strong> Unlimited plans, AI planning, Templates, Google Tasks integration, ICS email delivery, Real-time analytics, Full support
+              </p>
+            </div>
+
+            {/* Pricing Cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              {/* Free */}
+              <div className="bg-white border border-stone-200 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Free</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$0</p>
+                <p className="text-sm text-stone-600 mb-4">Perfect for personal use</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">1 User</p>
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                  Start Free Trial
+                </button>
+              </div>
+
+              {/* Starter */}
+              <div className="bg-white border border-stone-200 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Starter</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$9.99</p>
+                <p className="text-sm text-stone-600 mb-4">per month</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">Up to 10 users</p>
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                  Start Free Trial
+                </button>
+              </div>
+
+              {/* Pro */}
+              <div className="bg-white border-2 border-[#2d7a5f] rounded-xl p-6 relative">
+                <span className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#2d7a5f] text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  POPULAR
+                </span>
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Pro</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$24.99</p>
+                <p className="text-sm text-stone-600 mb-4">per month</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">Up to 50 users</p>
+                <button className="w-full bg-[#2d7a5f] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors">
+                  Start Free Trial
+                </button>
+              </div>
+
+              {/* Team */}
+              <div className="bg-white border border-stone-200 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-stone-900 mb-2">Team</h3>
+                <p className="text-3xl font-bold text-stone-900 mb-1">$49.99</p>
+                <p className="text-sm text-stone-600 mb-4">per month</p>
+                <p className="text-base font-semibold text-stone-900 mb-6">Up to 100 users</p>
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                  Start Free Trial
+                </button>
+              </div>
+            </div>
+
+            <p className="text-center text-stone-600">
+              <a href="#contact" className="text-[#2d7a5f] hover:underline font-medium">
+                Enterprise: Up to 1,000 users — contact us for custom pricing
+              </a>
+            </p>
+          </section>
+
+          {/* Final CTA */}
+          <section className="mb-20">
+            <div className="bg-white border border-stone-200 rounded-xl p-12 text-center max-w-3xl mx-auto">
+              <h2 className="text-4xl font-bold text-stone-900 mb-4">
+                Ready to See Your Plans Come to Life?
+              </h2>
+              <p className="text-lg text-stone-600 leading-relaxed mb-8">
+                Join coaches, consultants, and team leaders who are finally getting visibility into their planning efforts.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                <button className="bg-[#2d7a5f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors text-lg">
+                  Start Your Free Trial
+                </button>
+                <button className="border-2 border-stone-300 text-stone-700 px-8 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors text-lg">
+                  Schedule a Demo
+                </button>
+              </div>
+              <p className="text-sm text-stone-500">
+                14-day free trial · No credit card required · Cancel anytime
+              </p>
+            </div>
+          </section>
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-stone-200 py-8">
+          <div className="max-w-7xl mx-auto px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-stone-600">
+                © 2025 Plan2Tasks
+              </p>
+              <div className="flex items-center gap-6">
+                <a href="#privacy" className="text-sm text-stone-600 hover:text-stone-900">Privacy</a>
+                <a href="#terms" className="text-sm text-stone-600 hover:text-stone-900">Terms</a>
+                <a href="#contact" className="text-sm text-stone-600 hover:text-stone-900">Contact</a>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // Add form handlers for landing page
+  useEffect(() => {
+    if (!plannerEmail) {
+      // Waitlist form handler
+      const waitlistForm = document.getElementById('waitlistForm');
+      if (waitlistForm) {
+        waitlistForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const email = document.getElementById('email').value;
+          if (!email.includes('@')) {
+            alert('Please enter a valid email address');
+            return;
+          }
+          alert('Thanks for joining the waitlist! We\'ll be in touch soon.');
+          document.getElementById('email').value = '';
+        });
+      }
+
+      // Contact form handler
+      const contactForm = document.getElementById('contactForm');
+      if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const name = document.getElementById('name').value;
+          const email = document.getElementById('contactEmail').value;
+          const message = document.getElementById('message').value;
+          
+          const subject = encodeURIComponent('Contact from Plan2Tasks Website');
+          const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+          const mailtoLink = `mailto:bartpaden@gmail.com?subject=${subject}&body=${body}`;
+          
+          window.location.href = mailtoLink;
+          alert('Opening your email client. Please send the message to complete your contact request.');
+        });
+      }
+    }
+  }, [plannerEmail]);
+  const [selectedUserEmail,setSelectedUserEmail]=useState(urlUser || "");
+  const [prefs,setPrefs]=useState({});
+  const [inviteOpen,setInviteOpen]=useState(false);
+  const [toasts,setToasts]=useState([]);
+  const [profileOpen,setProfileOpen]=useState(false);
+  const [plannerProfile,setPlannerProfile]=useState(null);
+  const [profileEditMode,setProfileEditMode]=useState(false);
+  const [templateData,setTemplateData]=useState(null); // Template data from Templates view
+  const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
+  const profileRef = useRef(null);
+  const createDropdownRef = useRef(null);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = (event) => {
+      // Get the current URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlView = urlParams.get('view') || '';
+      const newView = validViews.has(urlView) ? urlView : 'dashboard';
+      const newUser = urlParams.get('user') || '';
+      
+      // Update the view and user state to match the URL
+      setView(newView);
+      if (newUser) {
+        setSelectedUserEmail(newUser);
+      } else {
+        setSelectedUserEmail('');
+      }
+    };
+    
+    // Listen for browser back/forward navigation
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  // Load prefs, but do NOT override URL-driven view
+  useEffect(()=>{ (async ()=>{
+    try{
+      const qs=new URLSearchParams({ plannerEmail });
+      const r=await fetch(`/api/prefs/get?${qs.toString()}`);
+      if (r.ok){ const j=await r.json(); const p=j.prefs||j;
+        setPrefs(p||{});
+        if (!validViews.has(urlView)) setView((p&&p.default_view) || "dashboard");
+      }
+    }catch(e){/* noop */}
+  })(); },[plannerEmail]);
+
+  // Load planner profile
+  useEffect(()=>{ (async ()=>{
+    try{
+      const r=await fetch(`/api/planner/profile?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      if (r.ok){ 
+        const j=await r.json(); 
+        setPlannerProfile(j.profile); 
+      }
+    }catch(e){ console.error("Profile load failed:", e); }
+  })(); }, [plannerEmail]);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+      if (createDropdownRef.current && !createDropdownRef.current.contains(event.target)) {
+        setCreateDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  async function loadBadge(){
+    try{
+      const qs=new URLSearchParams({ plannerEmail, status:"new" });
+      const r=await fetch(`/api/inbox?${qs.toString()}`); const j=await r.json();
+      // Badge functionality removed from header but function kept for InboxViewIntegrated
+    }catch(e){console.error('Badge error:', e);}
+  }
+
+  // Removed old uploadProfilePhoto function - using new direct upload approach
+
+  async function saveProfile(profileData) {
+    try {
+      console.log('Saving profile:', { plannerEmail, profileData });
+      
+      const response = await fetch('/api/planner/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plannerEmail,
+          ...profileData
+        })
+      });
+      
+      const result = await response.json();
+      console.log('Save response:', { status: response.status, result });
+      
+      if (response.ok) {
+        setPlannerProfile(result.profile);
+        setProfileEditMode(false);
+        onToast("ok", "Profile updated successfully");
+        // Navigate back to users view after successful save
+        setTimeout(() => {
+          setView("users");
+          updateQueryView("users");
+        }, 1000);
+      } else {
+        throw new Error(result.error || `Save failed with status ${response.status}`);
+      }
+    } catch (e) {
+      console.error('Profile save error:', e);
+      onToast("error", `Failed to save profile: ${e.message}`);
+    }
+  }
+
+  function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
+  function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
+  function clearAllToasts(){ setToasts([]); }
+
+  async function saveUserNotes(newNotes) {
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: selectedUserEmail,
+          plannerEmail,
+          notes: newNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        onToast?.("ok", "User notes updated with AI insights");
+        setShowSaveNotesPrompt(false);
+        setPendingNotes("");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F5F3F0] pb-6">
+      <Toasts items={toasts} dismiss={dismissToast} />
+      <div className="w-full">
+        {/* Header - Dark Background per Prompt 6 */}
+        <header className="bg-[#1A1A1A] border-b border-stone-800 w-full px-8 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo & Navigation */}
+            <div className="flex items-center gap-8">
+              <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8 brightness-0 invert" />
+              <nav className="hidden md:flex items-center gap-2">
+                <button 
+                  onClick={()=>{ 
+                    // Clear user parameter first
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("user");
+                    url.searchParams.set("view", "dashboard");
+                    window.history.pushState({}, "", url.toString());
+                    
+                    // Update state
+                    setView("dashboard"); 
+                    setSelectedUserEmail("");
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    view === "dashboard" 
+                      ? "bg-white/10 text-white" 
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Dashboard
+                </button>
+                <button 
+                  onClick={()=>{ setView("users"); updateQueryView("users"); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    view === "users" 
+                      ? "bg-white/10 text-white" 
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Users
+                </button>
+                <button 
+                  onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    view === "templates" 
+                      ? "bg-white/10 text-white" 
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Templates
+                </button>
+              </nav>
+            </div>
+
+            {/* Right: Actions & Profile */}
+            <div className="flex items-center gap-3">
+              {/* Create Dropdown */}
+              <div className="relative" ref={createDropdownRef}>
+                <button
+                  onClick={() => setCreateDropdownOpen(!createDropdownOpen)}
+                  className="flex items-center gap-2 px-4 py-2 bg-stone-700 text-white rounded-lg hover:bg-stone-600 transition-colors text-sm font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                
+                {createDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-stone-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        setCreateDropdownOpen(false);
+                        setInviteOpen(true);
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left flex items-center gap-3"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Invite User
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCreateDropdownOpen(false);
+                        // Navigate to plan view (user selection will be prompted)
+                        setView("plan");
+                        updateQueryView("plan");
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left flex items-center gap-3"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Plan for User
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCreateDropdownOpen(false);
+                        setView("templates");
+                        updateQueryView("templates");
+                        // Trigger template creation modal if available
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left flex items-center gap-3"
+                    >
+                      <Layout className="w-4 h-4" />
+                      Create Template
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Settings Dropdown */}
+              <div className="relative" ref={profileRef}>
+                <button 
+                  onClick={()=>setProfileOpen(!profileOpen)}
+                  className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <SettingsIcon className="w-5 h-5" />
+                </button>
+                
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-stone-200 py-2 z-50">
+                    <button 
+                      onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(true);}}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
+                    >
+                      Profile
+                    </button>
+                    <button 
+                      onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
+                    >
+                      Settings
+                    </button>
+                    <button 
+                      onClick={()=>{setProfileOpen(false); setView("billing"); updateQueryView("billing");}}
+                      className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
+                    >
+                      Billing
+                    </button>
+                    <div className="border-t border-stone-200 my-2" />
+                    <button 
+                      onClick={()=>{
+                        setProfileOpen(false);
+                        localStorage.removeItem("plannerEmail");
+                        window.location.href = "/";
+                      }}
+                      className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {view==="dashboard" && (
+          <DashboardView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onNavigate={(newView, userEmail) => {
+              if (userEmail) {
+                setSelectedUserEmail(userEmail);
+                updateQueryUser(userEmail);
+              }
+              setView(newView);
+              updateQueryView(newView);
+            }}
+          />
+        )}
+
+        {view==="users" && (
+          <UsersView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onManage={(email)=>{ 
+              setSelectedUserEmail(email);
+              setView("plan"); 
+              updateQueryView("plan");
+              updateQueryUser(email);
+            }}
+            onViewDashboard={(email) => {
+              console.log('[onViewDashboard] Called with email:', email);
+              setSelectedUserEmail(email);
+              setView("plan");
+              console.log('[onViewDashboard] Calling updateQueryView("plan")');
+              updateQueryView("plan");
+              updateQueryUser(email);
+              console.log('[onViewDashboard] URL should now be:', window.location.href);
+            }}
+          />
+        )}
+
+        {view==="plan" && (
+          <PlanView
+            plannerEmail={plannerEmail}
+            selectedUserEmailProp={selectedUserEmail}
+            urlUser={urlUser}
+            onToast={(t,m)=>toast(t,m)}
+            onUserChange={(email)=>updateQueryUser(email)}
+            templateData={templateData}
+            onTemplateApplied={() => setTemplateData(null)}
+            clearAllToasts={clearAllToasts}
+            prefs={prefs}
+          />
+        )}
+
+        {view==="templates" && (
+          <TemplatesManagementView
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onNavigate={(view, user, template) => {
+              setView(view);
+              updateQueryView(view);
+              if (user) {
+                updateQueryUser(user);
+              }
+              if (template) {
+                // Store template data for Plan view to use
+                setTemplateData(template);
+              }
+            }}
+          />
+        )}
+
+        {view==="user-dashboard" && (
+          <UserDashboard
+            plannerEmail={plannerEmail}
+            userEmail={selectedUserEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onNavigate={(newView) => {
+              setView(newView);
+              updateQueryView(newView);
+            }}
+          />
+        )}
+
+        {view==="settings" && (
+          <SettingsView
+            plannerEmail={plannerEmail}
+            prefs={prefs}
+            onChange={(p)=>setPrefs(p)}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+
+        {view==="inbox" && (
+          <InboxViewIntegrated
+            plannerEmail={plannerEmail}
+            onToast={(t,m)=>toast(t,m)}
+            onBadgeRefresh={loadBadge}
+          />
+        )}
+
+        {/* Legacy modal removed - inbox functionality eliminated */}
+        {false && (
+          <InboxDrawer
+            plannerEmail={plannerEmail}
+            onClose={()=>setInboxOpen(false)}
+          />
+        )}
+
+        {/* Global Invite Modal */}
+        {inviteOpen && (
+          <SendInviteModal
+            plannerEmail={plannerEmail}
+            onClose={()=>setInviteOpen(false)}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+
+        {/* Profile View */}
+        {view==="profile" && (
+          <ProfileView
+            plannerEmail={plannerEmail}
+            profile={plannerProfile}
+            editMode={profileEditMode}
+            onEditModeChange={setProfileEditMode}
+            onSave={saveProfile}
+            onToast={(t,m)=>toast(t,m)}
+          />
+        )}
+      </div>
+      
+      {/* Footer */}
+      <footer className="mt-8 border-t border-stone-200 py-4 text-center text-xs text-stone-500">
+        <div className="flex items-center justify-center gap-4">
+          <span>Version {APP_VERSION}</span>
+          <span>•</span>
+          <span>© 2025 Plan2Tasks</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function updateQueryView(next){
+  try{
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", next);
+    
+    // Clear user parameter when going to main dashboard
+    if (next === "dashboard") {
+      url.searchParams.delete("user");
+    }
+    
+    // Clean up OAuth parameters that might be in the URL
+    url.searchParams.delete("code");
+    url.searchParams.delete("state");
+    url.searchParams.delete("scope");
+    url.searchParams.delete("authuser");
+    url.searchParams.delete("prompt");
+    
+    // Use pushState to add new history entry instead of replaceState
+    window.history.pushState({}, "", url.toString());
+  }catch{/* noop */}
+}
+
+function updateQueryUser(userEmail){
+  try{
+    const url = new URL(window.location.href);
+    if (userEmail) {
+      url.searchParams.set("user", userEmail);
+    } else {
+      url.searchParams.delete("user");
+    }
+    // DON'T override the view - let the calling function control the view
+    // url.searchParams.set("view", "plan"); // REMOVED - this was causing the bug!
+    
+    // Clean up OAuth parameters that might be in the URL
+    url.searchParams.delete("code");
+    url.searchParams.delete("state");
+    url.searchParams.delete("scope");
+    url.searchParams.delete("authuser");
+    url.searchParams.delete("prompt");
+    
+    // Use pushState to add new history entry instead of replaceState
+    window.history.pushState({}, "", url.toString());
+  }catch{/* noop */}
+}
+
+/* ───────── nav & toasts ───────── */
+function NavBtn({ active, onClick, icon, children }){
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs sm:text-sm",
+        active ? "border-stone-800 bg-stone-900 text-white" : "border-stone-300 bg-white hover:bg-stone-50"
+      )}
+    >
+      {icon} {children}
+    </button>
+  );
+}
+function Toasts({ items, dismiss }){
+  return (
+    <div className="fixed bottom-2 left-0 right-0 z-50 flex justify-center">
+      <div className="flex max-w-[90vw] flex-col gap-2">
+        {items.map(t=>(
+          <div key={t.id} className={cn(
+            "relative rounded-xl border px-3 py-2 text-sm shadow-sm",
+            t.type==="ok" ? "border-green-300 bg-green-50 text-green-800" :
+            t.type==="warn" ? "border-yellow-300 bg-yellow-50 text-yellow-800" :
+            "border-red-300 bg-red-50 text-red-800"
+          )}>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">{t.type==="ok"?"Success":t.type==="warn"?"Heads up":"Error"}</span>
+              <span className="opacity-70">{t.text}</span>
+            </div>
+            <button onClick={()=>dismiss(t.id)} className="absolute right-1 top-1 text-xs text-stone-500 hover:text-stone-800">×</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Inbox: integrated view (no iframe, no new header) ───────── */
+function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
+  const [users,setUsers]=useState([]);
+  const [selectedUser,setSelectedUser]=useState("");
+  const [rows,setRows]=useState([]);
+  const [status,setStatus]=useState("new"); // "new" | "assigned" | "archived"
+  const [loading,setLoading]=useState(false);
+
+  // Deep-link support: when landing on inbox view, prefer NEW; if empty, auto-load ASSIGNED
+  useEffect(()=>{ (async ()=>{
+    await loadUsers();
+    await loadInbox("new", { fallbackToAssigned: true });
+  })(); /* eslint-disable-next-line */},[]);
+
+  async function fetchJSON(url){
+    const sep = url.includes("?") ? "&" : "?";
+    const noCacheUrl = `${url}${sep}t=${Date.now()}`;
+    const r = await fetch(noCacheUrl, { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json().catch(()=> ({}));
+  }
+
+  async function loadUsers(){
+    try{
+      const url = `/api/users?op=list&plannerEmail=${encodeURIComponent(plannerEmail)}&status=all`;
+      const body = await fetchJSON(url);
+      const list = body?.users || body?.data || [];
+      setUsers(list);
+      // Do not auto-select; dropdown serves both NEW (assign target) and ASSIGNED (context)
+    }catch{/* noop */}
+  }
+
+  function mapBundle(b){
+    return {
+      id: b.id || b.inboxId,
+      title: b.title,
+      startDate: b.start_date || b.startDate,
+      timezone: b.timezone,
+      assignedEmail: b.assigned_user_email || b.assigned_user || null
+    };
+  }
+
+  function preselectIfUniformAssigned(bundles, viewStatus){
+    if (viewStatus !== "assigned") return;
+    const emails = (bundles||[])
+      .map(b => (b.assigned_user_email || b.assigned_user || "").toString().trim())
+      .filter(Boolean).map(e=>e.toLowerCase());
+    if (emails.length===0) return;
+    const uniq = Array.from(new Set(emails));
+    if (uniq.length===1) {
+      const email = uniq[0];
+      const found = (users||[]).find(u => String(u.email||"").toLowerCase()===email);
+      if (found) setSelectedUser(found.email);
+    }
+  }
+
+  async function loadInbox(nextStatus="new", { fallbackToAssigned=false } = {}){
+    setLoading(true);
+    setRows([]);
+    setStatus(nextStatus);
+    try{
+      const url = `/api/inbox?plannerEmail=${encodeURIComponent(plannerEmail)}&status=${encodeURIComponent(nextStatus)}`;
+      const body = await fetchJSON(url);
+      const bundles = body?.bundles || body?.data || body || [];
+      if (nextStatus==="new" && fallbackToAssigned && (!Array.isArray(bundles) || bundles.length===0)){
+        setLoading(false);
+        return loadInbox("assigned", { fallbackToAssigned:false });
+      }
+      setRows(Array.isArray(bundles) ? bundles.map(mapBundle) : []);
+      preselectIfUniformAssigned(bundles, nextStatus);
+    }catch(e){
+      onToast?.("error", "Failed to load inbox");
+    }
+    setLoading(false);
+  }
+
+  async function assignBundle(inboxId){
+    const userEmail = selectedUser;
+    if (!userEmail) return; // require selection; no extra UI
+    try{
+      await fetch("/api/inbox/assign",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, inboxId, userEmail })
+      });
+      // After assignment, reload NEW; if empty, fall back to ASSIGNED
+      loadInbox("new", { fallbackToAssigned:true });
+      // Refresh badge count after assignment
+      onBadgeRefresh?.();
+      onToast?.("ok","Assigned");
+    }catch{
+      onToast?.("error","Assign failed");
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="text-base sm:text-lg font-semibold">Inbox — New Bundles</div>
+        <div className="flex items-center gap-3">
+          <label htmlFor="inboxUserSelect" className="text-sm">Assign to:</label>
+          <select
+            id="inboxUserSelect"
+            value={selectedUser || ""}
+            onChange={(e)=>setSelectedUser(e.target.value)}
+            className="rounded-xl border border-stone-300 px-3 py-2 text-sm"
+          >
+            <option value="">Select…</option>
+            {users.map(u=>(
+              <option key={u.email} value={u.email}>{u.email}</option>
+            ))}
+          </select>
+
+          <button onClick={()=>loadInbox("new")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-stone-50">Load NEW</button>
+          <button onClick={()=>loadInbox("assigned")} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-stone-50">Load ASSIGNED</button>
+          <button onClick={()=>loadInbox("new", { fallbackToAssigned:true })} className="rounded-xl border px-2.5 py-1.5 text-sm hover:bg-stone-50">Refresh</button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-stone-50">
+            <tr className="text-left text-stone-500">
+              <th className="py-1.5 px-2">Title</th>
+              <th className="py-1.5 px-2">Start Date</th>
+              <th className="py-1.5 px-2">Timezone</th>
+              <th className="py-1.5 px-2">Inbox ID</th>
+              <th className="py-1.5 px-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={5} className="py-4 text-center text-gray-500">Loading {status.toUpperCase()}…</td></tr>
+            )}
+            {!loading && rows.length===0 && (
+              <tr><td colSpan={5} className="py-4 text-center text-gray-500">No bundles.</td></tr>
+            )}
+            {!loading && rows.map(b=>(
+              <tr key={b.id} className="border-t align-top">
+                <td className="py-1.5 px-2">{b.title}</td>
+                <td className="py-1.5 px-2">{b.startDate || ""}</td>
+                <td className="py-1.5 px-2">{b.timezone || ""}</td>
+                <td className="py-1.5 px-2"><code className="text-xs">{b.id}</code></td>
+                <td className="py-1.5 px-2">
+                  <div className="flex gap-1.5">
+                    <a
+                      href={`/review.html?inboxId=${encodeURIComponent(b.id)}`}
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                    >Review</a>
+                    <button
+                      disabled={status!=="new"}
+                      onClick={()=>assignBundle(b.id)}
+                      className={cn("rounded-lg border px-2 py-1 text-xs", status==="assigned" ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50")}
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Inbox Drawer (legacy; not used) ───────── */
+function InboxDrawer({ plannerEmail, onClose }){
+  const [query,setQuery]=useState("");
+  const [items,setItems]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [sel,setSel]=useState({});
+
+  async function search(){
+    setLoading(true);
+    try{
+      const r=await fetch(`/api/inbox/search?q=${encodeURIComponent(query)}&plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const j=await r.json();
+      setItems(j.results||[]);
+      const m={}; for (const r of (j.results||[])) m[r.id]=false; setSel(m);
+    }catch(e){/* noop */}
+    setLoading(false);
+  }
+  useEffect(()=>{ if (query.trim().length===0) setItems([]); },[query]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/10 p-2 sm:p-4">
+      <div className="mx-auto max-w-2xl rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-semibold">Inbox</div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="mb-2 flex gap-2">
+          <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search..." className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <button onClick={search} className="rounded-xl border px-2 py-1 text-sm hover:bg-gray-50"><Search className="h-4 w-4" /></button>
+        </div>
+
+        <div className="max-h-[50vh] overflow-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr className="text-left text-gray-500">
+                <th className="py-1.5 px-2">Pick</th>
+                <th className="py-1.5 px-2">Title</th>
+                <th className="py-1.5 px-2">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(r=>(
+                <tr key={r.id} className="border-t">
+                  <td className="py-1.5 px-2"><input type="checkbox" checked={!!sel[r.id]} onChange={()=>setSel(s=>({ ...s, [r.id]: !s[r.id] }))} /></td>
+                  <td className="py-1.5 px-2">{r.title}</td>
+                  <td className="py-1.5 px-2 text-gray-500">{r.notes||"—"}</td>
+                </tr>
+              ))}
+              {(!items||items.length===0) && (
+                <tr><td colSpan={3} className="py-4 text-center text-gray-500">{loading?"Searching…":"No results"}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-xs text-gray-500">Search your inbox items to add to a plan.</div>
+          <button onClick={onClose} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Modal + Calendar (LOCAL) ───────── */
+function Modal({ title, onClose, children }){
+  useEffect(()=>{
+    function onKey(e){ if (e.key==="Escape") onClose?.(); }
+    document.addEventListener("keydown", onKey);
+    return ()=>document.removeEventListener("keydown", onKey);
+  },[onClose]);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/10 p-2 sm:p-4">
+      <div className="mx-auto max-w-lg rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-semibold">{title}</div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+function CalendarGridFree({ initialDate, selectedDate, onPick }){
+  const init = parseYMDLocal(initialDate) || new Date();
+  const sel = parseYMDLocal(selectedDate) || init;
+  const [vm,setVm]=useState(()=>new Date(sel.getFullYear(), sel.getMonth(), 1));
+
+  function same(d1,d2){ return d2 && d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth() && d1.getDate()===d2.getDate(); }
+
+  const weeks = useMemo(()=>{
+    const out=[];
+    const firstDow=new Date(vm.getFullYear(), vm.getMonth(), 1).getDay();
+    const start=new Date(vm.getFullYear(), vm.getMonth(), 1-firstDow);
+    let cur = new Date(start);
+    for (let r=0;r<6;r++){
+      const row=[];
+      for (let c=0;c<7;c++){ row.push(new Date(cur)); cur = addDaysLocal(cur,1); }
+      out.push(row);
+    }
+    return out;
+  },[vm]);
+
+  const monthLabel = (d)=> format(d, "LLLL yyyy");
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear()-1, v.getMonth(), 1))} title="Prev year"><ChevronsLeft className="h-3 w-3" /></button>
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear(), v.getMonth()-1, 1))} title="Prev month"><ChevronLeft className="h-3 w-3" /></button>
+          <div className="px-2 text-sm font-semibold">{monthLabel(vm)}</div>
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear(), v.getMonth()+1, 1))} title="Next month"><ChevronRight className="h-3 w-4" /></button>
+          <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(v=>new Date(v.getFullYear()+1, v.getMonth(), 1))} title="Next year"><ChevronsRight className="h-3 w-3" /></button>
+        </div>
+        <button className="rounded-lg border px-2 py-1 text-xs" onClick={()=>setVm(new Date(init.getFullYear(), init.getMonth(), 1))}>Jump to current</button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1">
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><div key={d}>{d}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {weeks.map((row,ri)=>row.map((c,ci)=>(
+          <button key={`${ri}-${ci}`} type="button"
+            onClick={()=>onPick?.(fmtYMDLocal(c))}
+            className={cn(
+              "rounded-lg border px-2 py-2 text-sm",
+              c.getMonth()===vm.getMonth() ? "bg-white hover:bg-gray-50" : "bg-gray-50 text-gray-400",
+              same(c, parseYMDLocal(selectedDate)||new Date(0)) ? "border-gray-800 ring-1 ring-gray-700" : "border-gray-300"
+            )}
+          >
+            {c.getDate()}
+          </button>
+        )))}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Plan view ───────── */
+function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange, templateData, onTemplateApplied, clearAllToasts, prefs }){
+  const [users,setUsers]=useState([]);
+  const [selectedUserEmail,setSelectedUserEmail]=useState("");
+  const [plan,setPlan]=useState({ title:"Weekly Plan", description:"", startDate: format(new Date(),"yyyy-MM-dd"), timezone:"America/Chicago" });
+  const [tasks,setTasks]=useState([]);
+  const [replaceMode,setReplaceMode]=useState(false);
+  const [msg,setMsg]=useState("");
+  const [planDateOpen,setPlanDateOpen]=useState(false);
+  const [histReloadKey,setHistReloadKey]=useState(0);
+  const [activeTab,setActiveTab]=useState("plan");
+  const [newBundleCount,setNewBundleCount]=useState(0);
+  const [taskMode,setTaskMode]=useState("manual");
+  const [planningMode,setPlanningMode]=useState(prefs?.default_planning_mode || "full-ai"); // "full-ai", "ai-assisted", "manual", "templates"
+  const [showSaveNotesPrompt,setShowSaveNotesPrompt]=useState(false);
+  const [pendingNotes,setPendingNotes]=useState("");
+  const [localTemplateApplied, setLocalTemplateApplied] = useState(false); // Track template applied locally in PlanView
+  
+  // Track if we're in template review mode (template applied, ready to review and deliver)
+  // Check both templateData prop (from Templates view navigation) and localTemplateApplied (from TemplatesView in planning mode)
+  const isTemplateMode = !!templateData || localTemplateApplied;
+
+  useEffect(()=>{ 
+    if (urlUser) {
+      setSelectedUserEmail(urlUser);
+    } else if (selectedUserEmailProp) {
+      setSelectedUserEmail(selectedUserEmailProp);
+    }
+  },[urlUser, selectedUserEmailProp]);
+
+  // Update planning mode when preferences change
+  useEffect(() => {
+    if (prefs?.default_planning_mode) {
+      setPlanningMode(prefs.default_planning_mode);
+    }
+  }, [prefs?.default_planning_mode]);
+
+  // Prevent auto-scroll on plan view mount - force scroll to top
+  useEffect(() => {
+    if (activeTab === "plan") {
+      // Aggressively prevent any auto-scroll by forcing scroll to top multiple times
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      // Additional attempts to prevent late scrolls
+      const timers = [10, 50, 100, 200, 300, 500].map(delay => 
+        setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }), delay)
+      );
+      return () => timers.forEach(clearTimeout);
+    }
+  }, [activeTab]);
+
+  useEffect(()=>{ (async ()=>{
+    const qs=new URLSearchParams({ op:"list", plannerEmail, status:"all" });
+    const r=await fetch(`/api/users?${qs.toString()}`); const j=await r.json();
+    const arr = (j.users||[]).map(u => ({ ...u, email: u.email || u.userEmail || u.user_email || "" }));
+    setUsers(arr);
+    if (!selectedUserEmail) {
+      const fromUrl = urlUser && arr.find(a=>a.email===urlUser)?.email;
+      const fromProp = selectedUserEmailProp && arr.find(a=>a.email===selectedUserEmailProp)?.email;
+      const connected = arr.find(u=>u.status==="connected")?.email;
+      const fallback = arr[0]?.email || "";
+      const newUser = fromUrl || fromProp || connected || fallback || "";
+      setSelectedUserEmail(newUser);
+      if (newUser && !urlUser) {
+        onUserChange?.(newUser);
+      }
+    }
+  })(); },[plannerEmail]);
+
+  useEffect(()=>{ 
+    // Only clear tasks if we're NOT applying a template
+    // If templateData exists, let the template application handle setting tasks
+    if (!templateData) {
+      setTasks([]); 
+      setMsg(""); 
+    }
+    setLocalTemplateApplied(false); // Clear template flag when user changes
+  },[selectedUserEmail, templateData]); // Include templateData to check current state
+
+  // Clear template data when user starts modifying the plan
+  const clearTemplateData = () => {
+    if (templateData) {
+      onTemplateApplied?.();
+    }
+    if (localTemplateApplied) {
+      setLocalTemplateApplied(false);
+    }
+  };
+
+  // Apply template data when available
+  // Only apply if we have a selected user (template assignment requires a user)
+  useEffect(() => {
+    if (templateData && selectedUserEmail) {
+      console.log("Applying template data:", templateData, "for user:", selectedUserEmail);
+      const newPlan = {
+        title: templateData.title || "Untitled Plan",
+        description: templateData.description || "",
+        startDate: format(new Date(),"yyyy-MM-dd"),
+        timezone: "America/Chicago"
+      };
+      console.log("Setting plan to:", newPlan);
+      setPlan(newPlan);
+      // Ensure tasks array is properly formatted
+      const templateTasks = Array.isArray(templateData.tasks) ? templateData.tasks : [];
+      console.log("Setting tasks:", templateTasks.length, "tasks");
+      setTasks(templateTasks);
+      setPlanningMode("ai-assisted"); // Use normal planning mode - keeps fields editable
+      clearAllToasts(); // Clear any existing toasts
+      
+      // Switch to Plan tab - NO auto-scroll, let user scroll freely
+      setActiveTab("plan");
+      
+      // Don't clear template data immediately - let it persist for the user to see
+    }
+  }, [templateData, selectedUserEmail]); // Apply when both template and user are ready
+
+  async function loadNewBundleCount(){
+    if (!selectedUserEmail) { setNewBundleCount(0); return; }
+    try{
+      const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
+      const r = await fetch(`/api/inbox?${qs.toString()}`);
+      const j = await r.json();
+      
+      const userBundles = (j.bundles || []).filter(b => 
+        (b.assigned_user_email || b.assigned_user) === selectedUserEmail
+      );
+      
+      const newCount = userBundles.filter(b => !b.reviewed_at).length;
+      setNewBundleCount(newCount);
+    }catch(e){
+      setNewBundleCount(0);
+    }
+  }
+
+  useEffect(()=>{ loadNewBundleCount(); },[selectedUserEmail, plannerEmail]);
+  
+  // Reload bundle count when switching to Assigned tab
+  useEffect(()=>{ 
+    if (activeTab === "assigned") {
+      loadNewBundleCount(); 
+    }
+  },[activeTab]);
+
+  async function markBundleAsReviewed(inboxId){
+    try{
+      const r = await fetch('/api/inbox/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, inboxId })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) {
+        console.error('Failed to mark bundle as reviewed:', j.error);
+      }
+    }catch(e){
+      console.error('Failed to mark bundle as reviewed:', e);
+    }
+  }
+
+  const planDateText = format(parseYMDLocal(plan.startDate)||new Date(),"EEE MMM d, yyyy");
+
+  const applyPrefill = useCallback(({ plan: rp, tasks: rt, mode })=>{
+    try{
+      setPlan(p=>({
+        ...p,
+        title: rp?.title ?? p.title,
+        startDate: rp?.startDate ?? p.startDate,
+        timezone: rp?.timezone ?? p.timezone
+      }));
+      setReplaceMode(mode === "replace");
+      if (Array.isArray(rt)) {
+        setTasks(rt.map(t=>({ id: uid(), ...t })));
+        setMsg(`Restored ${rt.length} task(s) from history`);
+        onToast?.("ok", `Restored ${rt.length} task(s)`);
+      }
+    }catch(e){ console.error("applyPrefill error", e); }
+  },[onToast]);
+
+  return (
+    <div>
+      {/* Folder Tabs Navigation - Floating on Gray Background */}
+      <div className="flex items-center justify-between px-4">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab("plan")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+              activeTab === "plan"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Plan
+          </button>
+          <button
+            onClick={() => setActiveTab("assigned")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors relative ${
+              activeTab === "assigned"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Assigned
+            {newBundleCount > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                {newBundleCount} New
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("notes")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+              activeTab === "notes"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            User Notes
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border transition-colors ${
+              activeTab === "history"
+                ? "bg-white text-gray-900 border-gray-300 border-b-white -mt-1"
+                : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+History
+          </button>
+        </div>
+        
+        {/* User Selection - Floating on Gray Background */}
+        <div className="flex items-center gap-2 pb-2">
+          <label className="text-sm font-medium text-gray-700">User:</label>
+          <select
+            value={selectedUserEmail || ""}
+            onChange={(e)=>{
+              const newUser = e.target.value;
+              setSelectedUserEmail(newUser);
+              onUserChange?.(newUser);
+            }}
+            className="rounded-xl border border-gray-300 px-3 py-2 text-sm min-w-[200px] bg-white"
+            title={selectedUserEmail || "— Choose user —"}
+          >
+            <option value="">— Choose user —</option>
+            {users.map(u=>(<option key={u.email} value={u.email} title={u.email}>
+              {u.email}
+            </option>))}
+          </select>
+        </div>
+        
+      </div>
+
+
+      {/* Plan Tab Content */}
+      {activeTab === "plan" && (
+        <>
+            {/* AI Decision Interface */}
+            <AIPlanningDecision
+              selectedUserEmail={selectedUserEmail}
+              onModeSelect={(mode) => setPlanningMode(mode)}
+              planningMode={planningMode}
+            />
+
+          {/* Templates View Interface - Show first when templates mode is selected */}
+          {planningMode === "templates" && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">1</div>
+                  <div className="text-base sm:text-lg font-semibold">Choose a Template</div>
+                </div>
+                <div className="text-sm text-gray-600 ml-8">
+                  {selectedUserEmail ? (
+                    <>Select from your saved plan templates to quickly create a plan for <strong>{selectedUserEmail}</strong></>
+                  ) : (
+                    <>Browse your saved plan templates. Select a user first to apply a template.</>
+                  )}
+                </div>
+              </div>
+
+              <div className="ml-8">
+                <TemplatesView
+                  plannerEmail={plannerEmail}
+                  selectedUserEmail={selectedUserEmail}
+                  onTemplateSelect={(template) => {
+                    if (!selectedUserEmail) {
+                      onToast?.("error", "Please select a user first before applying a template");
+                      return;
+                    }
+                    
+                    // Set local flag to indicate template is applied
+                    setLocalTemplateApplied(true);
+                    
+                    // Set plan and tasks directly
+                    setPlan({
+                      title: template.title,
+                      description: template.description,
+                      startDate: new Date().toISOString().split('T')[0],
+                      timezone: "America/Chicago"
+                    });
+                    setTasks(template.tasks || []);
+                    setPlanningMode("ai-assisted"); // Switch to review mode - keeps fields editable
+                    onToast?.("ok", `Applied template: ${template.title}`);
+                    // NO auto-scroll - let user scroll freely
+                  }}
+                  onToast={onToast}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Plan Setup Section - Only show for AI-Assisted and Manual modes, but NOT when template is applied */}
+          {!isTemplateMode && planningMode !== "full-ai" && planningMode !== "templates" && (
+            <div data-section="plan-setup" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">1</div>
+                  <div className="text-base sm:text-lg font-semibold">Plan Setup</div>
+                </div>
+                <div className="text-sm text-gray-600 ml-8">Configure your plan details and settings</div>
+                {!!msg && <div className="mt-2 ml-8 text-xs text-gray-600">{msg}</div>}
+              </div>
+
+              <div className="ml-8 space-y-4">
+                {/* Plan Details */}
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <label className="block">
+                    <div className="mb-1 text-sm font-medium">Plan Name</div>
+                    <input value={plan.title} onChange={(e)=>{setPlan({...plan, title:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="e.g., Week of Sep 1" />
+                  </label>
+                  <label className="block md:col-span-2">
+                    <div className="mb-1 text-sm font-medium">Plan Description</div>
+                    <input value={plan.description} onChange={(e)=>{setPlan({...plan, description:e.target.value}); clearTemplateData();}} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="Brief description of this plan template" />
+                  </label>
+                  <label className="block">
+                    <div className="mb-1 text-sm font-medium">Timezone</div>
+                    <select value={plan.timezone} onChange={(e)=>setPlan({...plan, timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                      {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+                    </select>
+                  </label>
+                  <div className="block">
+                    <div className="mb-1 text-sm font-medium">Plan start date</div>
+                    <button type="button" onClick={()=>setPlanDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap w-full justify-start">
+                      <Calendar className="h-4 w-4" /> {planDateText}
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Full AI Planning Interface */}
+          {planningMode === "full-ai" && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">💬</div>
+                  <div className="text-base sm:text-lg font-semibold">AI Planning Assistant</div>
+                </div>
+                <div className="text-sm text-gray-600 ml-8">Let's create your plan through conversation. I'll research, analyze, and build your complete plan.</div>
+              </div>
+
+              <div className="ml-8">
+                <ConversationalAI
+                  userEmail={selectedUserEmail}
+                  plannerEmail={plannerEmail}
+                  onPlanGenerated={(generatedPlan) => {
+                    setPlan(generatedPlan.plan);
+                    setTasks(generatedPlan.tasks);
+                    onToast?.("ok", "AI has generated your complete plan!");
+                  }}
+                  onToast={onToast}
+                />
+              </div>
+            </div>
+          )}
+
+      {planDateOpen && (
+        <Modal title="Choose Plan Start Date" onClose={()=>setPlanDateOpen(false)}>
+          <CalendarGridFree
+            initialDate={plan.startDate}
+            selectedDate={plan.startDate}
+            onPick={(ymd)=>{ setPlan({...plan, startDate: ymd}); setPlanDateOpen(false); }}
+          />
+        </Modal>
+      )}
+
+      {/* Tasks Section - Different behavior based on planning mode */}
+      {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
+      {!isTemplateMode && planningMode === "ai-assisted" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
+              <div className="text-base sm:text-lg font-semibold">Add Tasks with AI Assistance</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">Create tasks manually with AI providing smart suggestions and recommendations.</div>
+          </div>
+
+          <div className="ml-8">
+            <AIAssistedTaskEditor
+              planStartDate={plan.startDate}
+              userEmail={selectedUserEmail}
+              plannerEmail={plannerEmail}
+              tasks={tasks}
+              setTasks={setTasks}
+              onAdd={(items)=>{
+                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+                onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+              }}
+              onToast={onToast}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Hide "Add Tasks" section when template is applied (tasks already exist) */}
+      {!isTemplateMode && planningMode === "manual" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">2</div>
+              <div className="text-base sm:text-lg font-semibold">Add Tasks</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">Create tasks for your plan. Add multiple tasks to build a complete schedule.</div>
+          </div>
+
+          <div className="ml-8">
+            <TaskEditor
+              planStartDate={plan.startDate}
+              onAdd={(items)=>{
+                setTasks(prev=>[...prev, ...items.map(t=>({ id: uid(), ...t }))]);
+                onToast?.("ok", `Added ${items.length} task${items.length>1?"s":""} to plan`);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Deliver Section - Enhanced for template mode */}
+      {tasks.length>0 && (
+        <div data-section="delivery" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm mt-6">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">
+                {isTemplateMode ? "✓" : "3"}
+              </div>
+              <div className="text-base sm:text-lg font-semibold">
+                {isTemplateMode ? "Review & Deliver Template" : "Deliver to User"}
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">
+              {isTemplateMode 
+                ? "Review the template plan below. Edit plan details or tasks if needed, then deliver to the selected user's Google Tasks."
+                : "Review your plan and deliver tasks to the selected user's Google Tasks."
+              }
+            </div>
+          </div>
+
+          {/* Plan Details - Editable */}
+          <div className="ml-8 mb-6 p-4 bg-gray-50 rounded-xl">
+            <div className="text-sm font-medium text-gray-700 mb-3">Plan Details</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Plan Name:</span>
+                  <input
+                    value={plan.title}
+                    onChange={(e) => setPlan({...plan, title: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter plan name"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Start Date:</span>
+                  <button
+                    type="button"
+                    onClick={() => setPlanDateOpen(true)}
+                    className="w-full mt-1 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 justify-start"
+                  >
+                    <Calendar className="h-4 w-4" /> {planDateText}
+                  </button>
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block">
+                  <span className="font-medium text-gray-600">Description:</span>
+                  <textarea
+                    value={plan.description}
+                    onChange={(e) => setPlan({...plan, description: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter plan description"
+                    rows="2"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="block">
+                  <span className="font-medium text-gray-600">Timezone:</span>
+                  <select
+                    value={plan.timezone}
+                    onChange={(e) => setPlan({...plan, timezone: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
+                  </select>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="ml-8">
+            <ComposerPreview
+              plannerEmail={plannerEmail}
+              selectedUserEmail={selectedUserEmail}
+              plan={plan}
+              tasks={tasks}
+              setTasks={setTasks}
+              replaceMode={replaceMode}
+              setReplaceMode={setReplaceMode}
+              msg={msg}
+              setMsg={setMsg}
+              onToast={onToast}
+              onPushed={()=>{ /* can reload history */ }}
+            />
+          </div>
+        </div>
+      )}
+        </>
+      )}
+
+      {/* Assigned Tab Content */}
+      {activeTab === "assigned" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📦</div>
+            <div className="text-base sm:text-lg font-semibold">Assigned Bundles</div>
+          </div>
+          <div className="text-sm text-gray-600 ml-8">Review and work with bundles assigned to this user.</div>
+        </div>
+
+        <div className="ml-8">
+          <AssignedBundlesPanel 
+            plannerEmail={plannerEmail} 
+            userEmail={selectedUserEmail} 
+            onToast={onToast}
+            onReviewBundle={async (bundle) => {
+              try {
+                // First, fetch the full bundle data including tasks
+                const qs = new URLSearchParams({ inboxId: bundle.id });
+                const r = await fetch(`/api/inbox/get?${qs.toString()}`);
+                const j = await r.json();
+                
+                if (!r.ok || j.error) {
+                  onToast?.("error", `Failed to load bundle: ${j.error}`);
+                  return;
+                }
+                
+                const fullBundle = j.bundle;
+                const bundleTasks = (fullBundle.tasks || []).map(t => ({
+                  id: uid(),
+                  title: t.title,
+                  dayOffset: t.day_offset || 0,
+                  time: t.time || '',
+                  durationMins: t.duration_mins || null,
+                  notes: t.notes || ''
+                }));
+                
+                // Replace current tasks and plan details
+                setTasks(bundleTasks);
+                setPlan({
+                  title: fullBundle.title || "Bundle Plan",
+                  startDate: fullBundle.start_date || format(new Date(), "yyyy-MM-dd"),
+                  timezone: fullBundle.timezone || "America/Chicago"
+                });
+                
+                // Mark bundle as reviewed
+                await markBundleAsReviewed(bundle.id);
+                
+                // Switch to Plan tab to show the loaded bundle
+                setActiveTab("plan");
+                
+                // Show toast message
+                onToast?.("ok", `Loaded bundle "${fullBundle.title}" into plan. Current tasks replaced.`);
+              } catch (e) {
+                console.error('Review error:', e);
+                onToast?.("error", `Failed to load bundle: ${e.message}`);
+              }
+            }}
+          />
+        </div>
+
+        {/* Task Feedback Section - REMOVED per Prompt 2: Broken section that showed "Not Found" errors */}
+      </div>
+      )}
+
+      {/* User Notes Tab Content */}
+      {activeTab === "notes" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">📝</div>
+              <div className="text-base sm:text-lg font-semibold">User Notes</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">
+              {selectedUserEmail ? (
+                <>AI context and rules for <strong>{selectedUserEmail}</strong></>
+              ) : (
+                "Select a user to view and edit their notes"
+              )}
+            </div>
+          </div>
+
+          <div className="ml-8">
+            {selectedUserEmail ? (
+              <UserNotesManager
+                userEmail={selectedUserEmail}
+                plannerEmail={plannerEmail}
+                onToast={onToast}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">👤</div>
+                <div className="font-semibold mb-1">No User Selected</div>
+                <div className="text-sm">Choose a user from the dropdown above to view and edit their notes</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* History Tab Content */}
+      {activeTab === "history" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1 border-t-0">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">📋</div>
+              <div className="text-base sm:text-lg font-semibold">Plan History</div>
+            </div>
+            <div className="text-sm text-gray-600 ml-8">View and restore previously delivered plans for this user.</div>
+          </div>
+
+          <div className="ml-8">
+            <HistoryPanel plannerEmail={plannerEmail} userEmail={selectedUserEmail} reloadKey={0} onPrefill={applyPrefill} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Task editor ───────── */
+function TaskEditor({ planStartDate, onAdd }){
+  const [title,setTitle]=useState("");
+  const [notes,setNotes]=useState("");
+  const [taskDate,setTaskDate]=useState(planStartDate);
+  const [taskDateOpen,setTaskDateOpen]=useState(false);
+  const [time,setTime]=useState("");
+  const [dur,setDur]=useState(60);
+
+  const [repeat,setRepeat]=useState("none");    // none | daily | weekly | monthly | custom
+  const [interval,setInterval]=useState(1);     // every N units (1 = every day/week/month)
+  const [endMode,setEndMode]=useState("count"); // "horizon" | "until" | "count"
+  const [count,setCount]=useState(4);
+  const [untilDate,setUntilDate]=useState("");
+  const [untilOpen,setUntilOpen]=useState(false);
+  const [horizonMonths,setHorizonMonths]=useState(6);
+  const [weeklyDays,setWeeklyDays]=useState([false,true,false,true,false,false,false]);
+  const [monthlyMode,setMonthlyMode]=useState("dom"); // dom | dow
+
+  useEffect(()=>{ if (!taskDate) setTaskDate(planStartDate); },[planStartDate]);
+
+  function generate(){
+    const name=title.trim(); if (!name) return;
+    const planStart=parseYMDLocal(planStartDate)||new Date();
+    const base=parseYMDLocal(taskDate)||planStart;
+    const baseObj={ title:name, time: time || undefined, durationMins: Number(dur)||undefined, notes: notes || undefined };
+
+    const added=[];
+    function push(d){ const off=daysBetweenLocal(planStart, d); added.push({ ...baseObj, dayOffset: off }); }
+
+    const step=Math.max(1, Number(interval)||1);
+
+    if (repeat==="none"){ push(base); }
+
+    if (repeat==="daily"){
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        for (let i=0;i<n;i++){ push(addDaysLocal(base, i*step)); }
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
+        let i=0; while (i<2000){ const d=addDaysLocal(base, i*step); if (d>until) break; push(d); i++; }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let i=0; for(;;){ const d=addDaysLocal(base, i*step); if (d>end) break; push(d); if(++i>2000) break; }
+      }
+    }
+
+    if (repeat==="weekly"){
+      const checked=weeklyDays.map((v,i)=>v?i:null).filter(v=>v!==null);
+      if (checked.length===0) { alert("Pick at least one weekday."); return; }
+      const baseDow=base.getDay();
+      const baseStartOfWeek=addDaysLocal(base, -baseDow);
+      const emitWeek=(weekIndex)=>{
+        for(const dow of checked){
+          const d=addDaysLocal(baseStartOfWeek, dow + weekIndex*7*step);
+          if (d>=base) push(d);
+        }
+      };
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        let week=0; while (added.length<n){ emitWeek(week); week++; }
+        if (added.length>n) added.length=n;
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 3);
+        let week=0;
+        while (week<520){
+          emitWeek(week);
+          const lastOff=added.length? (added[added.length-1].dayOffset||0) : 0;
+          const lastDate = addDaysLocal(planStart, lastOff);
+          if (lastDate>until) break;
+          week++;
+        }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let week=0;
+        while (week<520){
+          emitWeek(week);
+          const lastOff=added.length? (added[added.length-1].dayOffset||0) : 0;
+          const lastDate = addDaysLocal(planStart, lastOff);
+          if (lastDate>end) break;
+          week++;
+        }
+      }
+    }
+
+    if (repeat==="monthly"){
+      const by=base.getFullYear(), bm=base.getMonth(), bd=base.getDate(), bw=base.getDay();
+      const firstSame=firstWeekdayOfMonthLocal(by,bm,bw);
+      const nth=Math.floor((base.getDate()-firstSame.getDate())/7)+1;
+      const lastSame=lastWeekdayOfMonthLocal(by,bm,bw);
+      const isLast=(base.getDate()===lastSame.getDate());
+      const compute=(y,m0)=> monthlyMode==="dom"
+        ? new Date(y,m0, Math.min(bd, lastDayOfMonthLocal(y,m0)))
+        : (isLast ? lastWeekdayOfMonthLocal(y,m0,bw) : (nthWeekdayOfMonthLocal(y,m0,bw, Math.max(1,nth)) || lastWeekdayOfMonthLocal(y,m0,bw)));
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        for (let i=0;i<n;i++){ const t=addMonthsLocal(base, i*step); push(compute(t.getFullYear(), t.getMonth())); }
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 6);
+        let i=0; while (i<240){ const t=addMonthsLocal(base, i*step); const d=compute(t.getFullYear(), t.getMonth()); if (d>until) break; push(d); i++; }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let i=0; while (i<240){ const t=addMonthsLocal(base, i*step); const d=compute(t.getFullYear(), t.getMonth()); if (d>end) break; push(d); i++; }
+      }
+    }
+
+    if (repeat==="custom"){
+      // Custom repeat uses weekly logic with selected days
+      const checked=weeklyDays.map((v,i)=>v?i:null).filter(v=>v!==null);
+      if (checked.length===0) { alert("Pick at least one weekday for custom repeat."); return; }
+
+      const baseDow=base.getDay();
+      const baseStartOfWeek=addDaysLocal(base, -baseDow);
+      const emitWeek=(weekIndex)=>{
+        for(const dow of checked){
+          const d=addDaysLocal(baseStartOfWeek, dow + weekIndex*7*step);
+          if (d>=base) push(d);
+        }
+      };
+
+      if (endMode==="count"){
+        const n=Math.max(1, Number(count)||1);
+        let week=0; let total=0;
+        while (total<n){
+          emitWeek(week);
+          total += checked.length;
+          week++;
+        }
+      } else if (endMode==="until"){
+        const until=parseYMDLocal(untilDate)||addMonthsLocal(base, 1);
+        let week=0;
+        while (week<2000){
+          let anyAdded=false;
+          for(const dow of checked){
+            const d=addDaysLocal(baseStartOfWeek, dow + week*7*step);
+            if (d>until) return;
+            if (d>=base) { push(d); anyAdded=true; }
+          }
+          if (!anyAdded) break;
+          week++;
+        }
+      } else {
+        const end=addMonthsLocal(base, Math.max(1, Number(horizonMonths)||6));
+        let week=0;
+        while (week<2000){
+          let anyAdded=false;
+          for(const dow of checked){
+            const d=addDaysLocal(baseStartOfWeek, dow + week*7*step);
+            if (d>end) return;
+            if (d>=base) { push(d); anyAdded=true; }
+          }
+          if (!anyAdded) break;
+          week++;
+        }
+      }
+    }
+
+    if (added.length===0) return;
+    onAdd(added);
+    setTitle(""); setNotes("");
+  }
+
+  const taskDateText = format(parseYMDLocal(taskDate||planStartDate)||new Date(),"EEE MMM d, yyyy");
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 p-2 sm:p-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2 sm:gap-3">
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Task title</div>
+          <input value={title} onChange={(e)=>setTitle(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder='e.g., "Workout" or "Read 20 pages"' />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Notes (optional)</div>
+          <input value={notes} onChange={(e)=>setNotes(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+        </label>
+      </div>
+
+      <div className="mt-2 grid grid-cols-1 sm:grid-cols-[repeat(3,minmax(0,1fr))] gap-2 sm:gap-3">
+        <div className="block min-w-0">
+          <div className="mb-1 text-sm font-medium">Task date</div>
+          <button type="button" onClick={()=>setTaskDateOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap overflow-hidden h-10">
+            <Calendar className="h-4 w-4 shrink-0" /> <span className="truncate">{taskDateText}</span>
+          </button>
+        </div>
+
+        <label className="block min-w-0">
+          <div className="mb-1 text-sm font-medium">Time (optional)</div>
+          <TimeSelect value={time} onChange={setTime} />
+        </label>
+
+        <label className="block min-w-0">
+          <div className="mb-1 text-sm font-medium">Duration (mins)</div>
+          <input type="number" min={15} step={15} value={dur} onChange={(e)=>setDur(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-10" />
+        </label>
+      </div>
+
+      {taskDateOpen && (
+        <Modal title="Choose Task Date" onClose={()=>setTaskDateOpen(false)}>
+          <CalendarGridFree
+            initialDate={taskDate || planStartDate}
+            selectedDate={taskDate || planStartDate}
+            onPick={(ymd)=>{ setTaskDate(ymd); setTaskDateOpen(false); }}
+          />
+        </Modal>
+      )}
+
+      {/* Recurrence */}
+      <div className="mt-2 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
+          <div className="text-sm font-medium">Repeat</div>
+          <select value={repeat} onChange={(e)=>setRepeat(e.target.value)} className="rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="none">Doesn't repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        {/* Progressive disclosure - only show options when repeat is selected */}
+        {repeat !== "none" && (
+          <div className="space-y-3">
+            {/* Daily options */}
+            {repeat === "daily" && (
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="text-sm">Every</span>
+                <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                <span className="text-sm">day(s)</span>
+              </div>
+            )}
+
+            {/* Weekly options */}
+            {repeat === "weekly" && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Every</span>
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <span className="text-sm">week(s) on:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>(
+                    <button key={d} type="button" className={pill(weeklyDays[i])} onClick={()=>setWeeklyDays(v=>{const n=[...v]; n[i]=!n[i]; return n;})}>{d}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Monthly options */}
+            {repeat === "monthly" && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Every</span>
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <span className="text-sm">month(s)</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Pattern:</span>
+                  <select value={monthlyMode} onChange={(e)=>setMonthlyMode(e.target.value)} className="rounded-xl border border-gray-300 px-2 py-1 text-sm">
+                    <option value="dom">Same day of month</option>
+                    <option value="dow">Same weekday pattern</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Custom options - "daily on Monday, Wednesday, Friday" */}
+            {repeat === "custom" && (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm">Every</span>
+                  <input type="number" min={1} value={interval} onChange={(e)=>setInterval(e.target.value)} className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm" />
+                  <span className="text-sm">week(s) on:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>(
+                    <button key={d} type="button" className={pill(weeklyDays[i])} onClick={()=>setWeeklyDays(v=>{const n=[...v]; n[i]=!n[i]; return n;})}>{d}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* End conditions - show for all repeat types except none */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 border-t border-gray-100">
+              <div className="text-sm font-medium">Ends</div>
+              <select
+                value={endMode}
+                onChange={(e)=>setEndMode(e.target.value)}
+                className="rounded-xl border border-gray-300 px-2 py-1 text-sm"
+              >
+                <option value="horizon">No end date</option>
+                <option value="until">On date</option>
+                <option value="count">After</option>
+              </select>
+
+              {endMode==="count" && (
+                <>
+                  <input
+                    type="number"
+                    min={1}
+                    value={count}
+                    onChange={(e)=>setCount(e.target.value)}
+                    className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+                  />
+                  <span className="text-sm">occurrence(s)</span>
+                </>
+              )}
+
+              {endMode==="until" && (
+                <>
+                  <span className="text-sm">Date</span>
+                  <UntilDatePicker value={untilDate} setValue={setUntilDate} planStartDate={planStartDate} />
+                </>
+              )}
+
+              {endMode==="horizon" && (
+                <>
+                  <span className="text-sm">Planning window (months)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={horizonMonths}
+                    onChange={(e)=>setHorizonMonths(e.target.value)}
+                    className="w-16 rounded-xl border border-gray-300 px-2 py-1 text-sm"
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <button onClick={generate} className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-3 sm:px-4 py-2 text-sm font-semibold text-white hover:bg-black">
+          <Plus className="h-4 w-4" /> Add to Plan
+        </button>
+        <div className="text-[11px] sm:text-xs text-gray-500 flex items-center gap-2">
+          <Info className="h-3.5 w-3.5" /> Times are optional; recurrence supported above.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UntilDatePicker({ value, setValue, planStartDate }){
+  const [open,setOpen]=useState(false);
+  const label = value ? format(parseYMDLocal(value)||new Date(),"MMM d, yyyy") : "Pick date";
+  return (
+    <>
+      <button type="button" onClick={()=>setOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50">
+        <Calendar className="h-4 w-4" />
+        {label}
+      </button>
+      {open && (
+        <Modal title="Choose Until Date" onClose={()=>setOpen(false)}>
+          <CalendarGridFree
+            initialDate={value || planStartDate}
+            selectedDate={value || planStartDate}
+            onPick={(ymd)=>{ setValue(ymd); setOpen(false); }}
+          />
+        </Modal>
+      )}
+    </>
+  );
+}
+
+function pill(on){ return cn("rounded-full border px-2 py-1 text-xs sm:text-sm", on?"border-gray-800 bg-gray-900 text-white":"border-gray-300 bg-white hover:bg-gray-50"); }
+
+/* ───────── Preview / Deliver ───────── */
+function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTasks, replaceMode, setReplaceMode, msg, setMsg, onToast, onPushed }){
+  const total=tasks.length;
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editTaskData, setEditTaskData] = useState({});
+
+  function editTask(task) {
+    setEditingTask(task);
+    setEditTaskData({
+      title: task.title,
+      dayOffset: task.dayOffset || 0,
+      time: task.time || '',
+      durationMins: task.durationMins || 60,
+      notes: task.notes || ''
+    });
+  }
+
+  function saveEditedTask() {
+    if (!editingTask) return;
+    
+    setTasks(prev => prev.map(t => 
+      t.id === editingTask.id 
+        ? { ...t, ...editTaskData }
+        : t
+    ));
+    
+    setEditingTask(null);
+    setEditTaskData({});
+    onToast?.("ok", "Task updated successfully");
+  }
+
+  function cancelEdit() {
+    setEditingTask(null);
+    setEditTaskData({});
+  }
+
+  async function pushNow(){
+    if (!selectedUserEmail) { setMsg("Choose a user first."); onToast?.("warn","Choose a user first"); return; }
+    if (!plan.title?.trim()) { setMsg("Title is required."); onToast?.("warn","Title is required"); return; }
+    if (!plan.startDate) { setMsg("Plan start date is required."); onToast?.("warn","Plan start date is required"); return; }
+    if (!total) { setMsg("Add at least one task."); onToast?.("warn","Add at least one task"); return; }
+    setMsg("Pushing…");
+    try {
+      const resp = await fetch("/api/push", {
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          plannerEmail,
+          userEmail: selectedUserEmail,
+          listTitle: plan.title,
+          timezone: plan.timezone,
+          startDate: plan.startDate,
+          mode: replaceMode ? "replace" : "append",
+          items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes }))
+        })
+      });
+      const j = await resp.json();
+      if (!resp.ok || j.error) throw new Error(j.error || "Push failed");
+
+      try{
+        // Pass taskIdMappings from push response to history/snapshot so google_task_id can be stored
+        const snap = await fetch("/api/history/snapshot",{
+          method:"POST", headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({
+            plannerEmail,
+            userEmail: selectedUserEmail,
+            listTitle: plan.title,
+            startDate: plan.startDate,
+            timezone: plan.timezone || "America/Chicago", // Ensure timezone is always provided
+            mode: replaceMode ? "replace" : "append",
+            items: tasks.map(t=>({ title:t.title, dayOffset:t.dayOffset, time:t.time, durationMins:t.durationMins, notes:t.notes })),
+            taskIdMappings: j.taskIdMappings || [] // Pass Google task ID mappings
+          })
+        });
+        const sj = await snap.json();
+        if (!snap.ok || sj.error) {
+          console.error("[PUSH] History snapshot failed:", sj);
+          onToast?.("warn", `Pushed, but could not save to History: ${sj.error || "Unknown error"}`);
+        } else {
+          console.log("[PUSH] History snapshot successful:", sj);
+        }
+      } catch (e) {
+        console.error("[PUSH] History snapshot exception:", e);
+        onToast?.("warn", `Pushed, but could not save to History: ${e.message || "Network error"}`);
+      }
+
+      const created = j.created || total;
+      const successMsg = `Success — ${created} task${created>1?"s":""} delivered to ${selectedUserEmail}`;
+      setMsg(successMsg);
+      onToast?.("ok", `Pushed ${created} task${created>1?"s":""} to ${selectedUserEmail}`);
+      
+      // Save as template if checkbox is checked
+      if (saveAsTemplate) {
+        try {
+          const templateResponse = await fetch('/api/templates/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plannerEmail,
+              name: plan.title,
+              description: plan.description || `Template created from plan: ${plan.title}`,
+              tasks: tasks
+            })
+          });
+          
+          const templateResult = await templateResponse.json();
+          
+          if (templateResult.ok) {
+            onToast?.("ok", `Template "${plan.title}" saved to your library`);
+          } else {
+            throw new Error(templateResult.error || 'Template save failed');
+          }
+        } catch (e) {
+          onToast?.("warn", `Tasks delivered successfully, but template save failed: ${e.message}`);
+        }
+      }
+      
+      // Don't clear tasks immediately - keep them visible for user feedback
+      // Only clear after a delay to show success message
+      setTimeout(() => {
+        setTasks([]);
+        setMsg("");
+      }, 3000);
+      
+      onPushed?.(created);
+    } catch (e) {
+      const m = String(e.message||e);
+      setMsg("Error: "+m);
+      onToast?.("error", m);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-gray-200 p-3 sm:p-4">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="text-sm font-semibold">Preview & Deliver</div>
+        <label className="inline-flex items-center gap-2 text-xs whitespace-nowrap">
+          <input type="checkbox" checked={replaceMode} onChange={(e)=>setReplaceMode(e.target.checked)} />
+          Replace existing list
+        </label>
+      </div>
+
+      {!!msg && <div className="mb-2 text-xs sm:text-sm text-gray-500">{msg}</div>}
+
+      {total===0 ? (
+        <div className="text-sm text-gray-500">No tasks yet.</div>
+      ) : (
+        <>
+          <div className="mb-3 rounded-lg border overflow-x-auto">
+            <table className="w-full min-w-[640px] text-xs sm:text-sm">
+              <thead className="bg-gray-50">
+                <tr className="text-left text-gray-500">
+                  <th className="py-1.5 px-2">Title</th>
+                  <th className="py-1.5 px-2">Offset</th>
+                  <th className="py-1.5 px-2">Time</th>
+                  <th className="py-1.5 px-2">Dur</th>
+                  <th className="py-1.5 px-2">Notes</th>
+                  <th className="py-1.5 px-2 text-right w-40 sm:w-48">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tasks.map(t=>(
+                  <tr key={t.id} className="border-t">
+                    <td className="py-1.5 px-2">{t.title}</td>
+                    <td className="py-1.5 px-2">{String(t.dayOffset||0)}</td>
+                    <td className="py-1.5 px-2">{t.time?to12hDisplay(t.time):"—"}</td>
+                    <td className="py-1.5 px-2">{t.durationMins||"—"}</td>
+                    <td className="py-1.5 px-2 text-gray-500 truncate max-w-[200px]">{t.notes||"—"}</td>
+                    <td className="py-1.5 px-2">
+                      <div className="flex flex-nowrap items-center justify-end gap-1.5 whitespace-nowrap">
+                        <button onClick={()=>editTask(t)} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-gray-50" title="Edit">
+                          <Edit className="h-3.5 w-3.5" />
+                          <span className="sr-only">Edit</span>
+                        </button>
+                        <button onClick={()=>setTasks(prev=>prev.filter(x=>x.id!==t.id))} className="inline-flex items-center rounded-lg border p-1.5 hover:bg-gray-50" title="Remove">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="sr-only">Remove</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Task Editing Interface */}
+          {editingTask && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Edit className="h-4 w-4 text-blue-600" />
+                  <div className="font-semibold text-blue-800">Edit Task</div>
+                </div>
+                <div className="text-sm text-blue-600">Modify the task details below</div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Task Title</label>
+                  <input
+                    value={editTaskData.title}
+                    onChange={(e) => setEditTaskData(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Enter task title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Day Offset</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editTaskData.dayOffset}
+                    onChange={(e) => setEditTaskData(prev => ({ ...prev, dayOffset: parseInt(e.target.value) || 0 }))}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Time (optional)</label>
+                  <TimeSelect 
+                    value={editTaskData.time} 
+                    onChange={(time) => setEditTaskData(prev => ({ ...prev, time }))} 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+                  <input
+                    type="number"
+                    min="15"
+                    step="15"
+                    value={editTaskData.durationMins}
+                    onChange={(e) => setEditTaskData(prev => ({ ...prev, durationMins: parseInt(e.target.value) || 60 }))}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="60"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+                <textarea
+                  value={editTaskData.notes}
+                  onChange={(e) => setEditTaskData(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-20 resize-none"
+                  placeholder="Add any notes for this task"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={saveEditedTask}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-4">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input 
+                type="checkbox" 
+                checked={saveAsTemplate} 
+                onChange={(e)=>setSaveAsTemplate(e.target.checked)} 
+                className="rounded border-gray-300"
+              />
+              <span>
+                Save as Template
+                {saveAsTemplate && (
+                  <span className="ml-1 text-xs text-gray-500">
+                    (will save "{plan.title}" to your template library)
+                  </span>
+                )}
+              </span>
+            </label>
+            <button onClick={pushNow} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">
+              Deliver to {selectedUserEmail || 'User'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ───────── History ───────── */
+function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
+  const [rows,setRows]=useState([]);
+  const [page,setPage]=useState(1);
+  const [pageSize,setPageSize]=useState(25);
+  const [total,setTotal]=useState(0);
+  const [loading,setLoading]=useState(false);
+  const [searchQuery,setSearchQuery]=useState('');
+
+  async function load(){
+    if (!userEmail) { setRows([]); setTotal(0); return; }
+    setLoading(true);
+    try{
+      // Load history
+      const historyR=await fetch(`/api/history/list`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail, status: "active", page })
+      });
+      const historyJ=await historyR.json();
+      setRows(historyJ.rows||[]);
+      setTotal(historyJ.total||0);
+    }catch(e){/* noop */}
+    setLoading(false);
+  }
+  useEffect(()=>{ load(); },[plannerEmail,userEmail,page,pageSize,reloadKey]);
+
+  // Filter data
+  const allItems = rows.sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
+
+  // Apply search filter
+  const filteredItems = searchQuery ? allItems.filter(item => 
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) : allItems;
+
+  const totalItems = total;
+
+  return (
+    <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-sm font-semibold">History</div>
+        <div className="text-xs text-gray-500">{filteredItems.length} of {totalItems} item(s)</div>
+      </div>
+
+      {/* Search and Controls */}
+      <div className="mb-4 space-y-3">
+        {/* Search Box */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search history..."
+            value={searchQuery}
+            onChange={(e)=>setSearchQuery(e.target.value)}
+            className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        {/* Filter Controls and Page Size */}
+        {/* Page Size Selector */}
+        <div className="flex items-center justify-end gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Show:</span>
+            <select 
+              value={pageSize} 
+              onChange={(e)=>setPageSize(Number(e.target.value))}
+              className="rounded-lg border border-gray-300 px-2 py-1 text-xs"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-stone-50">
+            <tr className="text-left text-stone-500">
+              <th className="py-1.5 px-2">Title</th>
+              <th className="py-1.5 px-2">Type</th>
+              <th className="py-1.5 px-2">Start</th>
+              <th className="py-1.5 px-2">Items</th>
+              <th className="py-1.5 px-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredItems.map(item=>(
+              <tr key={`history-${item.id}`} className="border-t">
+                <td className="py-1.5 px-2">
+                  <div className="flex items-center gap-2">
+                    {item.title}
+                  </div>
+                </td>
+                <td className="py-1.5 px-2">
+                  <span className="text-gray-600 text-xs">History</span>
+                </td>
+                <td className="py-1.5 px-2">{item.startDate}</td>
+                <td className="py-1.5 px-2">{item.itemsCount||"—"}</td>
+                <td className="py-1.5 px-2">
+                  <div className="flex justify-end">
+                    <button 
+                      onClick={()=>onPrefill?.({ 
+                        plan:{ title:item.title, startDate:item.startDate, timezone:item.timezone }, 
+                        tasks:item.tasks, 
+                        mode:item.mode 
+                      })} 
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                    >
+                      Restore
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filteredItems.length === 0 && (
+              <tr><td colSpan={5} className="py-6 text-center text-gray-500">
+                No history yet
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <button onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-lg border px-2 py-1 text-xs"><ChevronLeft className="h-3 w-3" /></button>
+        <div className="text-xs">Page {page}</div>
+        <button onClick={()=>setPage(p=>p+1)} className="rounded-lg border px-2 py-1 text-xs"><ChevronRight className="h-3 w-3" /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Task Feedback Panel ───────── */
+/* ───────── TaskFeedbackPanel - REMOVED per Prompt 2 ───────── */
+/* This broken component showed "Not Found" errors and has been removed.
+   Task completion tracking is now handled by the main Dashboard view. */
+
+/* ───────── Assigned Bundles Panel ───────── */
+function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle }){
+  const [bundles,setBundles]=useState([]);
+  const [loading,setLoading]=useState(false);
+
+  async function load(){
+    if (!userEmail) { setBundles([]); return; }
+    setLoading(true);
+    try{
+      const qs=new URLSearchParams({ plannerEmail, status:"assigned" });
+      const r=await fetch(`/api/inbox?${qs.toString()}`);
+      const j=await r.json();
+      
+      // Filter bundles assigned to the current user
+      const userBundles = (j.bundles||[]).filter(b => 
+        (b.assigned_user_email || b.assigned_user) === userEmail
+      );
+      setBundles(userBundles);
+    }catch(e){
+      console.error('Failed to load assigned bundles:', e);
+      onToast?.("error", "Failed to load assigned bundles");
+    }
+    setLoading(false);
+  }
+
+  async function deleteBundle(inboxId){
+    try{
+      const r=await fetch('/api/inbox/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, bundleIds: [inboxId] })
+      });
+      const j=await r.json();
+      if (r.ok && !j.error) {
+        onToast?.("ok", "Bundle deleted");
+        load(); // Reload the list
+      } else {
+        throw new Error(j.error || "Delete failed");
+      }
+    }catch(e){
+      console.error('Delete failed:', e);
+      onToast?.("error", "Failed to delete bundle");
+    }
+  }
+
+  useEffect(()=>{ load(); },[plannerEmail, userEmail]);
+
+  if (!userEmail) {
+    return (
+      <div className="text-sm text-gray-500 py-4 text-center">
+        Select a user to view their assigned bundles
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-semibold">Assigned Bundles</div>
+          {bundles.filter(b => !b.reviewed_at).length > 0 && (
+            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 border border-red-200">
+              {bundles.filter(b => !b.reviewed_at).length} new
+            </span>
+          )}
+        </div>
+        <div className="text-xs text-gray-500">{bundles.length} bundle(s)</div>
+      </div>
+
+      <div className="rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-stone-50">
+            <tr className="text-left text-stone-500">
+              <th className="py-1.5 px-2">Title</th>
+              <th className="py-1.5 px-2">Start Date</th>
+              <th className="py-1.5 px-2">Timezone</th>
+              <th className="py-1.5 px-2">Tasks</th>
+              <th className="py-1.5 px-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="py-6 text-center text-gray-500">Loading...</td></tr>
+            ) : bundles.length === 0 ? (
+              <tr><td colSpan={5} className="py-6 text-center text-gray-500">No assigned bundles</td></tr>
+            ) : bundles.map(b=>{
+              const isNew = !b.reviewed_at;
+              return (
+                <tr key={b.id} className={`border-t ${isNew ? 'bg-blue-50' : ''}`}>
+                  <td className="py-1.5 px-2">
+                    <div className="flex items-center gap-2">
+                      {b.title || "Untitled Bundle"}
+                      {isNew && (
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600">
+                          New
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-1.5 px-2">{b.start_date || b.startDate || "—"}</td>
+                  <td className="py-1.5 px-2">{b.timezone || "—"}</td>
+                  <td className="py-1.5 px-2">{b.tasks?.length || 0}</td>
+                  <td className="py-1.5 px-2">
+                    <div className="flex justify-end gap-1">
+                    <button 
+                      onClick={()=>onReviewBundle?.(b)}
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
+                      title="Edit bundle"
+                    >
+                      ✏️
+                    </button>
+       <button 
+         onClick={()=>deleteBundle(b.id)}
+         className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50 text-gray-600"
+         title="Delete bundle"
+       >
+         🗑️
+       </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-2 text-xs text-gray-500">
+        Click "Review" to edit tasks before pushing to Google Tasks, or "Archive" to remove from assigned list.
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Dashboard view ───────── */
+// Client-side caching for dashboard data (Prompt 4)
+const CACHE_DURATION = 30000; // 30 seconds
+const dashboardCache = new Map();
+
+function getCachedDashboardData(key) {
+  const cached = dashboardCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log('[DASHBOARD] Using cached data for:', key);
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedDashboardData(key, data) {
+  dashboardCache.set(key, { data, timestamp: Date.now() });
+}
+
+function DashboardView({ plannerEmail, onToast, onNavigate }){
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load dashboard metrics with client-side caching
+  const loadMetrics = async (useCache = true) => {
+    try {
+      console.log('[DASHBOARD] Loading metrics for:', plannerEmail);
+      
+      // Check cache first
+      const cacheKey = `dashboard_${plannerEmail}`;
+      if (useCache) {
+        const cached = getCachedDashboardData(cacheKey);
+        if (cached) {
+          setMetrics(cached);
+          setLoading(false);
+          setError(null);
+          return;
+        }
+      }
+      
+      setLoading(true);
+      setError(null);
+      
+      // Add cache-busting query parameter (only if not using cache)
+      const cacheBuster = Date.now();
+      const response = await fetch(`/api/dashboard/metrics?plannerEmail=${encodeURIComponent(plannerEmail)}&_t=${cacheBuster}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      const data = await response.json();
+      console.log('[DASHBOARD] Metrics response:', data);
+      
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Failed to load dashboard metrics');
+      }
+      
+      const metricsData = data.metrics; // Extract metrics from response
+      setMetrics(metricsData);
+      
+      // Cache the response
+      setCachedDashboardData(cacheKey, metricsData);
+    } catch (err) {
+      console.error('[DASHBOARD] Error loading metrics:', err);
+      setError(err.message);
+      onToast?.("error", "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMetrics(true); // Use cache on initial load
+    
+    // Auto-refresh every 60 seconds (bypass cache to get fresh data)
+    const interval = setInterval(() => {
+      loadMetrics(false); // Bypass cache for auto-refresh
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, [plannerEmail, onToast]);
+
+  if (loading) {
+    return (
+      <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-500">Loading dashboard...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-lg border border-stone-200 p-6">
+            <div className="text-red-600 mb-4">Error loading dashboard: {error}</div>
+            <button
+              onClick={loadMetrics}
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-gray-500">No dashboard data available</div>
+        </div>
+      </div>
+    );
+  }
+
+  const aggregate = metrics?.aggregate || {};
+  const userEngagement = metrics?.userEngagement || [];
+  const activityFeed = metrics?.activityFeed || [];
+  
+  const sortedUsers = [...userEngagement].sort((a, b) => (b.completionRate || 0) - (a.completionRate || 0));
+
+  return (
+    <div className="min-h-screen bg-[#F5F3F0]">
+      <main className="px-8 py-8">
+        {/* SECTION 1: PAGE HEADER */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-stone-900 mb-2">Dashboard</h1>
+          <p className="text-lg text-stone-600">Monitor user engagement and task completions</p>
+        </div>
+
+        {/* SECTION 2: METRIC CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Tasks Completed Today */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6">
+            <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed Today</p>
+            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedToday || 0}</p>
+            {aggregate?.trends?.today !== undefined && (
+              <p className={`text-sm text-green-600 ${aggregate.trends.today < 0 ? 'text-stone-500' : ''}`}>
+                {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
+              </p>
+            )}
+          </div>
+
+          {/* Tasks Completed This Week */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6">
+            <p className="text-sm font-medium text-stone-600 mb-3">Tasks Completed This Week</p>
+            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.completedThisWeek || 0}</p>
+            {aggregate?.trends?.week !== undefined && (
+              <p className={`text-sm text-green-600 ${aggregate.trends.week < 0 ? 'text-stone-500' : ''}`}>
+                {aggregate.trends.week >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.week)}% vs last week
+              </p>
+            )}
+          </div>
+
+          {/* Average Completion Rate */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6">
+            <p className="text-sm font-medium text-stone-600 mb-3">Average Completion Rate</p>
+            <p className="!text-5xl !font-bold text-stone-900 mb-2">{aggregate?.averageCompletionRate || 0}%</p>
+            <p className="text-sm text-stone-600">Across all users</p>
+          </div>
+
+          {/* Most Active User */}
+          <div className="bg-white rounded-lg border border-stone-200 p-6">
+            <p className="text-sm font-medium text-stone-600 mb-3">Most Active User</p>
+            {aggregate?.mostActiveUser ? (
+              <>
+                <p className="text-lg font-semibold text-stone-900 truncate mb-2">
+                  {aggregate.mostActiveUser.email?.split('@')[0] || aggregate.mostActiveUser.email}
+                </p>
+                <p className="text-sm text-green-600">{aggregate.mostActiveUser.completions || 0} completions today</p>
+              </>
+            ) : (
+              <p className="text-base text-stone-600">No activity yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* SECTION 3: MAIN PANELS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* User Engagement Panel */}
+          <div className="bg-white rounded-xl border border-stone-200 p-8 min-h-[500px]">
+            <h2 className="!text-2xl !font-bold text-stone-900 mb-2">User Engagement</h2>
+            <p className="text-base text-stone-600 mb-8">Track user activity and completion rates</p>
+            
+            {sortedUsers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px]">
+                <Users className="w-16 h-16 text-stone-300 mb-6" />
+                <h3 className="text-xl font-medium text-stone-900 mb-3">No User Activity Yet</h3>
+                <p className="text-base text-stone-600 text-center max-w-sm">
+                  Task completions will appear here as users engage with their plans
+                </p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-stone-200">
+                    <th className="text-left text-sm font-semibold text-stone-700 pb-3">User</th>
+                    <th className="text-center text-sm font-semibold text-stone-700 pb-3">Today</th>
+                    <th className="text-center text-sm font-semibold text-stone-700 pb-3">This Week</th>
+                    <th className="text-center text-sm font-semibold text-stone-700 pb-3">Completion Rate</th>
+                    <th className="text-center text-sm font-semibold text-stone-700 pb-3">Active Plans</th>
+                    <th className="text-right text-sm font-semibold text-stone-700 pb-3">Last Activity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedUsers.map((user) => (
+                    <tr
+                      key={user.userEmail}
+                      onClick={() => onNavigate("plan", user.userEmail)}
+                      className="border-b border-stone-100 hover:bg-stone-50 transition-colors cursor-pointer"
+                    >
+                      <td className="py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-700 font-semibold">
+                            {user.userEmail?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                          <span className="text-base text-stone-900">{user.userEmail}</span>
+                          {!user.isConnected && (
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                              Not Connected
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.today || 0}</td>
+                      <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.thisWeek || 0}</td>
+                      <td className="text-center py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-20 h-2 bg-stone-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-green-600" style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}></div>
+                          </div>
+                          <span className="text-lg font-semibold text-stone-900">{Math.round(user.completionRate || 0)}%</span>
+                        </div>
+                      </td>
+                      <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.activePlans || 0}</td>
+                      <td className="text-right text-sm text-stone-600 py-4">
+                        {user.lastActivity ? formatDistanceToNow(new Date(user.lastActivity), { addSuffix: true }) : 'Never'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Live Activity Panel */}
+          <div className="bg-white rounded-xl border border-stone-200 p-8 max-h-[600px] overflow-y-auto">
+            <h2 className="!text-2xl !font-bold text-stone-900 mb-2">Live Activity</h2>
+            <p className="text-base text-stone-600 mb-8">Recent completions</p>
+            
+            <div className="space-y-3">
+              {activityFeed && activityFeed.length > 0 ? (
+                activityFeed.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-4 p-4 rounded-lg hover:bg-stone-50 transition-colors"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-semibold text-stone-900 mb-1">{activity.taskTitle}</p>
+                      <p className="text-sm text-stone-600 mb-1">{activity.userEmail}</p>
+                      <p className="text-xs text-stone-500">{activity.bundleTitle} • {formatDistanceToNow(new Date(activity.completedAt), { addSuffix: true })}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+                    <CheckCircle className="h-8 w-8 text-stone-400" />
+                  </div>
+                  <div className="text-base font-medium text-stone-900 mb-2">No recent completions</div>
+                  <div className="text-sm text-stone-500 text-center">Task completions will appear here</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/* ───────── Users view — Active/Archived/Deleted ───────── */
+function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
+  const [rows,setRows]=useState([]);
+  const [filter,setFilter]=useState("");
+  const [groups,setGroups]=useState({});
+  const [bundleCounts,setBundleCounts]=useState({});
+
+  // Tabs: active | archived | deleted
+  const [tab,setTab]=useState("active");
+
+  // Category modal state
+  const [catOpen,setCatOpen]=useState(false);
+  const [catUserEmail,setCatUserEmail]=useState("");
+  const [catAssigned,setCatAssigned]=useState([]);
+
+  // Derived global categories (union) for the planner
+  const allCats = useMemo(()=>{
+    const set = new Map();
+    const eat = (arr)=> (arr||[]).forEach(g=>{
+      const s=String(g||"").trim();
+      if (!s) return;
+      const k=s.toLowerCase();
+      if (!set.has(k)) set.set(k, s);
+    });
+    for (const r of rows) eat(groups[r.email] ?? r.groups);
+    return Array.from(set.values()).sort((a,b)=>a.localeCompare(b));
+  },[rows, groups]);
+
+  useEffect(()=>{ load(); },[plannerEmail, tab]);
+
+  async function load(){
+    const qs=new URLSearchParams({ plannerEmail, status: tab });
+    const r=await fetch(`/api/users?${qs.toString()}`); const j=await r.json();
+    const arr = (j.users||[]).map(u => ({ ...u, email: u.email || u.userEmail || u.user_email || "" }));
+    setRows(arr);
+    
+    // Load bundle counts for each user
+    loadBundleCounts(arr);
+  }
+
+  async function loadBundleCounts(users){
+    const counts = {};
+    for (const user of users) {
+      try {
+        const qs = new URLSearchParams({ plannerEmail, status: "assigned" });
+        const r = await fetch(`/api/inbox?${qs.toString()}`);
+        const j = await r.json();
+        
+        // Filter bundles assigned to this user
+        const userBundles = (j.bundles || []).filter(b => 
+          (b.assigned_user_email || b.assigned_user) === user.email
+        );
+        
+        const newCount = userBundles.filter(b => !b.reviewed_at).length;
+        const totalCount = userBundles.length;
+        
+        counts[user.email] = { new: newCount, total: totalCount };
+      } catch (e) {
+        counts[user.email] = { new: 0, total: 0 };
+      }
+    }
+    setBundleCounts(counts);
+  }
+
+  async function saveGroups(email, nextList){
+    try{
+      const body={ plannerEmail, userEmail: email, groups: nextList };
+      const r=await fetch("/api/users",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
+      const j=await r.json();
+      if (!r.ok || j.error) throw new Error(j.error||"Save failed");
+      onToast?.("ok", `Categories saved for ${email}`);
+    }catch(e){ onToast?.("error", String(e.message||e)); }
+  }
+
+  function openCats(email){
+    const list = groups[email] ?? rows.find(x=>x.email===email)?.groups ?? [];
+    setCatUserEmail(email);
+    setCatAssigned(list);
+    setCatOpen(true);
+  }
+
+  async function doArchive(email, archived){
+    try{
+      const r = await fetch("/api/users/archive",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email, archived })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Archive failed");
+
+      // Immediate UI update
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `${archived ? "User archived" : "User restored"}: ${email}`);
+
+      // Gentle background refresh
+      setTimeout(()=>{ load(); }, 400);
+    } catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  // Soft delete (to status=deleted); allowed only in "archived" tab
+  async function doSoftDelete(email){
+    try{
+      const r = await fetch("/api/users/remove",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Delete failed");
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `User moved to Deleted: ${email}`);
+      setTimeout(()=>{ load(); }, 400);
+    } catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  // NEW: Cancel invite (invite-only pending rows)
+  async function doCancelInvite(email){
+    try{
+      const r = await fetch("/api/invite/remove",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Cancel invite failed");
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `Invite canceled: ${email}`);
+      setTimeout(()=>{ load(); }, 400);
+    } catch (e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  // Permanent purge; allowed only in "deleted" tab
+  async function doPurge(email){
+    if (!confirm(`Permanently delete ${email}? This cannot be undone.`)) return;
+    try{
+      const r = await fetch("/api/users/purge",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || "Purge failed");
+      setRows(prev => prev.filter(x => x.email !== email));
+      onToast?.("ok", `Permanently deleted: ${email}`);
+      setTimeout(()=>{ load(); }, 400);
+    } catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+  }
+
+  function onCatsSaved(email, nextList){
+    setGroups(prev=>({ ...prev, [email]: nextList }));
+    saveGroups(email, nextList);
+  }
+
+  const visible = rows.filter(r=>!filter || (r.email||"").toLowerCase().includes(filter.toLowerCase()));
+
+  return (
+    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-stone-900 mb-2">Users</h1>
+        <p className="text-lg text-stone-600">Manage your users and their planning activities</p>
+      </div>
+
+      {/* Main Content Panel */}
+      <div className="bg-white rounded-xl border border-stone-200 p-8">
+        {/* Panel Header with Filters and Search */}
+        <div className="flex items-center justify-between mb-6">
+          {/* Filter Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={()=>setTab("active")}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium",
+                tab==="active" ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              Active
+            </button>
+            <button
+              onClick={()=>setTab("archived")}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium",
+                tab==="archived" ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              Archived
+            </button>
+            <button
+              onClick={()=>setTab("deleted")}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium",
+                tab==="deleted" ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              Deleted
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={filter}
+              onChange={(e)=>setFilter(e.target.value)}
+              placeholder="Search..."
+              className="px-4 py-2 border border-stone-200 rounded-lg text-base w-64 focus:outline-none focus:ring-2 focus:ring-stone-900"
+            />
+            <button onClick={load} className="p-2 hover:bg-stone-50 rounded-lg">
+              <RotateCcw className="h-5 w-5 text-stone-600" />
+            </button>
+          </div>
+        </div>
+
+        {/* Users Table */}
+        <table className="w-full">
+          <thead>
+            <tr className="text-left border-b border-stone-200">
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Email</th>
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Status</th>
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide">Categories</th>
+              <th className="pb-4 text-sm font-semibold text-stone-700 uppercase tracking-wide text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map(r=>{
+              const list = (groups[r.email] ?? r.groups ?? []).slice().sort((a,b)=>a.localeCompare(b));
+              const pills = list.slice(0,2);
+              const count = list.length;
+              const isArchived = (r.status||"").toLowerCase()==="archived";
+              const isDeleted = (r.status||"").toLowerCase()==="deleted";
+              const isPendingInvite = !isArchived && !isDeleted && ((r.status||"").toLowerCase()==="pending") && (r.__source==="invite");
+
+              const bundleInfo = bundleCounts[r.email] || { new: 0, total: 0 };
+              return (
+                <tr key={r.email} className={`align-top ${bundleInfo.new > 0 ? 'bg-blue-50' : ''}`}>
+                  <td className="py-4 border-b border-stone-100 text-base text-stone-900">{r.email || "Unknown"}</td>
+                  <td className="py-4 border-b border-stone-100">
+                    {r.status==="connected" ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                        connected
+                      </span>
+                    ) : (
+                      <span className={cn(
+                        "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium",
+                        isDeleted ? "bg-red-100 text-red-700" :
+                        isArchived ? "bg-stone-100 text-stone-700" :
+                        "bg-stone-100 text-stone-700"
+                      )}>
+                        {r.status||"—"}
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-4 border-b border-stone-100">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {count === 0 ? (
+                        <span className="text-stone-600 text-base">+ Add</span>
+                      ) : (
+                        <>
+                          {pills.map(g=>(
+                            <span key={g} className="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg text-sm" title={g}>
+                              {g}
+                            </span>
+                          ))}
+                          {count > 2 && (
+                            <button
+                              onClick={()=>openCats(r.email)}
+                              className="relative inline-flex items-center justify-center rounded-lg border border-stone-200 px-2.5 py-1 text-sm hover:bg-stone-50 disabled:opacity-40"
+                              aria-label="Edit categories"
+                              title="Edit categories"
+                              disabled={isDeleted}
+                            >
+                              <Tag className="h-4 w-4" />
+                              <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] font-bold text-white">{count}</span>
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-4 border-b border-stone-100">
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
+                      {!isArchived && !isDeleted && (
+                        <>
+                          <button
+                            onClick={()=>onManage?.(r.email)}
+                            className="p-2 text-stone-500 hover:bg-stone-50 rounded-lg relative"
+                            title="Open Plan view for this user"
+                          >
+                            <Calendar className="h-5 w-5" />
+                            {bundleInfo.new > 0 && (
+                              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold w-4 h-4">
+                                {bundleInfo.new}
+                              </span>
+                            )}
+                          </button>
+
+                          {/* NEW: Cancel invite for pending invite-only rows */}
+                          {isPendingInvite && (
+                            <button
+                              onClick={()=>doCancelInvite(r.email)}
+                              className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
+                              title="Cancel pending invite"
+                            >
+                              Cancel invite
+                            </button>
+                          )}
+
+                          <button
+                            onClick={()=>doArchive(r.email, true)}
+                            className="p-2 text-stone-500 hover:bg-stone-50 rounded-lg"
+                            title="Archive this user connection"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+
+                      {isArchived && (
+                        <>
+                          <button
+                            onClick={()=>doArchive(r.email, false)}
+                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
+                            title="Restore user from archive"
+                          >
+                            Restore user
+                          </button>
+                          <button
+                            onClick={()=>doSoftDelete(r.email)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-red-50 text-red-700 border-red-300"
+                            title="Move to Deleted (soft delete)"
+                          >
+                            Delete user
+                          </button>
+                        </>
+                      )}
+
+                      {isDeleted && (
+                        <>
+                          <button
+                            onClick={()=>doArchive(r.email, false)}
+                            className="px-3 py-1.5 text-sm font-medium border border-stone-200 rounded-lg hover:bg-stone-50"
+                            title="Restore user (undelete)"
+                          >
+                            Restore user
+                          </button>
+                          <button
+                            onClick={()=>doPurge(r.email)}
+                            className="rounded-lg border px-2 py-1 text-xs hover:bg-red-50 text-red-700 border-red-300"
+                            title="Permanently delete this user connection"
+                          >
+                            Permanently delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {visible.length===0 && (
+              <tr><td colSpan={4} className="py-6 text-center text-stone-500">No users</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {catOpen && (
+        <CategoriesModal
+          userEmail={catUserEmail}
+          assigned={catAssigned}
+          allCats={allCats}
+          onClose={()=>setCatOpen(false)}
+          onSave={(next)=>{ onCatsSaved(catUserEmail, next); setCatOpen(false); }}
+          onToast={onToast}
+        />
+      )}
+    </main>
+  );
+}
+
+/* Categories Modal */
+function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToast }){
+  const [local,setLocal]=useState(()=>dedupeCaseInsensitive(assigned||[]));
+  const [search,setSearch]=useState("");
+  const [dirty,setDirty]=useState(false);
+
+  useEffect(()=>{
+    setLocal(dedupeCaseInsensitive(assigned||[]));
+    setDirty(false);
+    setSearch("");
+  },[assigned]);
+
+  const norm = (s)=> String(s||"")
+    .normalize("NFD").replace(/\p{Diacritic}/gu,"")
+    .toLowerCase().trim();
+
+  const filtered = useMemo(()=>{
+    const q = norm(search);
+    const map = new Map();
+    for (const c of allCats) map.set(norm(c), c);
+    for (const c of local) if (!map.has(norm(c))) map.set(norm(c), c);
+    let arr = Array.from(map.values());
+
+    const selSet = new Set(local.map(x=>norm(x)));
+    const score = (c)=>{
+      const n = norm(c);
+      let s = 0;
+      if (selSet.has(n)) s -= 3;
+      if (q){
+        if (n.startsWith(q)) s -= 2;
+        else if (n.includes(q)) s -= 1;
+        else s += 5;
+      }
+      return s;
+    };
+    arr.sort((a,b)=>{
+      const sa=score(a), sb=score(b);
+      if (sa!==sb) return sa-sb;
+      return a.localeCompare(b);
+    });
+    if (q){
+      const matches = arr.filter(c=>norm(c).includes(q));
+      const rest = arr.filter(c=>!norm(c).includes(q));
+      return [...matches, ...rest];
+    }
+    return arr;
+  },[allCats, local, search]);
+
+  function toggle(c){
+    const key = c.toLowerCase();
+    const set = new Map(local.map(v=>[v.toLowerCase(), v]));
+    if (set.has(key)) set.delete(key); else set.set(key, c);
+    const next = Array.from(set.values()).sort((a,b)=>a.localeCompare(b));
+    setLocal(next);
+    setDirty(true);
+  }
+
+  function addFromQuery(){
+    const raw = search.trim();
+    if (!raw){ onToast?.("warn","Type a category name"); return; }
+    const exists = local.some(x=>x.toLowerCase()===raw.toLowerCase()) || allCats.some(x=>x.toLowerCase()===raw.toLowerCase());
+    if (exists){ onToast?.("warn","Category already exists"); return; }
+    const next = dedupeCaseInsensitive([...local, raw]).sort((a,b)=>a.localeCompare(b));
+    setLocal(next);
+    setDirty(true);
+    onToast?.("ok","Category added");
+  }
+
+  function doSave(){ onSave?.(local); }
+  function maybeClose(){
+    if (!dirty) return onClose?.();
+    if (confirm("Discard unsaved changes?")) onClose?.();
+  }
+
+  const canQuickAdd = !!search.trim()
+    && !allCats.some(x=>x.toLowerCase()===search.trim().toLowerCase())
+    && !local.some(x=>x.toLowerCase()===search.trim().toLowerCase());
+
+  return (
+    <Modal title={`Categories`} onClose={maybeClose}>
+      <div className="text-xs text-gray-500 mb-2">User: <b className="text-gray-700">{userEmail}</b></div>
+
+      <div className="mb-2 flex items-center gap-2">
+        <div className="relative w-full">
+          <input
+            value={search}
+            onChange={(e)=>setSearch(e.target.value)}
+            placeholder="Search categories (partial match)…"
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm pr-8"
+            onKeyDown={(e)=>{ if (e.key==="Enter" && canQuickAdd) { e.preventDefault(); addFromQuery(); } }}
+          />
+          {search && (
+            <button
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
+              onClick={()=>setSearch("")}
+              aria-label="Clear search"
+            >×</button>
+          )}
+        </div>
+        {canQuickAdd && (
+          <button onClick={addFromQuery} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50 whitespace-nowrap">Add “{search.trim()}”</button>
+        )}
+      </div>
+
+      <div className="mb-3 max-h-[40vh] overflow-auto rounded-xl border p-2">
+        {filtered.length===0 ? (
+          <div className="p-2 text-sm text-gray-500">No categories yet.</div>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {filtered.map(c=>{
+              const checked = local.some(x=>x.toLowerCase()===c.toLowerCase());
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  title={c}
+                  onClick={()=>toggle(c)}
+                  className={cn(
+                    "max-w-[180px] truncate rounded-full border px-2.5 py-1 text-xs",
+                    checked ? "border-gray-800 bg-gray-900 text-white" : "border-gray-300 bg-white hover:bg-gray-50"
+                  )}
+                >
+                  {c}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={maybeClose} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50">Cancel</button>
+        <button onClick={doSave} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Save</button>
+      </div>
+    </Modal>
+  );
+}
+
+function dedupeCaseInsensitive(arr){
+  const m=new Map();
+  for (const s of (arr||[])){
+    const v=String(s||"").trim();
+    if (!v) continue;
+    const k=v.toLowerCase();
+    if (!m.has(k)) m.set(k, v);
+  }
+  return Array.from(m.values());
+}
+
+/* ───────── Invite modal ───────── */
+function SendInviteModal({ plannerEmail, onClose, onToast }){
+  const [email,setEmail]=useState("");
+  const [previewUrl,setPreviewUrl]=useState("");
+  const [previewRaw,setPreviewRaw]=useState("");
+  const [loading,setLoading]=useState(false);
+
+  function extractFirstUrl(text){
+    const m = String(text||"").match(/https?:\/\/[^\s"'<>]+/);
+    return m ? m[0] : "";
+  }
+  async function parseMaybeJson(resp){
+    const ctype = resp.headers.get("content-type") || "";
+    const txt = await resp.text();
+    if (ctype.includes("application/json")) {
+      try { return { kind:"json", json: JSON.parse(txt), txt }; }
+      catch { /* fall through */ }
+    }
+    return { kind:"text", txt };
+  }
+  async function doPreview(){
+    setLoading(true);
+    setPreviewUrl(""); setPreviewRaw("");
+    try{
+      const qs = new URLSearchParams({ plannerEmail, userEmail: email });
+      const resp = await fetch(`/api/invite/preview?${qs.toString()}`);
+      const parsed = await parseMaybeJson(resp);
+
+      if (!resp.ok) {
+        if (parsed.kind==="json") onToast?.("error", `Preview failed: ${parsed.json?.error || JSON.stringify(parsed.json)}`);
+        else onToast?.("error", `Preview failed: ${parsed.txt.slice(0,120)}`);
+        setLoading(false); return;
+      }
+      if (parsed.kind==="json") {
+        const j = parsed.json;
+        const url = j.url || j.inviteUrl || j.href || "";
+        if (url) { setPreviewUrl(url); onToast?.("ok","Preview generated"); }
+        else { setPreviewRaw(JSON.stringify(j)); onToast?.("warn","Preview returned JSON but no URL field"); }
+      } else {
+        const url = extractFirstUrl(parsed.txt);
+        if (url) { setPreviewUrl(url); onToast?.("ok","Preview URL detected"); }
+        else { setPreviewRaw(parsed.txt); onToast?.("warn","Preview returned non-JSON content"); }
+      }
+    }catch(e){ onToast?.("error", String(e.message||e)); }
+    setLoading(false);
+  }
+  async function doSend(){
+    setLoading(true);
+    try{
+      const resp = await fetch("/api/invite/send",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ plannerEmail, userEmail: email })
+      });
+      const parsed = await parseMaybeJson(resp);
+      if (!resp.ok) {
+        if (parsed.kind==="json") {
+          const errorData = parsed.json;
+          if (errorData.needsUpgrade) {
+            onToast?.("error", `User limit reached! You can invite up to ${errorData.userLimit} users. Upgrade your plan to invite more users.`);
+          } else {
+            onToast?.("error", `Invite failed: ${errorData.error || JSON.stringify(errorData)}`);
+          }
+        } else {
+          onToast?.("error", `Invite failed: ${parsed.txt.slice(0,120)}`);
+        }
+        setLoading(false); return;
+      }
+      onToast?.("ok", `Invite sent to ${email}`);
+      onClose?.();
+    }catch(e){ onToast?.("error", String(e.message||e)); }
+    setLoading(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/10 p-2 sm:p-4">
+      <div className="mx-auto max-w-lg rounded-xl border bg-white p-3 sm:p-4 shadow-lg">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-semibold">Send Invite</div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100" aria-label="Close"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="space-y-3">
+          <label className="block">
+            <div className="mb-1 text-sm font-medium">User email</div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e)=>setEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            />
+          </label>
+
+          <div className="flex gap-2">
+            <button disabled={!email || loading} onClick={doPreview} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50">Preview</button>
+            <button disabled={!email || loading} onClick={doSend} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">Send Invite</button>
+          </div>
+
+          {!!previewUrl && (
+            <div className="rounded-lg border bg-gray-50 p-2 text-xs break-all">
+              <div className="mb-1 font-semibold text-gray-700">Preview URL</div>
+              <div className="text-gray-700">{previewUrl}</div>
+            </div>
+          )}
+
+          {!!previewRaw && !previewUrl && (
+            <div className="rounded-lg border bg-yellow-50 p-2 text-xs break-all">
+              <div className="mb-1 font-semibold text-yellow-800">Preview (non-JSON response)</div>
+              <div className="text-yellow-900">{previewRaw.slice(0,800)}</div>
+            </div>
+          )}
+
+          <div className="text-[11px] text-gray-500">
+            Invite CTA opens Google OAuth and returns a “Connected” confirmation (no route back to app for users).
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Settings ───────── */
+function SettingsView({ plannerEmail, prefs, onChange, onToast }){
+  const [local,setLocal]=useState(()=>{
+    return {
+      default_view: prefs.default_view || "users",
+      default_timezone: prefs.default_timezone || "America/Chicago",
+      default_push_mode: prefs.default_push_mode || "append",
+      default_planning_mode: prefs.default_planning_mode || "full-ai",
+      auto_archive_after_assign: !!prefs.auto_archive_after_assign,
+      show_inbox_badge: !!prefs.show_inbox_badge,
+    };
+  });
+  const [saving,setSaving]=useState(false);
+  const [billingStatus, setBillingStatus] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+
+  useEffect(()=>{ setLocal({
+    default_view: prefs.default_view || "users",
+    default_timezone: prefs.default_timezone || "America/Chicago",
+    default_push_mode: prefs.default_push_mode || "append",
+    default_planning_mode: prefs.default_planning_mode || "full-ai",
+    auto_archive_after_assign: !!prefs.auto_archive_after_assign,
+    show_inbox_badge: !!prefs.show_inbox_badge,
+  }); },[prefs]);
+
+  // Load billing status
+  useEffect(() => {
+    loadBillingStatus();
+  }, [plannerEmail]);
+
+  async function loadBillingStatus() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch(`/api/billing/status?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      if (data.ok) {
+        setBillingStatus(data);
+      }
+    } catch (error) {
+      console.error('Failed to load billing status:', error);
+    }
+    setBillingLoading(false);
+  }
+
+  async function createCustomer() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        onToast?.("ok", "Customer created successfully");
+        loadBillingStatus();
+      } else {
+        throw new Error(data.error || 'Failed to create customer');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function createSubscription(priceId) {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/create-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail, priceId })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error(data.error || 'Failed to create subscription');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function openPortal() {
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plannerEmail })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to open portal');
+      }
+    } catch (error) {
+      onToast?.("error", String(error.message || error));
+    }
+    setBillingLoading(false);
+  }
+
+  async function save(){
+    setSaving(true);
+    try{
+      const body={ plannerEmail, prefs: local };
+      const r=await fetch("/api/prefs/set",{ method:"POST", headers:{"Content-Type":"application/json" }, body: JSON.stringify(body) });
+      const j=await r.json();
+      if (!r.ok || j.error) throw new Error(j.error||"Save failed");
+      onChange?.(local);
+      onToast?.("ok","Settings saved");
+    }catch(e){
+      onToast?.("error", String(e.message||e));
+    }
+    setSaving(false);
+  }
+
+  return (
+    <>
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="mb-3 text-sm font-semibold">Settings</div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default view</div>
+          <select value={local.default_view} onChange={(e)=>setLocal({...local, default_view:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="users">Users</option>
+            <option value="plan">Plan</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default timezone</div>
+          <select value={local.default_timezone} onChange={(e)=>setLocal({...local, default_timezone:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default push mode</div>
+          <select value={local.default_push_mode} onChange={(e)=>setLocal({...local, default_push_mode:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="append">Append</option>
+            <option value="replace">Replace</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Default planning mode</div>
+          <select value={local.default_planning_mode} onChange={(e)=>setLocal({...local, default_planning_mode:e.target.value})} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+            <option value="full-ai">Full AI Planning</option>
+            <option value="ai-assisted">AI-Assisted Manual</option>
+            <option value="manual">Pure Manual</option>
+            <option value="templates">Use Template</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Auto-archive after assign</div>
+          <input type="checkbox" checked={!!local.auto_archive_after_assign} onChange={(e)=>setLocal({...local, auto_archive_after_assign:(e.target.checked)})} />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Show inbox badge</div>
+          <input type="checkbox" checked={!!local.show_inbox_badge} onChange={(e)=>setLocal({...local, show_inbox_badge:(e.target.checked)})} />
+        </label>
+      </div>
+
+      <div className="mt-3">
+        <button onClick={save} disabled={saving} className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
+          {saving ? "Saving…" : "Save"}
+        </button>
+      </div>
+    </div>
+
+    {/* Billing Section */}
+    <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="mb-3 text-sm font-semibold">Billing & Subscription</div>
+      
+      {billingLoading ? (
+        <div className="text-sm text-gray-500">Loading billing status...</div>
+      ) : billingStatus ? (
+        <div className="space-y-4">
+          {/* Current Plan */}
+          <div className="rounded-lg border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium">
+                  {billingStatus.subscription.plan_tier === 'free' ? 'Free Plan' : 
+                   billingStatus.subscription.plan_tier === 'starter' ? 'Starter Plan' :
+                   billingStatus.subscription.plan_tier === 'professional' ? 'Professional Plan' :
+                   billingStatus.subscription.plan_tier === 'business' ? 'Business Plan' : 'Enterprise Plan'}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {billingStatus.userCount} / {billingStatus.userLimit} users
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                Status: {billingStatus.subscription.status}
+              </div>
+            </div>
+          </div>
+
+          {/* Upgrade Options */}
+          {billingStatus.subscription.plan_tier === 'free' && (
+            <div className="space-y-3">
+              <div className="text-sm font-medium">Upgrade your plan:</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Starter</div>
+                  <div className="text-xs text-gray-500">Up to 10 users</div>
+                  <div className="text-sm font-semibold">$9.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('starter-monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Professional</div>
+                  <div className="text-xs text-gray-500">Up to 50 users</div>
+                  <div className="text-sm font-semibold">$24.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('professional-monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-sm font-medium">Business</div>
+                  <div className="text-xs text-gray-500">Up to 100 users</div>
+                  <div className="text-sm font-semibold">$49.99/month</div>
+                  <button 
+                    onClick={() => createSubscription('business-monthly')}
+                    disabled={billingLoading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Manage Billing */}
+          {billingStatus.subscription.plan_tier !== 'free' && (
+            <div>
+              <button 
+                onClick={openPortal}
+                disabled={billingLoading}
+                className="rounded-lg bg-stone-900 px-3 py-2 text-sm text-white hover:bg-stone-800 disabled:opacity-50"
+              >
+                Manage Billing
+              </button>
+            </div>
+          )}
+
+          {/* Enterprise Contact */}
+          <div className="text-xs text-stone-500">
+            Need more than 100 users? <a href="#contact" className="text-blue-600 hover:underline">Contact us for Enterprise pricing</a>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="text-sm text-stone-500 mb-3">Set up billing to manage your subscription</div>
+          <button 
+            onClick={createCustomer}
+            disabled={billingLoading}
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            Set Up Billing
+          </button>
+        </div>
+      )}
+    </div>
+    </>
+  );
+}
+
+/* ───────── User Notes Manager ───────── */
+function UserNotesManager({ userEmail, plannerEmail, onToast }){
+  const [notes, setNotes] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Load user notes on mount
+  useEffect(() => {
+    loadUserNotes();
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    setIsLoading(true);
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok) {
+        setNotes(j.notes || "");
+        setLastUpdated(j.updatedAt);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+      onToast?.("error", "Failed to load user notes");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveUserNotes() {
+    setIsSaving(true);
+    try {
+      const resp = await fetch("/api/user-notes/set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          notes: notes.trim()
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok) {
+        setLastUpdated(new Date().toISOString());
+        onToast?.("ok", "User notes saved successfully");
+      } else {
+        throw new Error(j.error || "Save failed");
+      }
+    } catch (e) {
+      console.error('Save user notes error:', e);
+      onToast?.("error", `Failed to save user notes: ${e.message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
+        <div className="text-sm text-gray-600">Loading user notes...</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {lastUpdated && (
+        <div className="text-xs text-gray-500 mb-4">
+          Last updated: {new Date(lastUpdated).toLocaleString()}
+        </div>
+      )}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notes & Context
+          </label>
+          <div className="text-xs text-gray-500 mb-2">
+            These notes are automatically considered by AI in all planning sessions for this user.
+          </div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-32"
+            placeholder="Enter user preferences, constraints, goals, or any context that should guide AI planning for this user..."
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-500">
+            {notes.length} characters
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={loadUserNotes}
+              disabled={isSaving}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Reload
+            </button>
+            <button
+              onClick={saveUserNotes}
+              disabled={isSaving || !notes.trim()}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? "Saving..." : "Save Notes"}
+            </button>
+          </div>
+        </div>
+    </>
+  );
+}
+
+/* ───────── Templates Management View ───────── */
+function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('');
+
+  // Fetch templates and users on mount
+  useEffect(() => {
+    fetchTemplates();
+    fetchUsers();
+  }, [plannerEmail]);
+
+  const fetchTemplates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        setTemplates(data.templates || []);
+        
+        // Extract unique tags
+        const allTags = new Set();
+        (data.templates || []).forEach(template => {
+          if (template.tags && Array.isArray(template.tags)) {
+            template.tags.forEach(tag => allTags.add(tag));
+          }
+        });
+        setAvailableTags(Array.from(allTags));
+      } else {
+        onToast?.("error", data.error || "Failed to fetch templates");
+      }
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      onToast?.("error", "Failed to fetch templates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter templates based on search and tags
+  const filteredTemplates = templates.filter(template => {
+    const matchesSearch = !searchTerm || 
+      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+    
+    const matchesTags = selectedTags.length === 0 || 
+      (template.tags && selectedTags.every(tag => template.tags.includes(tag)));
+    
+    return matchesSearch && matchesTags;
+  });
+
+  const handleTagToggle = (tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const handleDeleteTemplate = async (templateId) => {
+    if (!confirm("Are you sure you want to delete this template? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/templates/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          plannerEmail, 
+          templateId 
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.ok) {
+        onToast?.("ok", "Template deleted successfully");
+        fetchTemplates(); // Refresh the list
+      } else {
+        onToast?.("error", data.error || "Failed to delete template");
+      }
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      onToast?.("error", "Failed to delete template");
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`/api/users?plannerEmail=${encodeURIComponent(plannerEmail)}&status=active`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        setUsers(data.users || []);
+      } else {
+        onToast?.("error", data.error || "Failed to fetch users");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      onToast?.("error", "Failed to fetch users");
+    }
+  };
+
+  const handleTemplateClick = (template) => {
+    setSelectedTemplate(template);
+    setShowAssignModal(true);
+  };
+
+  const handleAssignTemplate = () => {
+    if (!selectedUser) {
+      onToast?.("error", "Please select a user first");
+      return;
+    }
+
+    // Navigate to plan creation with template pre-filled
+    onNavigate("plan", selectedUser, selectedTemplate);
+    
+    // Close modal
+    setShowAssignModal(false);
+    setSelectedTemplate(null);
+    setSelectedUser('');
+    
+    onToast?.("ok", `Template "${selectedTemplate.title}" will be applied to ${selectedUser}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">⏳</div>
+          <div className="text-sm text-gray-600">Loading templates...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold">Templates</div>
+          <div className="text-xs text-gray-600 mt-1">Manage your plan templates for quick reuse</div>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+        >
+          + Create Template
+        </button>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="mb-6 space-y-3">
+        {/* Search Bar */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search templates by name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+            <div className="text-gray-400 text-sm">🔍</div>
+          </div>
+        </div>
+
+        {/* Tags Filter */}
+        {availableTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <div className="text-xs text-gray-600 mr-2">Filter by tags:</div>
+            {availableTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-2 py-1 text-xs rounded-full border transition-colors ${
+                  selectedTags.includes(tag)
+                    ? "bg-purple-100 border-purple-300 text-purple-700"
+                    : "bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Templates Grid */}
+      {filteredTemplates.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2 text-2xl">📋</div>
+          <div className="font-semibold text-gray-700 mb-1 text-sm">No templates found</div>
+          <div className="text-xs text-gray-500 mb-3">
+            {templates.length === 0 
+              ? "You haven't created any templates yet. Create your first template to get started."
+              : "Try adjusting your search terms or tag filters."
+            }
+          </div>
+          {templates.length === 0 && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+            >
+              Create Your First Template
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTemplates.map(template => (
+            <div
+              key={template.id}
+              onClick={() => handleTemplateClick(template)}
+              className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow group cursor-pointer"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors text-sm">
+                  {template.title}
+                </h3>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setEditingTemplate(template)}
+                    className="opacity-0 group-hover:opacity-100 text-blue-400 hover:text-blue-600 transition-all text-xs"
+                    title="Edit template"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all text-xs"
+                    title="Delete template"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              
+              {template.description && (
+                <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                  {template.description}
+                </p>
+              )}
+              
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{template.itemsCount || 0} tasks</span>
+                {template.tags && template.tags.length > 0 && (
+                  <div className="flex gap-1">
+                    {template.tags.slice(0, 2).map(tag => (
+                      <span key={tag} className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                    {template.tags.length > 2 && (
+                      <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                        +{template.tags.length - 2}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create/Edit Template Modal */}
+      {showCreateModal && (
+        <CreateTemplateModal
+          plannerEmail={plannerEmail}
+          template={editingTemplate}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingTemplate(null);
+          }}
+          onSave={() => {
+            fetchTemplates();
+            setShowCreateModal(false);
+            setEditingTemplate(null);
+          }}
+          onToast={onToast}
+        />
+      )}
+
+      {/* Assign Template Modal */}
+      {showAssignModal && selectedTemplate && (
+        <Modal title="Assign Template" onClose={() => {
+          setShowAssignModal(false);
+          setSelectedTemplate(null);
+          setSelectedUser('');
+        }}>
+          <div className="space-y-4">
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">Template</div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="font-semibold text-sm">{selectedTemplate.title}</div>
+                {selectedTemplate.description && (
+                  <div className="text-xs text-gray-600 mt-1">{selectedTemplate.description}</div>
+                )}
+                <div className="text-xs text-gray-500 mt-1">{selectedTemplate.itemsCount || 0} tasks</div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select User *
+              </label>
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">Choose a user...</option>
+                {users.map(user => (
+                  <option key={user.email} value={user.email}>
+                    {user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedTemplate(null);
+                  setSelectedUser('');
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignTemplate}
+                disabled={!selectedUser}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Assign Template
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Create Template Modal ───────── */
+function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast }) {
+  const [formData, setFormData] = useState({
+    title: template?.title || '',
+    description: template?.description || '',
+    tasks: template?.tasks || [],
+    tags: template?.tags || []
+  });
+  const [newTag, setNewTag] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleAddTask = () => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: [...prev.tasks, {
+        id: Date.now().toString(),
+        title: '',
+        description: '',
+        dayOffset: 0,
+        time: '09:00',
+        durationMins: 30
+      }]
+    }));
+  };
+
+  const handleUpdateTask = (taskId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(task => 
+        task.id === taskId ? { ...task, [field]: value } : task
+      )
+    }));
+  };
+
+  const handleRemoveTask = (taskId) => {
+    setFormData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(task => task.id !== taskId)
+    }));
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()]
+      }));
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!formData.title.trim()) {
+      onToast?.("error", "Please enter a template name");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/templates/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plannerEmail,
+          templateId: template?.id,
+          name: formData.title,
+          description: formData.description,
+          tasks: formData.tasks.filter(task => task.title.trim()),
+          tags: formData.tags
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.ok) {
+        onToast?.("ok", template ? "Template updated successfully" : "Template created successfully");
+        onSave();
+      } else {
+        onToast?.("error", data.error || "Failed to save template");
+      }
+    } catch (error) {
+      console.error("Error saving template:", error);
+      onToast?.("error", "Failed to save template");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title={template ? "Edit Template" : "Create Template"} onClose={onClose}>
+      <div className="space-y-4">
+        {/* Template Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Template Name *
+          </label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="e.g., Weekly Planning Template"
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            rows={3}
+            placeholder="Describe what this template is used for..."
+          />
+        </div>
+
+        {/* Tags */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tags
+          </label>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Add a tag..."
+              />
+              <button
+                onClick={handleAddTag}
+                className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm"
+                  >
+                    {tag}
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      className="text-purple-500 hover:text-purple-700"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tasks */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Tasks
+            </label>
+            <button
+              onClick={handleAddTask}
+              className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+            >
+              + Add Task
+            </button>
+          </div>
+          
+          {formData.tasks.length === 0 ? (
+            <div className="text-center py-4 text-gray-500 text-sm">
+              No tasks yet. Click "Add Task" to get started.
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {formData.tasks.map(task => (
+                <div key={task.id} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <input
+                      type="text"
+                      value={task.title}
+                      onChange={(e) => handleUpdateTask(task.id, 'title', e.target.value)}
+                      className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
+                      placeholder="Task title..."
+                    />
+                    <button
+                      onClick={() => handleRemoveTask(task.id)}
+                      className="ml-2 text-red-400 hover:text-red-600"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={task.description || ''}
+                    onChange={(e) => handleUpdateTask(task.id, 'description', e.target.value)}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
+                    placeholder="Task description (optional)..."
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={loading || !formData.title.trim()}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? 'Saving...' : (template ? 'Update Template' : 'Create Template')}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ───────── Templates View ───────── */
+function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onToast }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+
+  // Fetch templates on mount
+  useEffect(() => {
+    fetchTemplates();
+  }, [plannerEmail]);
+
+  const fetchTemplates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/templates/list?plannerEmail=${encodeURIComponent(plannerEmail)}`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        setTemplates(data.templates || []);
+        
+        // Extract unique tags
+        const allTags = new Set();
+        (data.templates || []).forEach(template => {
+          if (template.tags && Array.isArray(template.tags)) {
+            template.tags.forEach(tag => allTags.add(tag));
+          }
+        });
+        setAvailableTags(Array.from(allTags));
+      } else {
+        onToast?.("error", data.error || "Failed to fetch templates");
+      }
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      onToast?.("error", "Failed to fetch templates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter templates based on search and tags
+  const filteredTemplates = templates.filter(template => {
+    const matchesSearch = !searchTerm || 
+      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+    
+    const matchesTags = selectedTags.length === 0 || 
+      (template.tags && selectedTags.every(tag => template.tags.includes(tag)));
+    
+    return matchesSearch && matchesTags;
+  });
+
+  const handleTagToggle = (tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const handleDeleteTemplate = async (templateId) => {
+    if (!confirm("Are you sure you want to delete this template? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/templates/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          plannerEmail, 
+          templateId 
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.ok) {
+        onToast?.("ok", "Template deleted successfully");
+        fetchTemplates(); // Refresh the list
+      } else {
+        onToast?.("error", data.error || "Failed to delete template");
+      }
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      onToast?.("error", "Failed to delete template");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-gray-500 mb-2">⏳</div>
+        <div className="text-sm text-gray-600">Loading templates...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search and Filter Controls */}
+      <div className="space-y-3">
+        {/* Search Bar */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search templates by name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+            <div className="text-gray-400 text-sm">🔍</div>
+          </div>
+        </div>
+
+        {/* Tags Filter */}
+        {availableTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <div className="text-sm text-gray-600 mr-2">Filter by tags:</div>
+            {availableTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  selectedTags.includes(tag)
+                    ? "bg-purple-100 border-purple-300 text-purple-700"
+                    : "bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Templates Grid */}
+      {filteredTemplates.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">📋</div>
+          <div className="font-semibold text-gray-700 mb-1">No templates found</div>
+          <div className="text-sm text-gray-500">
+            {templates.length === 0 
+              ? "You haven't created any templates yet. Create a plan and save it as a template to get started."
+              : "Try adjusting your search terms or tag filters."
+            }
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTemplates.map(template => (
+            <div
+              key={template.id}
+              className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer group"
+              onClick={() => onTemplateSelect(template)}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">
+                  {template.title}
+                </h3>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTemplate(template.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all"
+                  title="Delete template"
+                >
+                  🗑️
+                </button>
+              </div>
+              
+              {template.description && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {template.description}
+                </p>
+              )}
+              
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{template.itemsCount || 0} tasks</span>
+                {template.tags && template.tags.length > 0 && (
+                  <div className="flex gap-1">
+                    {template.tags.slice(0, 2).map(tag => (
+                      <span key={tag} className="px-2 py-1 bg-purple-50 text-purple-600 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                    {template.tags.length > 2 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                        +{template.tags.length - 2}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── AI Planning Decision ───────── */
+function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
+
+  if (!selectedUserEmail) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">👤</div>
+          <div className="font-semibold text-gray-700 mb-1">Choose a User First</div>
+          <div className="text-sm text-gray-500">Select a user to begin planning</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm -mt-1">
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">🤖</div>
+          <div className="text-base sm:text-lg font-semibold">How would you like to create this plan?</div>
+        </div>
+        <div className="text-sm text-gray-600 ml-8">Choose your planning approach for <strong>{selectedUserEmail}</strong></div>
+      </div>
+
+             <div className="ml-8 space-y-3">
+               {/* Planning Mode Options */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Full AI Option */}
+                 <button
+                   onClick={() => onModeSelect("full-ai")}
+                   className={`p-4 rounded-xl border-2 text-left transition-all ${
+                     planningMode === "full-ai"
+                       ? "border-blue-500 bg-blue-50"
+                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                   }`}
+                 >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💬</div>
+              <div className="font-semibold text-sm">Full AI Planning</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              Conversational AI creates your entire plan through research and dialogue
+            </div>
+          </button>
+
+          {/* AI-Assisted Manual Option */}
+                 <button
+                   onClick={() => onModeSelect("ai-assisted")}
+                   className={`p-4 rounded-xl border-2 text-left transition-all ${
+                     planningMode === "ai-assisted"
+                       ? "border-blue-500 bg-blue-50"
+                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                   }`}
+                 >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤝</div>
+              <div className="font-semibold text-sm">AI-Assisted Manual</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              You create tasks manually with smart AI suggestions and recommendations
+            </div>
+          </button>
+
+          {/* Pure Manual Option */}
+          <button
+            onClick={() => onModeSelect("manual")}
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              planningMode === "manual"
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-xs">✏️</div>
+              <div className="font-semibold text-sm">Pure Manual</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              Traditional task creation without AI assistance
+            </div>
+          </button>
+
+          {/* Templates Option */}
+          <button
+            onClick={() => onModeSelect("templates")}
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              planningMode === "templates"
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs">📋</div>
+              <div className="font-semibold text-sm">Use Template</div>
+            </div>
+            <div className="text-xs text-gray-600">
+              Select from your saved plan templates
+            </div>
+          </button>
+        </div>
+
+        {/* Mode Description */}
+        {planningMode === "full-ai" && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="text-sm font-medium text-blue-800 mb-1">Full AI Planning</div>
+            <div className="text-xs text-blue-600">
+              AI will research, analyze user notes, and create a complete plan through conversation. 
+              You'll review and refine the final plan before delivery.
+            </div>
+          </div>
+        )}
+
+        {planningMode === "ai-assisted" && (
+          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="text-sm font-medium text-green-800 mb-1">AI-Assisted Manual</div>
+            <div className="text-xs text-green-600">
+              Create tasks manually with AI providing smart suggestions, gap analysis, and best practice recommendations.
+            </div>
+          </div>
+        )}
+
+        {planningMode === "manual" && (
+          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="text-sm font-medium text-gray-800 mb-1">Pure Manual</div>
+            <div className="text-xs text-gray-600">
+              Complete control over task creation without AI assistance. Perfect when you prefer full manual control.
+            </div>
+          </div>
+        )}
+
+        {planningMode === "templates" && (
+          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="text-sm font-medium text-purple-800 mb-1">Use Template</div>
+            <div className="text-xs text-purple-600">
+              Select from your saved plan templates to quickly create plans for your users. Perfect for recurring workflows.
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Conversational AI ───────── */
+function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast }){
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [userNotes, setUserNotes] = useState("");
+  const [currentStep, setCurrentStep] = useState("welcome");
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+  // Check if user has scrolled up
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+      setUserHasScrolled(!isNearBottom);
+    }
+  };
+
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setShowScrollButton(false);
+    setUserHasScrolled(false);
+  };
+
+  // Auto-scroll to new messages (like this chat)
+  useEffect(() => {
+    if (!userHasScrolled) {
+      scrollToBottom();
+    }
+  }, [messages, isLoading]);
+
+  // Load user notes on mount
+  useEffect(() => {
+    if (userEmail && plannerEmail) {
+      loadUserNotes();
+    }
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok && j.notes) {
+        setUserNotes(j.notes);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+    }
+  }
+
+
+  // Initialize conversation
+  useEffect(() => {
+    if (currentStep === "welcome" && userEmail) {
+      const welcomeMessage = {
+        id: Date.now(),
+        type: "ai",
+        content: `Hi! I'm your AI planning assistant. I'm here to help you create a comprehensive plan for ${userEmail}. 
+
+I can research best practices, analyze user preferences, and build a complete plan through our conversation. 
+
+What type of plan would you like to create? For example: "Create a workout plan" or "Build a study schedule" or "Design a project timeline".`
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [currentStep, userEmail]);
+
+  async function sendMessage() {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: "user",
+      content: inputMessage.trim()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      // Call AI API for conversational response
+      const resp = await fetch("/api/ai/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle: "AI Generated Plan",
+          planDescription: "",
+          startDate: new Date().toISOString().split('T')[0],
+          timezone: "America/Chicago",
+          userPrompt: inputMessage.trim(),
+          userNotes,
+          conversational: true,
+          conversationHistory: messages
+        })
+      });
+
+      const j = await resp.json();
+      if (!resp.ok || j.error) {
+        throw new Error(j.error || "AI conversation failed");
+      }
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        type: "ai",
+        content: j.response || "I understand. Let me help you with that."
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+
+      // If AI generated a complete plan
+      if (j.tasks && Array.isArray(j.tasks)) {
+        setCurrentStep("plan-ready");
+        onPlanGenerated({
+          plan: {
+            title: j.planTitle || "AI Generated Plan",
+            description: j.planDescription || "",
+            startDate: j.startDate || new Date().toISOString().split('T')[0],
+            timezone: j.timezone || "America/Chicago"
+          },
+          tasks: j.tasks,
+          aiInsights: j.aiInsights || null
+        });
+        
+        // Continue conversation with AI insights
+        if (j.aiInsights) {
+          const insightsMessage = {
+            id: Date.now() + 1000,
+            type: "ai",
+            content: `Here are my insights about this user based on the plan I generated:\n\n${j.aiInsights}\n\nWould you like me to save these insights to the user's notes for future reference?`
+          };
+          console.log('Adding insights message:', insightsMessage);
+          setMessages(prev => {
+            const newMessages = [...prev, insightsMessage];
+            console.log('Updated messages:', newMessages);
+            return newMessages;
+          });
+        }
+        
+      }
+
+    } catch (e) {
+      console.error('AI conversation error:', e);
+      onToast?.("error", `AI conversation failed: ${e.message}`);
+      
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: "ai",
+        content: "I'm sorry, I encountered an error. Could you please try again?"
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  if (currentStep === "plan-ready") {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+        <div className="text-center py-8">
+          <div className="text-green-600 mb-2">✅</div>
+          <div className="font-semibold text-green-800 mb-1">Plan Generated Successfully!</div>
+          <div className="text-sm text-green-600 mb-3">
+            Your AI-generated plan is ready for review and delivery.
+          </div>
+          <button
+            onClick={() => setCurrentStep("welcome")}
+            className="px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-100"
+          >
+            Start New Conversation
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      {/* Chat Messages */}
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="h-96 overflow-y-auto p-4 space-y-4 relative"
+      >
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                message.type === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-800'
+              }`}
+            >
+              <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+            </div>
+          </div>
+        ))}
+        
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                <span className="text-sm">AI is thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Scroll target */}
+        <div ref={messagesEndRef} />
+        
+        {/* Floating scroll button */}
+        {showScrollButton && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2 shadow-lg hover:bg-blue-700 transition-colors"
+            title="Scroll to bottom"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+
+      {/* Input Area */}
+      <div className="border-t p-4">
+        <div className="flex gap-2">
+          <textarea
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+            className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none h-20"
+            disabled={isLoading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!inputMessage.trim() || isLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── AI-Assisted Task Editor ───────── */
+function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, onToast, tasks, setTasks }){
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDayOffset, setTaskDayOffset] = useState(0);
+  const [taskTime, setTaskTime] = useState("");
+  const [taskDuration, setTaskDuration] = useState("");
+  const [taskNotes, setTaskNotes] = useState("");
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [userNotes, setUserNotes] = useState("");
+
+  // Load user notes on mount
+  useEffect(() => {
+    if (userEmail && plannerEmail) {
+      loadUserNotes();
+    }
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok && j.notes) {
+        setUserNotes(j.notes);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+    }
+  }
+
+  async function getAISuggestions() {
+    if (!taskTitle.trim()) return;
+    
+    setIsLoadingSuggestions(true);
+    try {
+      const resp = await fetch("/api/ai/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle: "AI Suggestions",
+          planDescription: "",
+          startDate: planStartDate,
+          timezone: "America/Chicago",
+          userPrompt: `Suggest improvements for this task: "${taskTitle}". Consider user notes: "${userNotes}". Provide 3-5 specific suggestions.`,
+          userNotes,
+          suggestionsOnly: true
+        })
+      });
+
+      const j = await resp.json();
+      if (j.ok && j.suggestions) {
+        setAiSuggestions(j.suggestions);
+      }
+    } catch (e) {
+      console.error('AI suggestions error:', e);
+      onToast?.("error", "Failed to get AI suggestions");
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  }
+
+  function addTask() {
+    if (!taskTitle.trim()) {
+      onToast?.("error", "Task title is required");
+      return;
+    }
+
+    const newTask = {
+      title: taskTitle.trim(),
+      dayOffset: parseInt(taskDayOffset) || 0,
+      time: taskTime || null,
+      durationMins: taskDuration ? parseInt(taskDuration) : null,
+      notes: taskNotes.trim() || null
+    };
+
+    onAdd([newTask]);
+    
+    // Reset form
+    setTaskTitle("");
+    setTaskDayOffset(0);
+    setTaskTime("");
+    setTaskDuration("");
+    setTaskNotes("");
+    setAiSuggestions([]);
+  }
+
+  function applySuggestion(suggestion) {
+    setTaskTitle(suggestion.title || taskTitle);
+    setTaskNotes(suggestion.notes || taskNotes);
+    if (suggestion.time) setTaskTime(suggestion.time);
+    if (suggestion.duration) setTaskDuration(suggestion.duration);
+  }
+
+  async function optimizeDeadlines() {
+    if (!tasks || tasks.length === 0) {
+      onToast?.("warn", "No tasks to optimize");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/ai/suggest-deadlines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle: "Task Optimization",
+          planDescription: "",
+          startDate: planStartDate,
+          timezone: "America/Chicago",
+          userNotes: "",
+          tasks
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.ok && result.optimizedTasks) {
+        // Show optimization results in a modal or confirmation
+        const confirmed = window.confirm(
+          `AI has optimized deadlines for ${result.optimizedTasks.length} tasks. Apply these optimizations?\n\n` +
+          result.optimizedTasks.map(task => 
+            `• ${task.title}: ${task.suggestedDeadline} (${task.reasoning})`
+          ).join('\n')
+        );
+        
+        if (confirmed) {
+          setTasks(result.optimizedTasks);
+          onToast?.("ok", "Task deadlines optimized successfully");
+        }
+      } else {
+        throw new Error(result.error || 'Optimization failed');
+      }
+    } catch (e) {
+      console.error('Deadline optimization error:', e);
+      onToast?.("warn", `Failed to optimize deadlines: ${e.message}`);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* AI Assistance Indicator */}
+      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
+        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">🤖</div>
+        <div className="text-sm text-green-700">
+          <strong>AI Assistant Active:</strong> I'll provide smart suggestions as you create tasks
+        </div>
+      </div>
+
+      {/* Task Form */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <label className="block md:col-span-2">
+          <div className="mb-1 text-sm font-medium">Task Title *</div>
+          <div className="flex gap-2">
+            <input
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+              className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              placeholder="e.g., Morning workout"
+            />
+            <button
+              onClick={getAISuggestions}
+              disabled={!taskTitle.trim() || isLoadingSuggestions}
+              className="px-3 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-50 disabled:opacity-50"
+            >
+              {isLoadingSuggestions ? "..." : "Get AI Help"}
+            </button>
+          </div>
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Day (from start)</div>
+          <input
+            type="number"
+            value={taskDayOffset}
+            onChange={(e) => setTaskDayOffset(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            placeholder="0"
+            min="0"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Time (optional)</div>
+          <input
+            type="time"
+            value={taskTime}
+            onChange={(e) => setTaskTime(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          />
+        </label>
+
+        <label className="block">
+          <div className="mb-1 text-sm font-medium">Duration (minutes)</div>
+          <input
+            type="number"
+            value={taskDuration}
+            onChange={(e) => setTaskDuration(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            placeholder="60"
+            min="15"
+          />
+        </label>
+
+        <label className="block md:col-span-2">
+          <div className="mb-1 text-sm font-medium">Notes (optional)</div>
+          <textarea
+            value={taskNotes}
+            onChange={(e) => setTaskNotes(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+            placeholder="Additional details or context..."
+            rows="2"
+          />
+        </label>
+      </div>
+
+      {/* AI Suggestions */}
+      {aiSuggestions.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">💡</div>
+            <div className="text-sm font-medium text-blue-800">AI Suggestions</div>
+          </div>
+          <div className="space-y-2">
+            {aiSuggestions.map((suggestion, idx) => (
+              <div key={idx} className="flex items-start gap-2 p-2 bg-white border border-blue-200 rounded-lg">
+                <div className="flex-1 text-sm text-gray-700">{suggestion}</div>
+                <button
+                  onClick={() => applySuggestion({ title: suggestion })}
+                  className="px-2 py-1 text-xs font-medium text-blue-700 border border-blue-300 rounded hover:bg-blue-50"
+                >
+                  Apply
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add Task Button */}
+      <div className="flex justify-between items-center">
+        <div>
+          {tasks.length > 0 && (
+            <button
+              onClick={optimizeDeadlines}
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium"
+            >
+              Optimize Deadlines
+            </button>
+          )}
+        </div>
+        <button
+          onClick={addTask}
+          className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium"
+        >
+          Add Task with AI Assistance
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── AI Task Generator ───────── */
+function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, planStartDate, planTimezone, onAdd, onToast }){
+  const [userNotes, setUserNotes] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState("welcome");
+  const [userPrompt, setUserPrompt] = useState("");
+  const [generatedTasks, setGeneratedTasks] = useState([]);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Load user notes on mount
+  useEffect(() => {
+    if (userEmail && plannerEmail) {
+      loadUserNotes();
+    }
+  }, [userEmail, plannerEmail]);
+
+  async function loadUserNotes() {
+    try {
+      const qs = new URLSearchParams({ userEmail, plannerEmail });
+      const r = await fetch(`/api/user-notes/get?${qs.toString()}`);
+      const j = await r.json();
+      if (j.ok && j.notes) {
+        setUserNotes(j.notes);
+      }
+    } catch (e) {
+      console.error('Load user notes error:', e);
+    }
+  }
+
+  async function generateTasks() {
+    if (!userPrompt.trim()) {
+      onToast?.("warn", "Please describe what tasks you want to create");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const resp = await fetch("/api/ai/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail,
+          plannerEmail,
+          planTitle,
+          planDescription,
+          startDate: planStartDate,
+          timezone: planTimezone,
+          userPrompt: userPrompt.trim(),
+          userNotes
+        })
+      });
+
+      const j = await resp.json();
+      if (!resp.ok || j.error) {
+        throw new Error(j.error || "AI generation failed");
+      }
+
+      setGeneratedTasks(j.tasks || []);
+      setShowPreview(true);
+      setCurrentStep("preview");
+      
+    } catch (e) {
+      console.error('AI generation error:', e);
+      onToast?.("error", `AI generation failed: ${e.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function addTasksToPlan() {
+    if (generatedTasks.length > 0) {
+      onAdd(generatedTasks);
+      setCurrentStep("complete");
+      onToast?.("ok", `Added ${generatedTasks.length} AI-generated tasks to plan`);
+    }
+  }
+
+  function resetGenerator() {
+    setCurrentStep("welcome");
+    setUserPrompt("");
+    setGeneratedTasks([]);
+    setShowPreview(false);
+  }
+
+  if (currentStep === "welcome") {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-blue-50 p-4">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-semibold">🤖</div>
+            <div className="text-base font-semibold">AI Task Generator</div>
+          </div>
+          <div className="text-sm text-gray-600">
+            Hi! Let's create a plan for <strong>{userEmail}</strong>. What should we call this plan?
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Plan Name</label>
+            <input 
+              value={planTitle} 
+              readOnly
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-gray-50"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Describe the tasks you want to create</label>
+            <textarea
+              value={userPrompt}
+              onChange={(e) => setUserPrompt(e.target.value)}
+              placeholder="e.g., Create a workout plan for someone who wants to get in shape, or Generate a study schedule for exam preparation..."
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-20 resize-none"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={generateTasks}
+              disabled={isLoading || !userPrompt.trim()}
+              className="flex-1 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isLoading ? "Generating..." : "Generate Tasks"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentStep === "preview" && showPreview) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-semibold">✅</div>
+            <div className="text-base font-semibold">Generated Tasks</div>
+          </div>
+          <div className="text-sm text-gray-600">
+            Review the tasks below. You can add them to your plan or generate new ones.
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+          {generatedTasks.map((task, i) => (
+            <div key={i} className="flex items-center gap-2 p-2 bg-white rounded-lg border">
+              <div className="flex-1">
+                <div className="font-medium text-sm">{task.title}</div>
+                <div className="text-xs text-gray-500">
+                  Day {task.dayOffset} • {task.time || 'No time'} • {task.durationMins || 60} min
+                  {task.notes && ` • ${task.notes}`}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={addTasksToPlan}
+            className="flex-1 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+          >
+            Add {generatedTasks.length} Tasks to Plan
+          </button>
+          <button
+            onClick={resetGenerator}
+            className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50"
+          >
+            Generate New
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentStep === "complete") {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-green-50 p-4">
+        <div className="text-center">
+          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-lg mx-auto mb-2">✓</div>
+          <div className="font-semibold text-green-800 mb-1">Tasks Added Successfully!</div>
+          <div className="text-sm text-green-600 mb-3">
+            {generatedTasks.length} AI-generated tasks have been added to your plan.
+          </div>
+          <button
+            onClick={resetGenerator}
+            className="px-4 py-2 text-sm font-medium text-green-700 border border-green-300 rounded-xl hover:bg-green-100"
+          >
+            Generate More Tasks
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+/* ───────── Profile View ───────── */
+function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave, onToast }) {
+  const [formData, setFormData] = useState({
+    planner_name: '',
+    company_name: '',
+    business_description: '',
+    phone: '',
+    website_url: '',
+    linkedin_username: '',
+    instagram_username: '',
+    facebook_username: '',
+    twitter_username: ''
+  });
+
+  // Initialize form data when profile loads
+  useEffect(() => {
+    console.log('ProfileView: Profile data received:', profile);
+    if (profile) {
+      const newFormData = {
+        planner_name: profile.planner_name || '',
+        company_name: profile.company_name || '',
+        business_description: profile.business_description || '',
+        phone: profile.phone || '',
+        website_url: profile.website_url || '',
+        linkedin_username: profile.linkedin_url?.split('/').pop() || '',
+        instagram_username: profile.instagram_url?.split('/').pop() || '',
+        facebook_username: profile.facebook_url?.split('/').pop() || '',
+        twitter_username: profile.twitter_url?.split('/').pop() || ''
+      };
+      console.log('ProfileView: Setting form data:', newFormData);
+      setFormData(newFormData);
+    }
+  }, [profile]);
+
+  const [uploadState, setUploadState] = useState({
+    isUploading: false,
+    progress: 0,
+    preview: null,
+    error: null,
+    file: null
+  });
+
+  const handleSave = async () => {
+    // Convert usernames to full URLs
+    const profileData = {
+      planner_name: formData.planner_name,
+      company_name: formData.company_name,
+      business_description: formData.business_description,
+      phone: formData.phone,
+      website_url: formData.website_url,
+      linkedin_url: formData.linkedin_username ? `https://linkedin.com/in/${formData.linkedin_username}` : '',
+      instagram_url: formData.instagram_username ? `https://instagram.com/${formData.instagram_username}` : '',
+      facebook_url: formData.facebook_username ? `https://facebook.com/${formData.facebook_username}` : '',
+      twitter_url: formData.twitter_username ? `https://twitter.com/${formData.twitter_username}` : ''
+    };
+    
+    console.log('Saving profile data:', profileData);
+    await onSave(profileData);
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const formatPhoneNumber = (value) => {
+    const phoneNumber = value.replace(/\D/g, '');
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength < 4) return phoneNumber;
+    if (phoneNumberLength < 7) {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    }
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+  };
+
+  const handlePhoneChange = (value) => {
+    const formatted = formatPhoneNumber(value);
+    handleInputChange('phone', formatted);
+  };
+
+  const validateImageFile = (file) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    if (!allowedTypes.includes(file.type)) {
+      return { valid: false, error: 'Please select a JPEG, PNG, or WebP image.' };
+    }
+    
+    if (file.size > maxSize) {
+      return { valid: false, error: 'Image must be smaller than 5MB.' };
+    }
+    
+    return { valid: true };
+  };
+
+  // Simple file validation - no FileReader needed
+  const validateFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      throw new Error('Invalid file type');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('File too large');
+    }
+    if (file.size < 100) {
+      throw new Error('File too small');
+    }
+    return true;
+  };
+
+  const compressImage = (file, maxWidth = 400, quality = 0.8) => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        try {
+          const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              // Fallback to original file if compression fails
+              resolve(file);
+            }
+          }, file.type, quality);
+        } catch (e) {
+          console.warn('Image compression failed, using original:', e);
+          resolve(file);
+        }
+      };
+      
+      img.onerror = () => {
+        console.warn('Image load failed, using original file');
+        resolve(file);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      {/* Standard Panel Header */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">Edit Profile</h1>
+              <p className="text-sm text-gray-600 mt-1">Manage your planner profile and business information</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => { setView("users"); updateQueryView("users"); }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Content */}
+        <div className="px-6 py-6">
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Planner Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.planner_name}
+                  onChange={(e) => handleInputChange('planner_name', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Your name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.company_name}
+                  onChange={(e) => handleInputChange('company_name', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Your company"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Business Description
+              </label>
+              <textarea
+                value={formData.business_description}
+                onChange={(e) => handleInputChange('business_description', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                placeholder="Describe your business..."
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  value={formData.website_url}
+                  onChange={(e) => handleInputChange('website_url', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
+            </div>
+
+            {/* Social Media */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LinkedIn Username
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                    linkedin.com/in/
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.linkedin_username}
+                    onChange={(e) => handleInputChange('linkedin_username', e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="username"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Instagram Username
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                    instagram.com/
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.instagram_username}
+                    onChange={(e) => handleInputChange('instagram_username', e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="username"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Facebook Username
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                    facebook.com/
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.facebook_username}
+                    onChange={(e) => handleInputChange('facebook_username', e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="username"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Twitter Username
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                    twitter.com/
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.twitter_username}
+                    onChange={(e) => handleInputChange('twitter_username', e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="username"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ───────── User Dashboard (NEW) ───────── */
+function UserDashboard({ plannerEmail, userEmail, onToast, onNavigate }) {
+  const [userData, setUserData] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [bundles, setBundles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserData();
+  }, [plannerEmail, userEmail]);
+
+  async function loadUserData() {
+    if (!userEmail) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Load user connection status (Google Tasks API only checks userEmail, not planner)
+      console.log('Fetching connection status for:', { userEmail });
+      const connRes = await fetch(`/api/connections/status?userEmail=${encodeURIComponent(userEmail)}`);
+      const connData = await connRes.json();
+      console.log('Connection status response:', connData);
+      console.log('CRITICAL FIELDS:', {
+        canCallTasks: connData.canCallTasks,
+        googleError: connData.googleError,
+        hasAccessToken: connData.hasAccessToken,
+        hasRefreshToken: connData.hasRefreshToken
+      });
+      
+      setConnectionStatus({
+        isConnected: connData.canCallTasks || false,
+        lastSync: connData.google_expires_at || null,
+        status: connData.canCallTasks ? 'connected' : (connData.googleError || 'unknown')
+      });
+      console.log('Set connection status to:', {
+        isConnected: connData.canCallTasks || false,
+        lastSync: connData.google_expires_at || null,
+        status: connData.canCallTasks ? 'connected' : (connData.googleError || 'unknown')
+      });
+
+      // Load bundles for this user (both assigned and archived)
+      const bundlesRes = await fetch(`/api/inbox?plannerEmail=${encodeURIComponent(plannerEmail)}&status=all`);
+      const bundlesData = await bundlesRes.json();
+      
+      if (bundlesData.bundles) {
+        const userBundles = bundlesData.bundles.filter(b => 
+          (b.assigned_user_email || b.assigned_user) === userEmail
+        );
+        // Sort by created_at descending to get most recent first
+        userBundles.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setBundles(userBundles);
+        
+        // Get feedback for the most recent bundle
+        if (userBundles.length > 0 && connData.canCallTasks) {
+          const latestBundle = userBundles[0];
+          await loadBundleFeedback(latestBundle.id);
+        }
+      }
+
+      // Set basic user data
+      setUserData({
+        email: userEmail,
+        name: userEmail.split('@')[0],
+        status: 'active'
+      });
+    } catch (e) {
+      console.error('Failed to load user data:', e);
+      onToast?.("error", "Failed to load user dashboard");
+      // Set defaults on error
+      setConnectionStatus({
+        isConnected: false,
+        lastSync: null,
+        status: 'unknown'
+      });
+      setUserData({
+        email: userEmail,
+        name: userEmail.split('@')[0],
+        status: 'active'
+      });
+    }
+    setLoading(false);
+  }
+
+  async function loadBundleFeedback(bundleId) {
+    try {
+      const qs = new URLSearchParams({ plannerEmail, bundleId });
+      const r = await fetch(`/api/feedback/status?${qs.toString()}`);
+      const j = await r.json();
+      
+      if (r.ok && j.feedback) {
+        setFeedback(j.feedback);
+      }
+    } catch (e) {
+      console.error('Failed to load bundle feedback:', e);
+    }
+  }
+
+  if (!userEmail) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500">No user selected</div>
+        <button
+          onClick={() => onNavigate?.("users")}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Back to Users
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500">Loading user dashboard...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">User Dashboard</h1>
+          <p className="text-sm text-gray-600 mt-1">{userEmail}</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={loadUserData}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            onClick={() => onNavigate?.("users")}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+          >
+            ← Back to Users
+          </button>
+        </div>
+      </div>
+
+      {/* User Profile & Connection Status */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* User Profile Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+              {userData?.name?.[0]?.toUpperCase() || '?'}
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">{userData?.name || 'Unknown'}</h3>
+              <p className="text-xs text-gray-500">{userEmail}</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-600">Status:</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Active
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Tasks Connection Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-600 font-semibold text-sm">GT</span>
+            </div>
+            <h3 className="font-semibold text-gray-900">Google Tasks</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${connectionStatus?.isConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+              <span className="text-sm font-medium">
+                {connectionStatus?.isConnected ? 'Connected' : 'Re-authorizing...'}
+              </span>
+            </div>
+            {connectionStatus?.isConnected && connectionStatus?.lastSync && (
+              <div className="text-xs text-gray-500">
+                Last sync: {new Date(connectionStatus.lastSync).toLocaleString()}
+              </div>
+            )}
+            {!connectionStatus?.isConnected && (
+              <div className="text-xs text-gray-500 mt-2">
+                User has been notified to re-authorize their Google account
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Connection Health Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <span className="text-green-600 font-semibold text-lg">✓</span>
+            </div>
+            <h3 className="font-semibold text-gray-900">Connection Health</h3>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">API Status:</span>
+              <span className={`font-medium ${connectionStatus?.isConnected ? 'text-green-600' : 'text-gray-400'}`}>
+                {connectionStatus?.isConnected ? 'Healthy' : 'N/A'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Connection:</span>
+              <span className={`font-medium ${connectionStatus?.status === 'connected' ? 'text-green-600' : 'text-gray-400'}`}>
+                {connectionStatus?.status || 'Unknown'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Task Completion Overview */}
+      {connectionStatus?.isConnected && feedback && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">📊 Task Completion Overview</h2>
+          
+          {/* Completion Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="text-3xl font-bold text-blue-600">{feedback.tasksCompleted || 0}</div>
+              <div className="text-sm text-blue-700 mt-1">Tasks Completed</div>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="text-3xl font-bold text-gray-600">
+                {(feedback.totalTasks || 0) - (feedback.tasksCompleted || 0)}
+              </div>
+              <div className="text-sm text-gray-700 mt-1">Tasks Pending</div>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="text-3xl font-bold text-green-600">
+                {feedback.totalTasks > 0 
+                  ? Math.round((feedback.tasksCompleted / feedback.totalTasks) * 100)
+                  : 0}%
+              </div>
+              <div className="text-sm text-green-700 mt-1">Completion Rate</div>
+            </div>
+          </div>
+
+          {/* Task Details */}
+          {feedback.taskDetails && feedback.taskDetails.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700 mb-3">Task Details:</div>
+              <div className="space-y-2">
+                {feedback.taskDetails.map((task, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                      task.completed ? 'bg-green-500' : 
+                      task.found ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">{task.title}</div>
+                      <div className={`text-xs mt-0.5 ${
+                        task.completed ? 'text-green-700' : 
+                        task.found ? 'text-yellow-700' : 'text-red-700'
+                      }`}>
+                        {task.completed ? '✓ Completed' : 
+                         task.found ? '◷ Found in Google Tasks' : '○ Not Found'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Last Checked */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="text-xs text-gray-500">
+              Last checked: {new Date(feedback.lastChecked).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No Feedback Available Message */}
+      {connectionStatus?.isConnected && !feedback && bundles.length > 0 && (
+        <div className="bg-blue-50 rounded-2xl border border-blue-200 p-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-2">📊 Task Completion Tracking</h2>
+          <p className="text-sm text-blue-700">
+            Task completion data will be available after the daily sync runs. 
+            The system checks Google Tasks status every night at 2 AM UTC.
+          </p>
+        </div>
+      )}
+
+      {/* No Connection Message */}
+      {!connectionStatus?.isConnected && bundles.length > 0 && (
+        <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6">
+          <h2 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Google Tasks Not Connected</h2>
+          <p className="text-sm text-yellow-700">
+            This user needs to authorize Google Tasks connection to enable task completion tracking.
+          </p>
+        </div>
+      )}
+
+      {/* Hidden: Incomplete features - Planning workspace, quick actions, recent activity */}
+      {/* These features will be restored when fully implemented */}
+    </div>
+  );
+}
+
+/* ───────── Timezones ───────── */
+const TIMEZONES = [
+  "America/Chicago","America/New_York","America/Denver","America/Los_Angeles",
+  "UTC","Europe/London","Europe/Berlin","Asia/Tokyo","Australia/Sydney"
+];import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import {
+  Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
+  Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
+  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
+  FileText, Layout, UserPlus, Zap, BarChart, ArrowRight
+} from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+
+
+const APP_VERSION = "2025-09-02 · C4";
+/* ───────────── utils (LOCAL DATE ONLY) ───────────── */
+function cn(...a){ return a.filter(Boolean).join(" "); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function parseYMDLocal(s){
+  if (!s) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));
+  if (!m) return null;
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  return new Date(y, mo-1, d);
+}
+function fmtYMDLocal(d){
+  const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,"0"); const dd=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${dd}`;
+}
+function addDaysLocal(base, days){
+  return new Date(base.getFullYear(), base.getMonth(), base.getDate()+days);
+}
+function daysBetweenLocal(a,b){
+  const a0=new Date(a.getFullYear(),a.getMonth(),a.getDate());
+  const b0=new Date(b.getFullYear(),b.getMonth(),b.getDate());
+  return Math.round((b0 - a0)/86400000);
+}
+function addMonthsLocal(date, months){
+  const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
+  const nmo=m+months; const ny=y+Math.floor(nmo/12); const nm=((nmo%12)+12)%12;
+  const last=new Date(ny, nm+1, 0).getDate();
+  return new Date(ny, nm, Math.min(d,last));
+}
+function lastDayOfMonthLocal(y,m0){ return new Date(y, m0+1, 0).getDate(); }
+function firstWeekdayOfMonthLocal(y,m0,weekday){
+  const first=new Date(y,m0,1);
+  const shift=(7+weekday-first.getDay())%7;
+  return new Date(y,m0,1+shift);
+}
+function nthWeekdayOfMonthLocal(y,m0,weekday,nth){
+  const first=firstWeekdayOfMonthLocal(y,m0,weekday);
+  const c=new Date(y,m0, first.getDate()+7*(nth-1));
+  return c.getMonth()===m0?c:null;
+}
+function lastWeekdayOfMonthLocal(y,m0,weekday){
+  const lastD=lastDayOfMonthLocal(y,m0);
+  const last=new Date(y,m0,lastD);
+  const shift=(7+last.getDay()-weekday)%7;
+  return new Date(y,m0,lastD-shift);
+}
+
+/* display helper */
+function to12hDisplay(hhmm){
+  if (!hhmm) return "";
+  const [h,m] = hhmm.split(":").map(Number);
+  const ampm = h>=12 ? "pm" : "am";
+  const h12 = h%12 || 12;
+  return `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
+/* Time dropdown (15-min steps) */
+const TIME_OPTIONS = (() => {
+  const out = [{ value: "", label: "— none —" }];
+  for (let h=0; h<24; h++){
+    for (let m=0; m<60; m+=15){
+      const v = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+      const h12 = (h%12) || 12;
+      const ampm = h>=12 ? "pm" : "am";
+      const label = `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+      out.push({ value: v, label });
+    }
+  }
+  return out;
+})();
+
+function TimeSelect({ value, onChange }){
+  return (
+    <select
+      value={value || ""}
+      onChange={(e)=>onChange(e.target.value)}
+      className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm h-10"
+    >
+      {TIME_OPTIONS.map(opt=>(
+        <option key={opt.value || "none"} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  );
+}
+
+/* ───────── Error boundary ───────── */
+class ErrorBoundary extends React.Component{
+  constructor(p){ super(p); this.state={error:null}; }
+  static getDerivedStateFromError(e){ return {error:e}; }
+  componentDidCatch(e, info){ console.error("UI crash:", e, info); }
+  render(){
+    if (this.state.error) {
+      return (
+        <div className="min-h-screen bg-red-50 p-4 sm:p-6">
+          <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-4">
+            <div className="text-red-700 font-bold mb-2">Something went wrong in the UI</div>
+            <pre className="bg-red-100 p-3 text-xs text-red-900 overflow-auto rounded">
+              {String(this.state.error?.message || this.state.error)}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/* ───────── App shell ───────── */
+export default function App(){
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
+}
+
+function MainApp(){
+  const usp = typeof window!=="undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const urlPE = usp.get("plannerEmail");
+  const urlView = (usp.get("view")||"").toLowerCase();
+  const urlUser = usp.get("user") || "";
+  const validViews = new Set(["dashboard","users","plan","settings","profile","templates","user-dashboard"]);
+
+  const storedPE = (typeof window!=="undefined" ? localStorage.getItem("plannerEmail") : "") || "";
+  const plannerEmail = (urlPE || storedPE);
+  if (urlPE) { try { localStorage.setItem("plannerEmail", urlPE); } catch {} }
+  const [view,setView]=useState(validViews.has(urlView) ? urlView : "dashboard");
+  
   // Show landing page if no planner email
   if (!plannerEmail) {
     return (
