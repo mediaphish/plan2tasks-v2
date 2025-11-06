@@ -5326,8 +5326,16 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-stone-900 mb-2">How would you like to create this plan?</h2>
-      <p className="text-base text-stone-600 mb-6">Choose your planning approach for {selectedUserEmail}</p>
+      {/* Header Section with Lightbulb Icon */}
+      <div className="flex items-start gap-4 mb-8">
+        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center">
+          <Lightbulb className="w-6 h-6 text-stone-700" />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-stone-900 mb-1">How would you like to create this plan?</h2>
+          <p className="text-base text-stone-600">Choose your planning approach for {selectedUserEmail}</p>
+        </div>
+      </div>
       
       {/* Planning Mode Options */}
       <div className="grid grid-cols-4 gap-4">
