@@ -112,8 +112,8 @@ class ErrorBoundary extends React.Component{
           <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-4">
             <div className="text-red-700 font-bold mb-2">Something went wrong in the UI</div>
             <pre className="bg-red-100 p-3 text-xs text-red-900 overflow-auto rounded">
-              {String(this.state.error?.message || this.state.error)}
-            </pre>
+                {String(this.state.error?.message || this.state.error)}
+              </pre>
           </div>
         </div>
       );
@@ -185,7 +185,7 @@ function MainApp(){
       setLoginError("Network error. Please try again.");
     }
   };
-
+  
   // Show landing page if no planner email
   if (!plannerEmail) {
     return (
@@ -254,7 +254,7 @@ function MainApp(){
                   >
                     Use a different email
                   </button>
-                </div>
+          </div>
               ) : (
                 <form onSubmit={handleMagicLinkRequest}>
                   <div className="mb-6">
@@ -320,7 +320,7 @@ function MainApp(){
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
                 <span className="text-sm text-stone-700">Create Plans in Minutes</span>
-              </div>
+                </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
                 <span className="text-sm text-stone-700">Instant Delivery</span>
@@ -328,14 +328,14 @@ function MainApp(){
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
                 <span className="text-sm text-stone-700">Track Progress</span>
-              </div>
+                </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
                 <span className="text-sm text-stone-700">No App Required</span>
               </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-8 py-16">
@@ -364,7 +364,7 @@ function MainApp(){
             </h2>
             <p className="text-lg text-stone-600 leading-relaxed">
               Plan2Tasks creates a feedback loop between you and your users. You plan, they execute, you see results.
-            </p>
+              </p>
           </section>
 
           {/* How It Works */}
@@ -374,7 +374,7 @@ function MainApp(){
               <div className="text-center flex-1 max-w-xs">
                 <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-white">1</span>
-                </div>
+              </div>
                 <h3 className="text-xl font-bold text-stone-900 mb-3">Create Your Plan</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
                   Use natural language or AI to outline tasks. Organize by categories, set priorities, add context.
@@ -390,12 +390,12 @@ function MainApp(){
               <div className="text-center flex-1 max-w-xs">
                 <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-white">2</span>
-                </div>
+              </div>
                 <h3 className="text-xl font-bold text-stone-900 mb-3">Assign to Users</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
                   Choose recipients and send. Tasks appear instantly in their Google Tasks—no new app required.
                 </p>
-              </div>
+            </div>
 
               {/* Arrow 2 */}
               <div className="hidden md:flex items-center justify-center flex-shrink-0">
@@ -474,7 +474,7 @@ function MainApp(){
                 <h3 className="text-xl font-bold text-stone-900 mb-3">Create Plans Instantly</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
                   Use AI or templates to build task plans in minutes. No spreadsheets, no complex project management tools.
-                </p>
+              </p>
               </div>
 
               {/* Card 2 */}
@@ -508,27 +508,27 @@ function MainApp(){
             </h2>
             <p className="text-lg text-stone-600 leading-relaxed mb-8">
               Whether you're a coach, consultant, trainer, or team leader—if you create plans for others, this is for you.
-            </p>
-
+              </p>
+              
             <div className="grid md:grid-cols-2 gap-6 text-left">
               <div className="flex gap-4">
                 <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
-                <div>
+                  <div>
                   <h3 className="font-semibold text-stone-900 mb-2">No New App for Your Users</h3>
                   <p className="text-base text-stone-600 leading-relaxed">
                     Tasks go straight to Google Tasks. Your users don't need to learn anything new or download another app.
                   </p>
-                </div>
+                  </div>
               </div>
               <div className="flex gap-4">
                 <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
-                <div>
+                  <div>
                   <h3 className="font-semibold text-stone-900 mb-2">AI-Powered Planning</h3>
                   <p className="text-base text-stone-600 leading-relaxed">
                     Describe what needs to be done in plain English. AI structures it into actionable tasks automatically.
                   </p>
+                  </div>
                 </div>
-              </div>
             </div>
           </section>
 
@@ -642,8 +642,8 @@ function MainApp(){
                 <a href="#contact" className="text-sm text-stone-600 hover:text-stone-900">Contact</a>
               </div>
             </div>
-          </div>
-        </footer>
+            </div>
+          </footer>
       </div>
     );
   }
@@ -876,24 +876,24 @@ function MainApp(){
         {/* Header - Dark Background per Prompt 6 */}
         <header className="bg-[#1A1A1A] border-b border-stone-800 w-full px-8 py-4">
           <div className="flex items-center justify-between">
-            {/* Left: Logo & Navigation */}
-            <div className="flex items-center gap-8">
+          {/* Left: Logo & Navigation */}
+          <div className="flex items-center gap-8">
               <img src="/brand/plan2tasks-logo-horizontal.svg" alt="Plan2Tasks" className="h-8 brightness-0 invert" />
               <nav className="hidden md:flex items-center gap-2">
-                <button 
-                  onClick={()=>{ 
-                    // Clear user parameter first
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete("user");
-                    url.searchParams.set("view", "dashboard");
-                    window.history.pushState({}, "", url.toString());
-                    
-                    // Update state
-                    setView("dashboard"); 
-                    setSelectedUserEmail("");
-                  }}
+              <button 
+                onClick={()=>{ 
+                  // Clear user parameter first
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete("user");
+                  url.searchParams.set("view", "dashboard");
+                  window.history.pushState({}, "", url.toString());
+                  
+                  // Update state
+                  setView("dashboard"); 
+                  setSelectedUserEmail("");
+                }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    view === "dashboard" 
+                  view === "dashboard" 
                       ? "bg-white/10 text-white" 
                       : "text-white/70 hover:text-white hover:bg-white/5"
                   }`}
@@ -906,39 +906,39 @@ function MainApp(){
                     view === "users" 
                       ? "bg-white/10 text-white" 
                       : "text-white/70 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  Users
-                </button>
-                <button 
-                  onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
+                }`}
+              >
+                Users
+              </button>
+              <button 
+                onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    view === "templates" 
+                  view === "templates" 
                       ? "bg-white/10 text-white" 
                       : "text-white/70 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  Templates
-                </button>
-              </nav>
-            </div>
+                }`}
+              >
+                Templates
+              </button>
+            </nav>
+          </div>
 
-            {/* Right: Actions & Profile */}
+     {/* Right: Actions & Profile */}
             <div className="flex items-center gap-3">
               {/* Create Dropdown */}
               <div className="relative" ref={createDropdownRef}>
-                <button
+            <button 
                   onClick={() => setCreateDropdownOpen(!createDropdownOpen)}
                   className="flex items-center gap-2 px-4 py-2 bg-stone-700 text-white rounded-lg hover:bg-stone-600 transition-colors text-sm font-medium"
-                >
+            >
                   <Plus className="w-4 h-4" />
                   <span>Create</span>
                   <ChevronDown className="w-4 h-4" />
-                </button>
-                
+            </button>
+
                 {createDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-stone-200 py-2 z-50">
-                    <button
+            <button 
                       onClick={() => {
                         setCreateDropdownOpen(false);
                         setInviteOpen(true);
@@ -947,19 +947,19 @@ function MainApp(){
                     >
                       <UserPlus className="w-4 h-4" />
                       Invite User
-                    </button>
-                    <button
+            </button>
+            <button 
                       onClick={() => {
                         setCreateDropdownOpen(false);
                         // Navigate to plan view (user selection will be prompted)
                         setView("plan");
                         updateQueryView("plan");
-                      }}
+              }}
                       className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left flex items-center gap-3"
                     >
                       <FileText className="w-4 h-4" />
                       Plan for User
-                    </button>
+            </button>
                     <button
                       onClick={() => {
                         setCreateDropdownOpen(false);
@@ -977,28 +977,28 @@ function MainApp(){
               </div>
 
               {/* Settings Dropdown */}
-              <div className="relative" ref={profileRef}>
-                <button 
-                  onClick={()=>setProfileOpen(!profileOpen)}
+           <div className="relative" ref={profileRef}>
+             <button 
+               onClick={()=>setProfileOpen(!profileOpen)}
                   className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                >
+             >
                   <SettingsIcon className="w-5 h-5" />
-                </button>
-                
-                {profileOpen && (
+             </button>
+              
+              {profileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-stone-200 py-2 z-50">
-                    <button 
-                      onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(true);}}
+                     <button 
+                       onClick={()=>{setProfileOpen(false); setView("profile"); updateQueryView("profile"); setProfileEditMode(true);}}
                       className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
-                    >
-                      Profile
-                    </button>
-                    <button 
-                      onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
+                     >
+                       Profile
+                     </button>
+                     <button 
+                       onClick={()=>{setProfileOpen(false); setView("settings"); updateQueryView("settings");}}
                       className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
-                    >
-                      Settings
-                    </button>
+                     >
+                       Settings
+                     </button>
                     <button 
                       onClick={()=>{setProfileOpen(false); setView("billing"); updateQueryView("billing");}}
                       className="w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 text-left"
@@ -1006,25 +1006,25 @@ function MainApp(){
                       Billing
                     </button>
                     <div className="border-t border-stone-200 my-2" />
-                    <button 
-                      onClick={()=>{
-                        setProfileOpen(false);
+                     <button 
+                       onClick={()=>{
+                         setProfileOpen(false);
                         // Clear all state
-                        localStorage.removeItem("plannerEmail");
+                         localStorage.removeItem("plannerEmail");
                         // Clear URL params and redirect
-                        window.location.href = "/";
-                      }}
+                         window.location.href = "/";
+                       }}
                       className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left"
                       type="button"
-                    >
+                     >
                       <LogOut className="inline h-4 w-4 mr-2" />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+                       Logout
+                     </button>
+                </div>
+              )}
             </div>
           </div>
+        </div>
         </header>
 
         {view==="dashboard" && (
@@ -2001,7 +2001,7 @@ History
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-semibold">
                 {isTemplateMode ? "✓" : "3"}
-              </div>
+            </div>
               <div className="text-base font-semibold">
                 {isTemplateMode ? "Review & Deliver Template" : "Deliver to User"}
               </div>
@@ -2697,7 +2697,7 @@ function ComposerPreview({ plannerEmail, selectedUserEmail, plan, tasks, setTask
       // Don't clear tasks immediately - keep them visible for user feedback
       // Only clear after a delay to show success message
       setTimeout(() => {
-        setTasks([]);
+      setTasks([]);
         setMsg("");
       }, 3000);
       
@@ -3172,9 +3172,9 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
 
   // Load dashboard metrics with client-side caching
   const loadMetrics = async (useCache = true) => {
-    try {
+      try {
       console.log('[DASHBOARD] Loading metrics for:', plannerEmail);
-      
+        
       // Check cache first
       const cacheKey = `dashboard_${plannerEmail}`;
       if (useCache) {
@@ -3215,10 +3215,10 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
       console.error('[DASHBOARD] Error loading metrics:', err);
       setError(err.message);
       onToast?.("error", "Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
     loadMetrics(true); // Use cache on initial load
@@ -3235,7 +3235,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
     return (
       <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-64">
             <div className="text-stone-500">Loading dashboard...</div>
           </div>
         </div>
@@ -3244,7 +3244,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
   }
 
   if (error) {
-    return (
+  return (
       <div className="bg-[#F5F3F0] min-h-screen -mx-4 -my-4 px-4 py-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg border border-stone-200 p-6">
@@ -3281,10 +3281,10 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
     <div className="min-h-screen bg-[#F5F3F0]">
       <main className="px-8 py-8">
         {/* SECTION 1: PAGE HEADER */}
-        <div className="mb-8">
+      <div className="mb-8">
           <h1 className="text-4xl font-bold text-stone-900 mb-2">Dashboard</h1>
           <p className="text-lg text-stone-600">Monitor user engagement and task completions</p>
-        </div>
+      </div>
 
         {/* SECTION 2: METRIC CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -3297,7 +3297,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                 {aggregate.trends.today >= 0 ? '↑' : '↓'} {Math.abs(aggregate.trends.today)}% vs yesterday
               </p>
             )}
-          </div>
+        </div>
 
           {/* Tasks Completed This Week */}
           <div className="bg-white rounded-lg border border-stone-200 p-6">
@@ -3358,9 +3358,9 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                     <th className="text-center text-sm font-semibold text-stone-700 pb-3">Completion Rate</th>
                     <th className="text-center text-sm font-semibold text-stone-700 pb-3">Active Plans</th>
                     <th className="text-right text-sm font-semibold text-stone-700 pb-3">Last Activity</th>
-                  </tr>
-                </thead>
-                <tbody>
+              </tr>
+            </thead>
+            <tbody>
                   {sortedUsers.map((user) => (
                     <tr
                       key={user.userEmail}
@@ -3377,9 +3377,9 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                             <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
                               Not Connected
                             </span>
-                          )}
-                        </div>
-                      </td>
+                        )}
+                      </div>
+                    </td>
                       <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.today || 0}</td>
                       <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.thisWeek || 0}</td>
                       <td className="text-center py-4">
@@ -3388,18 +3388,18 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                             <div className="h-full bg-green-600" style={{ width: `${Math.min(user.completionRate || 0, 100)}%` }}></div>
                           </div>
                           <span className="text-lg font-semibold text-stone-900">{Math.round(user.completionRate || 0)}%</span>
-                        </div>
-                      </td>
+                      </div>
+                    </td>
                       <td className="text-center text-lg font-semibold text-stone-900 py-4">{user.activePlans || 0}</td>
                       <td className="text-right text-sm text-stone-600 py-4">
                         {user.lastActivity ? formatDistanceToNow(new Date(user.lastActivity), { addSuffix: true }) : 'Never'}
-                      </td>
-                    </tr>
+                  </td>
+                </tr>
                   ))}
-                </tbody>
-              </table>
+            </tbody>
+          </table>
             )}
-          </div>
+        </div>
 
           {/* Live Activity Panel */}
           <div className="bg-white rounded-xl border border-stone-200 p-8 max-h-[600px] overflow-y-auto">
@@ -3415,7 +3415,7 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
                   >
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                       <CheckCircle className="w-6 h-6 text-green-600" />
-                    </div>
+      </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-base font-semibold text-stone-900 mb-1">{activity.taskTitle}</p>
                       <p className="text-sm text-stone-600 mb-1">{activity.userEmail}</p>
@@ -3641,10 +3641,10 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
             >
               Deleted
             </button>
-          </div>
+        </div>
 
           {/* Search Bar */}
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <input
               type="text"
               value={filter}
@@ -3655,8 +3655,8 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
             <button onClick={load} className="p-2 hover:bg-stone-50 rounded-lg">
               <RotateCcw className="h-5 w-5 text-stone-600" />
             </button>
-          </div>
         </div>
+      </div>
 
         {/* Users Table */}
         <table className="w-full">
@@ -3688,14 +3688,14 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         connected
                       </span>
                     ) : (
-                      <span className={cn(
+                    <span className={cn(
                         "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium",
                         isDeleted ? "bg-red-100 text-red-700" :
                         isArchived ? "bg-stone-100 text-stone-700" :
                         "bg-stone-100 text-stone-700"
-                      )}>
-                        {r.status||"—"}
-                      </span>
+                    )}>
+                      {r.status||"—"}
+                    </span>
                     )}
                   </td>
                   <td className="py-4 border-b border-stone-100">
@@ -3704,22 +3704,22 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
                         <span className="text-stone-600 text-base">+ Add</span>
                       ) : (
                         <>
-                          {pills.map(g=>(
+                      {pills.map(g=>(
                             <span key={g} className="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg text-sm" title={g}>
                               {g}
-                            </span>
-                          ))}
+                        </span>
+                      ))}
                           {count > 2 && (
-                            <button
-                              onClick={()=>openCats(r.email)}
+                      <button
+                        onClick={()=>openCats(r.email)}
                               className="relative inline-flex items-center justify-center rounded-lg border border-stone-200 px-2.5 py-1 text-sm hover:bg-stone-50 disabled:opacity-40"
                               aria-label="Edit categories"
                               title="Edit categories"
-                              disabled={isDeleted}
-                            >
+                        disabled={isDeleted}
+                      >
                               <Tag className="h-4 w-4" />
                               <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] font-bold text-white">{count}</span>
-                            </button>
+                      </button>
                           )}
                         </>
                       )}
@@ -4541,7 +4541,7 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
     
     return matchesSearch;
   });
-
+    
   const handleDeleteTemplate = async (templateId, e) => {
     e.stopPropagation(); // Prevent card click
     if (!confirm("Are you sure you want to delete this template? This action cannot be undone.")) {
@@ -4635,7 +4635,7 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
         <p className="text-lg text-stone-600">Manage your plan templates for quick reuse</p>
       </div>
 
-      {/* Search Bar */}
+        {/* Search Bar */}
       <div className="mb-6">
         <div className="relative">
           <input
@@ -4646,8 +4646,8 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
             className="w-full rounded-lg border border-stone-200 bg-white px-4 py-3 pr-10 text-base text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
           />
           <Search className="absolute right-3 top-3.5 h-5 w-5 text-stone-400" />
+          </div>
         </div>
-      </div>
 
       {/* Template Cards Grid */}
       {filteredTemplates.length === 0 ? (
@@ -4676,11 +4676,11 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
             const taskCount = template.tasks?.length || template.itemsCount || 0;
             
             return (
-              <div
-                key={template.id}
-                onClick={() => handleTemplateClick(template)}
+            <div
+              key={template.id}
+              onClick={() => handleTemplateClick(template)}
                 className="group rounded-lg border border-stone-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
-              >
+            >
                 {/* Card Title */}
                 <h3 className="text-base font-semibold text-stone-900 mb-2">{templateName}</h3>
                 
@@ -4697,29 +4697,29 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
                   {/* Action Buttons - Hidden until hover */}
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {/* Edit Button */}
-                    <button
+                  <button
                       onClick={(e) => handleEditTemplate(template, e)}
                       className="rounded p-1.5 text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-                      title="Edit template"
-                    >
+                    title="Edit template"
+                  >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
-                    </button>
+                  </button>
                     
                     {/* Delete Button */}
-                    <button
+                  <button
                       onClick={(e) => handleDeleteTemplate(template.id, e)}
                       className="rounded p-1.5 text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-                      title="Delete template"
-                    >
+                    title="Delete template"
+                  >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                    </button>
-                  </div>
+                  </button>
                 </div>
               </div>
+                  </div>
             );
           })}
         </div>
@@ -6287,38 +6287,21 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
 
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      {/* Standard Panel Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-stone-200 mb-6">
-        <div className="px-6 py-4 border-b border-stone-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-stone-900">Edit Profile</h1>
-              <p className="text-sm text-stone-600 mt-1">Manage your planner profile and business information</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => { setView("users"); updateQueryView("users"); }}
-                className="px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-md hover:bg-stone-50"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSave}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
+    <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-stone-900 mb-2">Edit Profile</h1>
+        <p className="text-lg text-stone-600">Manage your planner profile and business information</p>
+      </div>
 
-        {/* Profile Content */}
-        <div className="px-6 py-6">
-
-          {/* Form Fields */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Main Content Panel */}
+      <div className="bg-white rounded-xl border border-stone-200 p-8">
+        <form className="space-y-8">
+          {/* Profile Information Section */}
+          <div className="space-y-6">
+            <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Profile Information</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
                   Planner Name
@@ -6327,7 +6310,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   type="text"
                   value={formData.planner_name}
                   onChange={(e) => handleInputChange('planner_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                   placeholder="Your name"
                 />
               </div>
@@ -6340,7 +6323,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   type="text"
                   value={formData.company_name}
                   onChange={(e) => handleInputChange('company_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                   placeholder="Your company"
                 />
               </div>
@@ -6353,13 +6336,18 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
               <textarea
                 value={formData.business_description}
                 onChange={(e) => handleInputChange('business_description', e.target.value)}
-                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                 rows={3}
                 placeholder="Describe your business..."
               />
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Contact Information Section */}
+          <div className="space-y-6">
+            <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Contact Information</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
                   Phone
@@ -6368,7 +6356,7 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                   placeholder="(555) 123-4567"
                 />
               </div>
@@ -6381,27 +6369,31 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   type="url"
                   value={formData.website_url}
                   onChange={(e) => handleInputChange('website_url', e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                   placeholder="https://yourwebsite.com"
                 />
               </div>
             </div>
+          </div>
 
-            {/* Social Media */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Social Media Section */}
+          <div className="space-y-6">
+            <h2 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">Social Media</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
                   LinkedIn Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     linkedin.com/in/
                   </span>
                   <input
                     type="text"
                     value={formData.linkedin_username}
                     onChange={(e) => handleInputChange('linkedin_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                     placeholder="username"
                   />
                 </div>
@@ -6412,34 +6404,34 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   Instagram Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     instagram.com/
                   </span>
                   <input
                     type="text"
                     value={formData.instagram_username}
                     onChange={(e) => handleInputChange('instagram_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                     placeholder="username"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
                   Facebook Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     facebook.com/
                   </span>
                   <input
                     type="text"
                     value={formData.facebook_username}
                     onChange={(e) => handleInputChange('facebook_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                     placeholder="username"
                   />
                 </div>
@@ -6450,23 +6442,41 @@ function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave
                   Twitter Username
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-stone-300 bg-stone-50 text-stone-500 text-sm">
                     twitter.com/
                   </span>
                   <input
                     type="text"
                     value={formData.twitter_username}
                     onChange={(e) => handleInputChange('twitter_username', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-base text-stone-900 placeholder:text-stone-400"
                     placeholder="username"
                   />
                 </div>
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Form Actions */}
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-stone-200">
+            <button
+              type="button"
+              onClick={() => { setView("users"); updateQueryView("users"); }}
+              className="px-4 py-2 border border-stone-200 text-sm font-medium text-stone-700 rounded-lg hover:bg-stone-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-4 py-2 bg-blue-600 text-sm font-medium text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
+    </main>
   );
 }
 
