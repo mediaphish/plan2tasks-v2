@@ -4,7 +4,7 @@ import {
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
   FileText, Layout, UserPlus, Zap, BarChart, ArrowRight, MessageCircle,
-  CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb, Edit3, Send
+  CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb, Edit3, Send, Sparkles
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -1751,7 +1751,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onClick={() => setActiveTab("plan")}
               className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === "plan"
-                  ? "text-stone-900 border-blue-600"
+                  ? "text-stone-900 border-green-600"
                   : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
@@ -1761,7 +1761,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onClick={() => setActiveTab("assigned")}
               className={`px-4 py-3 text-sm font-medium transition-colors relative border-b-2 ${
                 activeTab === "assigned"
-                  ? "text-stone-900 border-blue-600"
+                  ? "text-stone-900 border-green-600"
                   : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
@@ -1776,7 +1776,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onClick={() => setActiveTab("notes")}
               className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === "notes"
-                  ? "text-stone-900 border-blue-600"
+                  ? "text-stone-900 border-green-600"
                   : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
@@ -1786,7 +1786,7 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
               onClick={() => setActiveTab("history")}
               className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === "history"
-                  ? "text-stone-900 border-blue-600"
+                  ? "text-stone-900 border-green-600"
                   : "text-stone-600 border-transparent hover:text-stone-900"
               }`}
             >
@@ -5326,15 +5326,13 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
 
   return (
     <>
-      {/* Header Section with Lightbulb Icon */}
-      <div className="flex items-start gap-4 mb-8">
-        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center">
-          <Lightbulb className="w-6 h-6 text-stone-700" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold text-stone-900 mb-1">How would you like to create this plan?</h2>
-          <p className="text-base text-stone-600">Choose your planning approach for {selectedUserEmail}</p>
-        </div>
+      {/* Header Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-stone-900 mb-1 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-stone-700" />
+          How would you like to create this plan?
+        </h2>
+        <p className="text-base text-stone-600">Choose your planning approach for {selectedUserEmail}</p>
       </div>
       
       {/* Planning Mode Options */}
