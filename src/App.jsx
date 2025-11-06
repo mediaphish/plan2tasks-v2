@@ -5329,7 +5329,7 @@ function AIPlanningDecision({ selectedUserEmail, onModeSelect, planningMode }){
       {/* Header Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-stone-900 mb-1 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-stone-700" />
+          <Sparkles className="w-5 h-5 text-purple-600" />
           How would you like to create this plan?
         </h2>
         <p className="text-base text-stone-600">Choose your planning approach for {selectedUserEmail}</p>
