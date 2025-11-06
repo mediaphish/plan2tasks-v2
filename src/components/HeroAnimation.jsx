@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, MessageSquare } from "lucide-react";
 
-const ROTATION_INTERVAL = 5000;
+const ROTATION_INTERVAL = 7000;
 const TEXT_FADE_DURATION = 200;
 const TRANSITION_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
 
@@ -83,7 +83,7 @@ export function HeroAnimation() {
             <div
               className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${
                 SCREENSHOTS[activeIndex].iconBg
-              }`}
+              } mx-auto`}
             >
               {(() => {
                 const Icon = SCREENSHOTS[activeIndex].icon;
@@ -119,7 +119,7 @@ export function HeroAnimation() {
             className="absolute w-full"
             style={{
               top: "50%",
-              transform: "translateY(-50%) translateY(-20px)",
+              transform: "translateY(-50%)",
             }}
           >
             {SCREENSHOTS.map((shot, index) => {
@@ -138,8 +138,8 @@ export function HeroAnimation() {
                     transform: `translateX(-50%) scale(${scale}) rotateY(${rotate}deg)`,
                     transformOrigin: "center",
                     zIndex,
-                    maxWidth: "380px",
-                    maxHeight: "420px",
+                    maxWidth: "440px",
+                    maxHeight: "460px",
                     transition: `all 800ms ${TRANSITION_EASING}`,
                   }}
                 >
