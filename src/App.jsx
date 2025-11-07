@@ -320,25 +320,25 @@ function MainApp(){
         {/* Credibility Bar */}
         <section className="bg-white border-b border-stone-200">
           <div className="max-w-7xl mx-auto px-8 py-6">
-            <p className="text-center text-sm text-stone-600 mb-8 uppercase tracking-wide font-medium">
+            <p className="text-center text-base text-stone-600 mb-8 uppercase tracking-wide font-medium">
               BUILT FOR COACHES, CONSULTANTS, AND PLANNERS
             </p>
             <div className="grid gap-6 text-center sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <div className="text-lg font-semibold text-stone-900">Integrated AI</div>
-                <div className="text-sm text-stone-600 mt-1">Fast Planning</div>
+                <div className="text-2xl font-semibold text-stone-900">Integrated AI</div>
+                <div className="text-base text-stone-600 mt-1">Fast Planning</div>
               </div>
               <div>
-                <div className="text-lg font-semibold text-stone-900">Instant Delivery</div>
-                <div className="text-sm text-stone-600 mt-1">Google Tasks or email</div>
+                <div className="text-2xl font-semibold text-stone-900">Instant Delivery</div>
+                <div className="text-base text-stone-600 mt-1">Google Tasks or email</div>
               </div>
               <div>
-                <div className="text-lg font-semibold text-stone-900">Track Progress</div>
-                <div className="text-sm text-stone-600 mt-1">Real-time completion data</div>
+                <div className="text-2xl font-semibold text-stone-900">Track Progress</div>
+                <div className="text-base text-stone-600 mt-1">Real-time completion data</div>
               </div>
               <div>
-                <div className="text-lg font-semibold text-stone-900">No App Required</div>
-                <div className="text-sm text-stone-600 mt-1">100% browser based</div>
+                <div className="text-2xl font-semibold text-stone-900">No App Required</div>
+                <div className="text-base text-stone-600 mt-1">100% browser based</div>
               </div>
             </div>
           </div>
@@ -397,7 +397,7 @@ function MainApp(){
           {/* Target Audience */}
           <section className="mb-20">
             <div className="bg-stone-50 border border-stone-200 rounded-2xl p-12">
-              <div className="text-center max-w-3xl mx-auto">
+              <div className="text-center mx-auto max-w-5xl">
                 <h2 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-6">
                   Built for People Who Plan for Others
                 </h2>
