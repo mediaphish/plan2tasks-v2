@@ -207,7 +207,7 @@ function MainApp(){
                 >
                   Log in
                 </button>
-                <button className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                <button className="bg-[oklch(62.7%_0.194_149.214)] text-white px-6 py-2 rounded-lg font-medium hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors">
                   Get Started
                 </button>
               </div>
@@ -313,35 +313,45 @@ function MainApp(){
         )}
 
         {/* Hero Animation */}
-        <section className="mx-auto max-w-7xl px-6 lg:px-8 pt-16 lg:pt-24 pb-16 lg:pb-24">
+        <section className="mx-auto max-w-7xl px-4 lg:px-6 pt-8 pb-8">
           <HeroAnimation />
         </section>
 
         {/* Credibility Bar */}
         <section className="bg-white border-b border-stone-200">
           <div className="max-w-7xl mx-auto px-8 py-6">
-            <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide text-center mb-4">
+            <p className="text-center text-sm text-stone-600 mb-8 uppercase tracking-wide font-medium">
               BUILT FOR COACHES, CONSULTANTS, AND PLANNERS
             </p>
             <div className="grid gap-6 text-center sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-1">
-                <div className="text-sm font-semibold text-stone-900">Integrated AI</div>
-                <div className="text-sm text-stone-600">Fast Planning</div>
+              <div>
+                <div className="text-lg font-semibold text-stone-900">Integrated AI</div>
+                <div className="text-sm text-stone-600 mt-1">Fast Planning</div>
               </div>
-              <div className="space-y-1">
-                <div className="text-sm font-semibold text-stone-900">Instant Delivery</div>
-                <div className="text-sm text-stone-600">Google Tasks or email</div>
+              <div>
+                <div className="text-lg font-semibold text-stone-900">Instant Delivery</div>
+                <div className="text-sm text-stone-600 mt-1">Google Tasks or email</div>
               </div>
-              <div className="space-y-1">
-                <div className="text-sm font-semibold text-stone-900">Track Progress</div>
-                <div className="text-sm text-stone-600">Real-time completion data</div>
+              <div>
+                <div className="text-lg font-semibold text-stone-900">Track Progress</div>
+                <div className="text-sm text-stone-600 mt-1">Real-time completion data</div>
               </div>
-              <div className="space-y-1">
-                <div className="text-sm font-semibold text-stone-900">No App Required</div>
-                <div className="text-sm text-stone-600">100% browser based</div>
+              <div>
+                <div className="text-lg font-semibold text-stone-900">No App Required</div>
+                <div className="text-sm text-stone-600 mt-1">100% browser based</div>
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Problem Statement */}
+        <section className="max-w-5xl mx-auto px-8 py-12">
+          <h1 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-6 text-center leading-tight">
+            Stop Wondering If Your Plans Are Working
+          </h1>
+          <p className="text-lg lg:text-xl text-stone-600 text-center max-w-3xl mx-auto leading-relaxed">
+            You spend hours creating perfect task plans for your clients. But once you send them, it's a black hole. Are they using it? Are they making progress? You have no idea.
+          </p>
         </section>
 
         {/* Main Content */}
@@ -350,20 +360,20 @@ function MainApp(){
           <section className="mb-20">
             <div className="grid md:grid-cols-3 gap-8">
               {/* Card 1 */}
-              <div className="bg-green-50 border border-green-100 p-6 rounded-xl">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <Zap className="h-6 w-6 text-[#2d7a5f]" />
+              <div className="bg-white rounded-xl border border-stone-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-green-600" />
                 </div>
                 <h3 className="text-xl font-bold text-stone-900 mb-3">Create Plans Instantly</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
                   Use AI or templates to build task plans in minutes. No spreadsheets, no complex project management tools.
-              </p>
+                </p>
               </div>
 
               {/* Card 2 */}
-              <div className="bg-amber-50 border border-amber-100 p-6 rounded-xl">
-                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-amber-700" />
+              <div className="bg-white rounded-xl border border-stone-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-amber-600" />
                 </div>
                 <h3 className="text-xl font-bold text-stone-900 mb-3">Deliver to Google Tasks</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
@@ -372,9 +382,9 @@ function MainApp(){
               </div>
 
               {/* Card 3 */}
-              <div className="bg-purple-50 border border-purple-100 p-6 rounded-xl">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <BarChart className="h-6 w-6 text-purple-700" />
+              <div className="bg-white rounded-xl border border-stone-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
+                  <BarChart className="h-6 w-6 text-purple-600" />
                 </div>
                 <h3 className="text-xl font-bold text-stone-900 mb-3">See Real Completion Data</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
@@ -385,33 +395,36 @@ function MainApp(){
           </section>
 
           {/* Target Audience */}
-          <section className="mb-20 text-center max-w-3xl mx-auto">
-            <h2 className="text-4xl font-bold text-stone-900 mb-4">
-              Built for People Who Plan for Others
-            </h2>
-            <p className="text-lg text-stone-600 leading-relaxed mb-8">
-              Whether you're a coach, consultant, trainer, or team leader—if you create plans for others, this is for you.
-              </p>
-              
-            <div className="grid md:grid-cols-2 gap-6 text-left">
-              <div className="flex gap-4">
-                <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
-                  <div>
-                  <h3 className="font-semibold text-stone-900 mb-2">No New App for Your Users</h3>
-                  <p className="text-base text-stone-600 leading-relaxed">
-                    Tasks go straight to Google Tasks. Your users don't need to learn anything new or download another app.
-                  </p>
-                  </div>
+          <section className="mb-20">
+            <div className="bg-stone-50 border border-stone-200 rounded-2xl p-12">
+              <div className="text-center max-w-3xl mx-auto">
+                <h2 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-6">
+                  Built for People Who Plan for Others
+                </h2>
+                <p className="text-lg lg:text-xl text-stone-600 leading-relaxed mb-10">
+                  Whether you're a coach, consultant, trainer, or team leader—if you create plans for others, this is for you.
+                </p>
               </div>
-              <div className="flex gap-4">
-                <CheckCircle className="h-6 w-6 text-[#2d7a5f] flex-shrink-0 mt-0.5" />
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="flex gap-4 items-start">
+                  <CheckCircle className="h-8 w-8 text-green-600 flex-shrink-0 mt-1" />
                   <div>
-                  <h3 className="font-semibold text-stone-900 mb-2">AI-Powered Planning</h3>
-                  <p className="text-base text-stone-600 leading-relaxed">
-                    Describe what needs to be done in plain English. AI structures it into actionable tasks automatically.
-                  </p>
+                    <h3 className="text-xl font-semibold text-stone-900 mb-3">No New App for Your Users</h3>
+                    <p className="text-lg text-stone-600 leading-relaxed">
+                      Tasks go straight to Google Tasks. Your users don't need to learn anything new or download another app.
+                    </p>
                   </div>
                 </div>
+                <div className="flex gap-4 items-start">
+                  <CheckCircle className="h-8 w-8 text-green-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="text-xl font-semibold text-stone-900 mb-3">AI-Powered Planning</h3>
+                    <p className="text-lg text-stone-600 leading-relaxed">
+                      Describe what needs to be done in plain English. AI structures it into actionable tasks automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -457,14 +470,14 @@ function MainApp(){
 
               {/* Pro */}
               <div className="bg-white border-2 border-[#2d7a5f] rounded-xl p-6 relative">
-                <span className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#2d7a5f] text-white px-3 py-1 rounded-full text-xs font-semibold">
+                <span className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[oklch(62.7%_0.194_149.214)] text-white px-3 py-1 rounded-full text-xs font-semibold">
                   POPULAR
                 </span>
                 <h3 className="text-xl font-bold text-stone-900 mb-2">Pro</h3>
                 <p className="text-3xl font-bold text-stone-900 mb-1">$24.99</p>
                 <p className="text-sm text-stone-600 mb-4">per month</p>
                 <p className="text-base font-semibold text-stone-900 mb-6">Up to 50 users</p>
-                <button className="w-full bg-[#2d7a5f] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors">
+                <button className="w-full bg-[oklch(62.7%_0.194_149.214)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors">
                   Start Free Trial
                 </button>
               </div>
@@ -498,7 +511,7 @@ function MainApp(){
                 Join coaches, consultants, and team leaders who are finally getting visibility into their planning efforts.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-                <button className="bg-[#2d7a5f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#236049] transition-colors text-lg">
+                <button className="bg-[oklch(62.7%_0.194_149.214)] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors text-lg">
                   Start Your Free Trial
                 </button>
               </div>
