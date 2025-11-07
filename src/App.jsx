@@ -318,26 +318,28 @@ function MainApp(){
         </section>
 
         {/* Credibility Bar */}
-        <section className="max-w-7xl mx-auto px-6 py-12 border-y border-stone-200 bg-white/50">
-          <p className="text-center text-base text-stone-600 mb-8 uppercase tracking-wide font-medium">
-            BUILT FOR COACHES, CONSULTANTS, AND PLANNERS
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-lg font-semibold text-stone-900">Create Plans in Minutes</div>
-              <div className="text-sm text-stone-600 mt-1">AI-powered planning</div>
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-stone-900">Instant Delivery</div>
-              <div className="text-sm text-stone-600 mt-1">Google Tasks or email</div>
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-stone-900">Track Progress</div>
-              <div className="text-sm text-stone-600 mt-1">Real-time completion data</div>
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-stone-900">No App Required</div>
-              <div className="text-sm text-stone-600 mt-1">Works with existing tools</div>
+        <section className="border-y border-stone-200 bg-white/50">
+          <div className="max-w-7xl mx-auto px-6 py-12">
+            <p className="text-center text-base text-stone-600 mb-8 uppercase tracking-wide font-medium">
+              BUILT FOR COACHES, CONSULTANTS, AND PLANNERS
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-lg font-semibold text-stone-900">Create Plans in Minutes</div>
+                <div className="text-sm text-stone-600 mt-1">AI-powered planning</div>
+              </div>
+              <div>
+                <div className="text-lg font-semibold text-stone-900">Instant Delivery</div>
+                <div className="text-sm text-stone-600 mt-1">Google Tasks or email</div>
+              </div>
+              <div>
+                <div className="text-lg font-semibold text-stone-900">Track Progress</div>
+                <div className="text-sm text-stone-600 mt-1">Real-time completion data</div>
+              </div>
+              <div>
+                <div className="text-lg font-semibold text-stone-900">No App Required</div>
+                <div className="text-sm text-stone-600 mt-1">Works with existing tools</div>
+              </div>
             </div>
           </div>
         </section>
