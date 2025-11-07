@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {
   Users, Calendar, Settings as SettingsIcon, Inbox as InboxIcon,
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Plus, RotateCcw, Info, Mail, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
-  FileText, Layout, UserPlus, Zap, BarChart, ArrowRight, MessageCircle,
+  Plus, RotateCcw, Info, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
+  FileText, Layout, UserPlus, Zap, BarChart, MessageCircle,
   CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb, Edit3, Send, Sparkles
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
@@ -207,7 +207,7 @@ function MainApp(){
                 >
                   Log in
                 </button>
-                <button className="bg-[#2d7a5f] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#236049] transition-colors">
+                <button className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors">
                   Get Started
                 </button>
               </div>
@@ -312,146 +312,40 @@ function MainApp(){
           </div>
         )}
 
-        {/* Hero Bar - Benefits */}
-        <div className="bg-white border-b border-stone-200">
-          <div className="max-w-7xl mx-auto px-8 py-4">
-            <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide text-center mb-4">
-              TRUSTED BY COACHES, CONSULTANTS, AND TEAM LEADERS
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
-                <span className="text-sm text-stone-700">Create Plans in Minutes</span>
-                </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
-                <span className="text-sm text-stone-700">Instant Delivery</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
-                <span className="text-sm text-stone-700">Track Progress</span>
-                </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-[#2d7a5f]" />
-                <span className="text-sm text-stone-700">No App Required</span>
-              </div>
-                </div>
-              </div>
-            </div>
-
         {/* Hero Animation */}
         <section className="mx-auto max-w-7xl px-6 lg:px-8 pt-16 lg:pt-24 pb-16 lg:pb-24">
           <HeroAnimation />
         </section>
 
+        {/* Credibility Bar */}
+        <section className="bg-white border-b border-stone-200">
+          <div className="max-w-7xl mx-auto px-8 py-6">
+            <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide text-center mb-4">
+              BUILT FOR COACHES, CONSULTANTS, AND PLANNERS
+            </p>
+            <div className="grid gap-6 text-center sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1">
+                <div className="text-sm font-semibold text-stone-900">Integrated AI</div>
+                <div className="text-sm text-stone-600">Fast Planning</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-semibold text-stone-900">Instant Delivery</div>
+                <div className="text-sm text-stone-600">Google Tasks or email</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-semibold text-stone-900">Track Progress</div>
+                <div className="text-sm text-stone-600">Real-time completion data</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-semibold text-stone-900">No App Required</div>
+                <div className="text-sm text-stone-600">100% browser based</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-8 pb-16">
-          {/* Two-Way Street - The Solution */}
-          <section className="text-center mb-20 max-w-3xl mx-auto">
-            <h2 className="text-4xl font-bold text-stone-900 mb-4">
-              The Two-Way Street That Changes Everything
-            </h2>
-            <p className="text-lg text-stone-600 leading-relaxed">
-              Plan2Tasks creates a feedback loop between you and your users. You plan, they execute, you see results.
-              </p>
-          </section>
-
-          {/* How It Works */}
-          <section className="mb-20">
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
-              {/* Step 1 */}
-              <div className="text-center flex-1 max-w-xs">
-                <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-white">1</span>
-              </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-3">Create Your Plan</h3>
-                <p className="text-base text-stone-600 leading-relaxed">
-                  Use natural language or AI to outline tasks. Organize by categories, set priorities, add context.
-                </p>
-              </div>
-
-              {/* Arrow 1 */}
-              <div className="hidden md:flex items-center justify-center flex-shrink-0">
-                <ArrowRight className="h-8 w-8 text-stone-400" />
-              </div>
-
-              {/* Step 2 */}
-              <div className="text-center flex-1 max-w-xs">
-                <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-white">2</span>
-              </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-3">Assign to Users</h3>
-                <p className="text-base text-stone-600 leading-relaxed">
-                  Choose recipients and send. Tasks appear instantly in their Google Tasks—no new app required.
-                </p>
-            </div>
-
-              {/* Arrow 2 */}
-              <div className="hidden md:flex items-center justify-center flex-shrink-0">
-                <ArrowRight className="h-8 w-8 text-stone-400" />
-              </div>
-
-              {/* Step 3 */}
-              <div className="text-center flex-1 max-w-xs">
-                <div className="w-16 h-16 rounded-full bg-[#2d7a5f] flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-white">3</span>
-                </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-3">Track Completions</h3>
-                <p className="text-base text-stone-600 leading-relaxed">
-                  See real-time completion data on your dashboard. Know who's engaged and what's working.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Dashboard Screenshot - The Proof */}
-          <section className="mb-20">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-stone-900 mb-4">
-                See Exactly What's Happening
-              </h2>
-              <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-                Your dashboard shows real-time completion data from all your users. Finally, proof that your plans are working.
-              </p>
-            </div>
-            
-            {/* Dashboard Screenshot Placeholder */}
-            <div className="bg-white border border-stone-200 rounded-xl p-8 mb-8">
-              <div className="aspect-[16/10] bg-gradient-to-br from-stone-50 to-stone-100 rounded-lg border-2 border-dashed border-stone-300 flex items-center justify-center">
-                <div className="text-center">
-                  <BarChart className="h-16 w-16 text-stone-400 mx-auto mb-4" />
-                  <p className="text-stone-500 font-medium">Dashboard Screenshot</p>
-                  <p className="text-sm text-stone-400 mt-2">Placeholder for actual dashboard screenshot</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Three Metric Callouts */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle className="h-6 w-6 text-[#2d7a5f]" />
-                </div>
-                <h3 className="font-semibold text-stone-900 mb-2">Real-Time Updates</h3>
-                <p className="text-sm text-stone-600">Completion data syncs automatically</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
-                  <Users className="h-6 w-6 text-[#2d7a5f]" />
-                </div>
-                <h3 className="font-semibold text-stone-900 mb-2">User Engagement</h3>
-                <p className="text-sm text-stone-600">See who's active and who needs support</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-[#2d7a5f]/10 flex items-center justify-center mx-auto mb-3">
-                  <BarChart className="h-6 w-6 text-[#2d7a5f]" />
-                </div>
-                <h3 className="font-semibold text-stone-900 mb-2">Activity Feed</h3>
-                <p className="text-sm text-stone-600">Track recent completions across all users</p>
-              </div>
-            </div>
-          </section>
-
           {/* Feature Cards */}
           <section className="mb-20">
             <div className="grid md:grid-cols-3 gap-8">
