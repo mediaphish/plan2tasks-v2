@@ -697,7 +697,6 @@ function MainApp(){
               <div className="flex items-center gap-6">
                 <a href="/privacy" className="text-sm text-stone-600 hover:text-stone-900">Privacy</a>
                 <a href="/terms" className="text-sm text-stone-600 hover:text-stone-900">Terms</a>
-                <a href="#contact" className="text-sm text-stone-600 hover:text-stone-900">Contact</a>
               </div>
             </div>
             </div>
