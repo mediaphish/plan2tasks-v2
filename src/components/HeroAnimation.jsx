@@ -75,10 +75,10 @@ export function HeroAnimation() {
 
   return (
     <section
-      className="relative bg-white rounded-3xl shadow-lg overflow-hidden h-[495px] px-6 py-16 flex flex-col items-center justify-center text-center lg:grid lg:grid-cols-5 lg:h-[510px] lg:p-0 lg:text-left"
+      className="relative bg-white rounded-3xl shadow-lg overflow-hidden pt-16 pb-16 px-6 flex flex-col items-center justify-center gap-8 text-center lg:grid lg:grid-cols-5 lg:h-[510px] lg:p-0 lg:text-left"
     >
       <div
-        className="flex flex-col items-center justify-center h-full w-full lg:col-span-2 lg:items-start lg:px-12 lg:text-left lg:z-30 space-y-4 lg:space-y-6"
+        className="flex flex-col items-center justify-center h-full w-full gap-6 lg:col-span-2 lg:items-start lg:px-12 lg:text-left lg:z-30 lg:gap-8"
         style={textOpacityStyle}
       >
         <div
@@ -99,7 +99,7 @@ export function HeroAnimation() {
         <h2 className="text-2xl lg:text-4xl font-bold text-stone-900 text-balance">
           {SCREENSHOTS[activeIndex].title}
         </h2>
-        <p className="text-base lg:text-lg text-stone-600 leading-relaxed text-pretty max-w-xl">
+        <p className="text-base lg:text-lg text-stone-600 leading-relaxed text-pretty max-w-xl lg:max-w-2xl">
           {SCREENSHOTS[activeIndex].description}
         </p>
         <div className="lg:hidden">

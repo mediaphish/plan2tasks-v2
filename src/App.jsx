@@ -404,8 +404,13 @@ function MainApp(){
         )}
 
         {/* Hero Animation */}
-        <section className="mx-auto max-w-7xl px-4 lg:px-6 pt-8 pb-8">
+        <section className="mx-auto max-w-7xl px-4 lg:px-6 pt-8 pb-16">
           <HeroAnimation />
+          <div className="mt-10 flex justify-center">
+            <div className="h-12 w-12 rounded-full border border-stone-200 bg-white/80 flex items-center justify-center animate-bounce shadow-sm">
+              <ChevronDown className="h-6 w-6 text-stone-500" />
+            </div>
+          </div>
         </section>
 
         {/* Credibility Bar */}
