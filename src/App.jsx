@@ -4,13 +4,19 @@ import {
   Search, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, RotateCcw, Info, Tag, Edit, User, ChevronDown, LogOut, CheckCircle,
   FileText, Layout, UserPlus, Zap, BarChart, MessageCircle,
-  CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb, Edit3, Send, Sparkles
+  CheckCircle2, TrendingUp, Clock, Package, MessageSquare, History, Eye, Download, Upload, Check, AlertCircle, Lightbulb, Edit3, Send, Sparkles, LogIn
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { HeroAnimation } from "./components/HeroAnimation.jsx";
+import { SignupPage } from "./pages/Signup.jsx";
+import { SignupConfirmPage } from "./pages/SignupConfirm.jsx";
+import { AboutPage } from "./pages/About.jsx";
+import { PrivacyPage } from "./pages/Privacy.jsx";
+import { TermsPage } from "./pages/Terms.jsx";
 
 
 const APP_VERSION = "2025-09-02 · C4";
+const SIGNUP_ENABLED = typeof import.meta !== "undefined" && import.meta.env?.VITE_SIGNUP_ENABLED === "true";
 
 /* ───────── Timezones ───────── */
 const TIMEZONES = [
@@ -134,6 +140,7 @@ export default function App(){
 }
 
 function MainApp(){
+  const pathname = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "/";
   const usp = typeof window!=="undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlPE = usp.get("plannerEmail");
   const urlView = (usp.get("view")||"").toLowerCase();
@@ -151,6 +158,12 @@ function MainApp(){
   const [loginEmail, setLoginEmail] = useState("");
   const [loginStatus, setLoginStatus] = useState("idle"); // "idle", "sending", "sent", "error"
   const [loginError, setLoginError] = useState("");
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistResult, setWaitlistResult] = useState(null);
+  const [waitlistName, setWaitlistName] = useState("");
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistNotes, setWaitlistNotes] = useState("");
 
   // Handle magic link request
   const handleMagicLinkRequest = async (e) => {
@@ -188,27 +201,105 @@ function MainApp(){
     }
   };
   
-  // Show landing page if no planner email
+  if (plannerEmail) {
+    if (["/signup","/signup/confirm","/about","/privacy","/terms"].includes(pathname)) {
+      if (typeof window !== "undefined") {
+        window.location.replace(`/?plannerEmail=${encodeURIComponent(plannerEmail)}&view=dashboard`);
+      }
+      return null;
+    }
+  }
+
   if (!plannerEmail) {
+    if (pathname === "/signup") {
+      return <SignupPage signupEnabled={SIGNUP_ENABLED} />;
+    }
+    if (pathname === "/signup/confirm") {
+      return <SignupConfirmPage />;
+    }
+    if (pathname === "/about") {
+      return <AboutPage />;
+    }
+    if (pathname === "/privacy") {
+      return <PrivacyPage />;
+    }
+    if (pathname === "/terms") {
+      return <TermsPage />;
+    }
+
+    const handleSignupRequest = () => {
+      if (SIGNUP_ENABLED) {
+        window.location.href = "/signup";
+      } else {
+        setWaitlistResult(null);
+        setWaitlistName("");
+        setWaitlistEmail("");
+        setWaitlistNotes("");
+        setWaitlistOpen(true);
+      }
+    };
+
+    const closeWaitlist = () => {
+      setWaitlistOpen(false);
+      setWaitlistSubmitting(false);
+      setWaitlistResult(null);
+    };
+
+    const submitWaitlist = async (event) => {
+      event.preventDefault();
+      if (!waitlistEmail || !waitlistEmail.includes('@')) {
+        setWaitlistResult({ status: 'error', message: 'Enter a valid email.' });
+        return;
+      }
+      setWaitlistSubmitting(true);
+      try {
+        const response = await fetch('/api/waitlist/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: waitlistName,
+            email: waitlistEmail,
+            notes: waitlistNotes,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || 'Unable to join waitlist');
+        }
+        setWaitlistResult({ status: 'success' });
+      } catch (err) {
+        console.error('[WAITLIST] submit error:', err);
+        setWaitlistResult({ status: 'error', message: err.message || 'Could not submit form.' });
+      }
+      setWaitlistSubmitting(false);
+    };
+
     return (
       <div className="min-h-screen bg-[#F5F3F0]">
         {/* Header */}
         <header className="bg-[#1A1A1A] border-b border-stone-800 w-full">
-          <div className="max-w-7xl mx-auto px-8 py-4">
+          <div className="mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <img src="/brand/logo-dark.svg" alt="Plan2Tasks" className="h-8 brightness-0 invert" />
                 <span className="text-xl font-bold text-white">Plan2Tasks</span>
               </div>
-              <div className="flex items-center gap-4">
-                <button 
+              <div className="flex items-center gap-3">
+                <a href="/about" className="text-white/70 hover:text-white font-medium hidden sm:inline">About</a>
+                <button
                   onClick={() => setLoginOpen(true)}
-                  className="text-white/80 hover:text-white font-medium"
+                  className="text-white/80 hover:text-white"
+                  aria-label="Log in"
+                  type="button"
                 >
-                  Log in
+                  <LogIn className="h-5 w-5" />
                 </button>
-                <button className="bg-[oklch(62.7%_0.194_149.214)] text-white px-6 py-2 rounded-lg font-medium hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors">
-                  Get Started
+                <button
+                  type="button"
+                  onClick={handleSignupRequest}
+                  className="bg-[oklch(62.7%_0.194_149.214)] text-white px-3 sm:px-4 py-2 rounded-lg font-medium hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors"
+                >
+                  {SIGNUP_ENABLED ? 'Get Started' : 'Join Waitlist'}
                 </button>
               </div>
             </div>
@@ -452,7 +543,7 @@ function MainApp(){
                 <p className="text-3xl font-bold text-stone-900 mb-1">$0</p>
                 <p className="text-sm text-stone-600 mb-4">Perfect for personal use</p>
                 <p className="text-base font-semibold text-stone-900 mb-6">1 User</p>
-                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors" type="button" onClick={handleSignupRequest}>
                   Start Free Trial
                 </button>
               </div>
@@ -463,7 +554,7 @@ function MainApp(){
                 <p className="text-3xl font-bold text-stone-900 mb-1">$9.99</p>
                 <p className="text-sm text-stone-600 mb-4">per month</p>
                 <p className="text-base font-semibold text-stone-900 mb-6">Up to 10 users</p>
-                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors" type="button" onClick={handleSignupRequest}>
                   Start Free Trial
                 </button>
               </div>
@@ -477,7 +568,7 @@ function MainApp(){
                 <p className="text-3xl font-bold text-stone-900 mb-1">$24.99</p>
                 <p className="text-sm text-stone-600 mb-4">per month</p>
                 <p className="text-base font-semibold text-stone-900 mb-6">Up to 50 users</p>
-                <button className="w-full bg-[oklch(62.7%_0.194_149.214)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors">
+                <button className="w-full bg-[oklch(62.7%_0.194_149.214)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors" type="button" onClick={handleSignupRequest}>
                   Start Free Trial
                 </button>
               </div>
@@ -488,7 +579,7 @@ function MainApp(){
                 <p className="text-3xl font-bold text-stone-900 mb-1">$49.99</p>
                 <p className="text-sm text-stone-600 mb-4">per month</p>
                 <p className="text-base font-semibold text-stone-900 mb-6">Up to 100 users</p>
-                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors">
+                <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors" type="button" onClick={handleSignupRequest}>
                   Start Free Trial
                 </button>
               </div>
@@ -511,7 +602,7 @@ function MainApp(){
                 Join coaches, consultants, and team leaders who are finally getting visibility into their planning efforts.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-                <button className="bg-[oklch(62.7%_0.194_149.214)] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors text-lg">
+                <button className="bg-[oklch(62.7%_0.194_149.214)] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors text-lg" type="button" onClick={handleSignupRequest}>
                   Start Your Free Trial
                 </button>
               </div>
@@ -530,55 +621,92 @@ function MainApp(){
                 © 2025 Plan2Tasks
               </p>
               <div className="flex items-center gap-6">
-                <a href="#privacy" className="text-sm text-stone-600 hover:text-stone-900">Privacy</a>
-                <a href="#terms" className="text-sm text-stone-600 hover:text-stone-900">Terms</a>
+                <a href="/privacy" className="text-sm text-stone-600 hover:text-stone-900">Privacy</a>
+                <a href="/terms" className="text-sm text-stone-600 hover:text-stone-900">Terms</a>
                 <a href="#contact" className="text-sm text-stone-600 hover:text-stone-900">Contact</a>
               </div>
             </div>
             </div>
           </footer>
+
+        {waitlistOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-xl max-w-lg w-full p-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-stone-900">Join the Waitlist</h2>
+                <button
+                  type="button"
+                  onClick={closeWaitlist}
+                  className="text-stone-400 hover:text-stone-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {waitlistResult?.status === 'success' ? (
+                <div className="space-y-4 text-base text-stone-600">
+                  <p>You're on the list! We'll reach out as soon as Plan2Tasks signups open.</p>
+                  <button
+                    type="button"
+                    onClick={closeWaitlist}
+                    className="w-full px-4 py-2 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={submitWaitlist} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={waitlistName}
+                      onChange={(e) => setWaitlistName(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-stone-200 rounded-lg text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-800/10 focus:border-stone-800"
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={waitlistEmail}
+                      onChange={(e) => setWaitlistEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-2.5 border border-stone-200 rounded-lg text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-800/10 focus:border-stone-800"
+                      placeholder="you@company.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-2">What are you hoping to accomplish?</label>
+                    <textarea
+                      value={waitlistNotes}
+                      onChange={(e) => setWaitlistNotes(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-stone-200 rounded-lg text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-800/10 focus:border-stone-800"
+                      rows={3}
+                      placeholder="Optional"
+                    />
+                  </div>
+                  {waitlistResult?.status === 'error' && (
+                    <div className="rounded-lg border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-600">
+                      {waitlistResult.message}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={waitlistSubmitting}
+                    className="w-full px-4 py-2 bg-[oklch(62.7%_0.194_149.214)] text-white rounded-lg font-medium hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {waitlistSubmitting ? 'Submitting…' : 'Join Waitlist'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
-
-  // Add form handlers for landing page
-  useEffect(() => {
-    if (!plannerEmail) {
-      // Waitlist form handler
-      const waitlistForm = document.getElementById('waitlistForm');
-      if (waitlistForm) {
-        waitlistForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const email = document.getElementById('email').value;
-          if (!email.includes('@')) {
-            alert('Please enter a valid email address');
-            return;
-          }
-          alert('Thanks for joining the waitlist! We\'ll be in touch soon.');
-          document.getElementById('email').value = '';
-        });
-      }
-
-      // Contact form handler
-      const contactForm = document.getElementById('contactForm');
-      if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const name = document.getElementById('name').value;
-          const email = document.getElementById('contactEmail').value;
-          const message = document.getElementById('message').value;
-          
-          const subject = encodeURIComponent('Contact from Plan2Tasks Website');
-          const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
-          const mailtoLink = `mailto:bartpaden@gmail.com?subject=${subject}&body=${body}`;
-          
-          window.location.href = mailtoLink;
-          alert('Opening your email client. Please send the message to complete your contact request.');
-        });
-      }
-    }
-  }, [plannerEmail]);
-
   // Reset login state when plannerEmail changes (e.g., after magic link login)
   useEffect(() => {
     if (plannerEmail) {
@@ -620,7 +748,6 @@ function MainApp(){
   const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
   const profileRef = useRef(null);
   const createDropdownRef = useRef(null);
-
   // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = (event) => {
@@ -673,7 +800,6 @@ function MainApp(){
       }
     }catch(e){ console.error("Profile load failed:", e); }
   })(); }, [plannerEmail]);
-
   // Close profile dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -695,7 +821,6 @@ function MainApp(){
       // Badge functionality removed from header but function kept for InboxViewIntegrated
     }catch(e){console.error('Badge error:', e);}
   }
-
   // Removed old uploadProfilePhoto function - using new direct upload approach
 
   async function saveProfile(profileData) {
@@ -731,7 +856,6 @@ function MainApp(){
       onToast("error", `Failed to save profile: ${e.message}`);
     }
   }
-
   function toast(type, text){ const id=uid(); setToasts(t=>[...t,{ id,type,text }]); setTimeout(()=>dismissToast(id), 5000); }
   function dismissToast(id){ setToasts(t=>t.filter(x=>x.id!==id)); }
   function clearAllToasts(){ setToasts([]); }
@@ -761,7 +885,6 @@ function MainApp(){
       onToast?.("error", `Failed to save user notes: ${e.message}`);
     }
   }
-
   return (
     <div className="min-h-screen bg-[#F5F3F0] pb-6">
       <Toasts items={toasts} dismiss={dismissToast} />
@@ -803,7 +926,7 @@ function MainApp(){
               >
                 Users
               </button>
-              <button 
+                <button 
                 onClick={()=>{ setView("templates"); updateQueryView("templates"); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   view === "templates" 
@@ -1148,7 +1271,6 @@ function Toasts({ items, dismiss }){
     </div>
   );
 }
-
 /* ───────── Inbox: integrated view (no iframe, no new header) ───────── */
 function InboxViewIntegrated({ plannerEmail, onToast, onBadgeRefresh }){
   const [users,setUsers]=useState([]);
@@ -1454,7 +1576,6 @@ function CalendarGridFree({ initialDate, selectedDate, onPick }){
     </div>
   );
 }
-
 /* ───────── Plan view ───────── */
 function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUserChange, templateData, onTemplateApplied, clearAllToasts, prefs }){
   const [users,setUsers]=useState([]);
@@ -2063,7 +2184,6 @@ function PlanView({ plannerEmail, selectedUserEmailProp, urlUser, onToast, onUse
     </>
   );
 }
-
 /* ───────── Task editor ───────── */
 function TaskEditor({ planStartDate, onAdd }){
   const [title,setTitle]=useState("");
@@ -2429,7 +2549,6 @@ function UntilDatePicker({ value, setValue, planStartDate }){
     </>
   );
 }
-
 function pill(on){ return cn("rounded-full border px-2 py-1 text-xs sm:text-sm", on?"border-stone-800 bg-stone-900 text-white":"border-stone-300 bg-white hover:bg-stone-50"); }
 
 /* ───────── Preview / Deliver ───────── */
@@ -2859,7 +2978,6 @@ function HistoryPanel({ plannerEmail, userEmail, reloadKey, onPrefill }){
 /* ───────── TaskFeedbackPanel - REMOVED per Prompt 2 ───────── */
 /* This broken component showed "Not Found" errors and has been removed.
    Task completion tracking is now handled by the main Dashboard view. */
-
 /* ───────── Assigned Bundles Panel ───────── */
 function AssignedBundlesPanel({ plannerEmail, userEmail, onToast, onReviewBundle }){
   const [bundles,setBundles]=useState([]);
@@ -3006,7 +3124,6 @@ function getCachedDashboardData(key) {
 function setCachedDashboardData(key, data) {
   dashboardCache.set(key, { data, timestamp: Date.now() });
 }
-
 function DashboardView({ plannerEmail, onToast, onNavigate }){
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -3300,7 +3417,6 @@ function DashboardView({ plannerEmail, onToast, onNavigate }){
     </div>
   );
 }
-
 /* ───────── Users view — Active/Archived/Deleted ───────── */
 function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
   const [rows,setRows]=useState([]);
@@ -3460,7 +3576,6 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
   }
 
   const visible = rows.filter(r=>!filter || (r.email||"").toLowerCase().includes(filter.toLowerCase()));
-
   return (
     <main className="px-8 py-8 bg-[#F5F3F0] min-h-screen">
       {/* Page Header */}
@@ -3787,7 +3902,9 @@ function CategoriesModal({ userEmail, assigned, allCats, onSave, onClose, onToas
           )}
         </div>
         {canQuickAdd && (
-          <button onClick={addFromQuery} className="rounded-xl border px-3 py-2 text-sm hover:bg-stone-50 whitespace-nowrap">Add “{search.trim()}”</button>
+          <button onClick={addFromQuery} className="rounded-xl border px-3 py-2 text-sm hover:bg-stone-50 whitespace-nowrap">Add "
+            {search.trim()}
+          "</button>
         )}
       </div>
 
@@ -3949,14 +4066,13 @@ function SendInviteModal({ plannerEmail, onClose, onToast }){
           )}
 
           <div className="text-[11px] text-stone-500">
-            Invite CTA opens Google OAuth and returns a “Connected” confirmation (no route back to app for users).
+            Invite CTA opens Google OAuth and returns a "Connected" confirmation (no route back to app for users).
           </div>
         </div>
       </div>
     </div>
   );
 }
-
 /* ───────── Settings ───────── */
 function SettingsView({ plannerEmail, prefs, onChange, onToast }){
   const [local,setLocal]=useState(()=>{
@@ -4434,7 +4550,6 @@ function UserNotesManager({ userEmail, plannerEmail, onToast }){
     </>
   );
 }
-
 /* ───────── Templates Management View ───────── */
 function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
   const [templates, setTemplates] = useState([]);
@@ -4756,7 +4871,6 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
     </main>
   );
 }
-
 /* ───────── Create Template Modal ───────── */
 function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast }) {
   const [formData, setFormData] = useState({
@@ -4996,7 +5110,6 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
     </Modal>
   );
 }
-
 /* ───────── Templates View ───────── */
 function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onToast }) {
   const [templates, setTemplates] = useState([]);
@@ -5369,9 +5482,7 @@ function ConversationalAI({ userEmail, plannerEmail, onPlanGenerated, onToast })
         id: Date.now(),
         type: "ai",
         content: `Hi! I'm your AI planning assistant. I'm here to help you create a comprehensive plan for ${userEmail}. 
-
 I can research best practices, analyze user preferences, and build a complete plan through our conversation. 
-
 What type of plan would you like to create? For example: "Create a workout plan" or "Build a study schedule" or "Design a project timeline".`
       };
       setMessages([welcomeMessage]);
@@ -5576,7 +5687,6 @@ What type of plan would you like to create? For example: "Create a workout plan"
     </>
   );
 }
-
 /* ───────── AI-Assisted Task Editor ───────── */
 function AIAssistedTaskEditor({ planStartDate, userEmail, plannerEmail, onAdd, onToast, tasks, setTasks }){
   const [taskTitle, setTaskTitle] = useState("");
@@ -6040,7 +6150,6 @@ function AITaskGenerator({ userEmail, plannerEmail, planTitle, planDescription, 
 
   return null;
 }
-
 /* ───────── Profile View ───────── */
 function ProfileView({ plannerEmail, profile, editMode, onEditModeChange, onSave, onToast }) {
   const [formData, setFormData] = useState({
