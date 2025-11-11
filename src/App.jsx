@@ -8,11 +8,11 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { HeroAnimation } from "./components/HeroAnimation.jsx";
-import { SignupPage } from "./pages/Signup.jsx";
-import { SignupConfirmPage } from "./pages/SignupConfirm.jsx";
-import { AboutPage } from "./pages/About.jsx";
-import { PrivacyPage } from "./pages/Privacy.jsx";
-import { TermsPage } from "./pages/Terms.jsx";
+import { SignupPage } from "./pages/Signup";
+import { SignupConfirmPage } from "./pages/SignupConfirm";
+import { AboutPage } from "./pages/About";
+import { PrivacyPage } from "./pages/Privacy";
+import { TermsPage } from "./pages/Terms";
 
 
 const APP_VERSION = "2025-09-02 · C4";
