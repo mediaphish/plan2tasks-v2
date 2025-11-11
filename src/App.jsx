@@ -285,7 +285,6 @@ function MainApp(){
                 <span className="text-xl font-bold text-white">Plan2Tasks</span>
               </div>
               <div className="flex items-center gap-3">
-                <a href="/about" className="text-white/70 hover:text-white font-medium hidden sm:inline">About</a>
                 <button
                   onClick={() => setLoginOpen(true)}
                   className="text-white/80 hover:text-white"

@@ -122,12 +122,10 @@ export function HeroAnimation() {
         </div>
       </div>
 
-      <div className="hidden lg:block lg:col-span-3" />
-
-      <div className="hidden lg:block absolute inset-0 pointer-events-none">
+      <div className="hidden lg:flex lg:col-span-3 items-center justify-end relative pointer-events-none">
         {SCREENSHOTS.map((shot, index) => {
           const isActive = index === activeIndex;
-          const left = isActive ? "45%" : "65%";
+          const left = isActive ? "60%" : "78%";
           const scale = isActive ? 1.1 : 0.9;
           const rotate = isActive ? 5 : -5;
           const zIndex = isActive ? 20 : 10;
