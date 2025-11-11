@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, MessageSquare } from "lucide-react";
 
-const ROTATION_INTERVAL = 7000;
+const ROTATION_INTERVAL = 5000;
 const TEXT_FADE_DURATION = 200;
 const TRANSITION_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
 
@@ -13,7 +13,6 @@ const SCREENSHOTS = [
     title: "Real-Time Dashboard Analytics",
     description:
       "Monitor task completions, user engagement, and activity across all your users in one unified view.",
-    primaryCtaLabel: "Get Started",
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
     icon: BarChart3,
@@ -25,7 +24,6 @@ const SCREENSHOTS = [
     title: "AI-Powered Plan Creation",
     description:
       "Create comprehensive plans through conversation with our AI assistant. Choose from multiple planning approaches.",
-    primaryCtaLabel: "Start Your Free Trial",
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
     icon: MessageSquare,
@@ -43,17 +41,23 @@ export function HeroAnimation() {
   const intervalRef = useRef(null);
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
+    const runTransition = () => {
       setIsTransitioning(true);
 
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+
       timeoutRef.current = setTimeout(() => {
         setActiveIndex((prev) => getNextIndex(prev, SCREENSHOTS));
-        setIsTransitioning(false);
+
+        timeoutRef.current = setTimeout(() => {
+          setIsTransitioning(false);
+        }, TEXT_FADE_DURATION);
       }, TEXT_FADE_DURATION);
-    }, ROTATION_INTERVAL);
+    };
+
+    intervalRef.current = setInterval(runTransition, ROTATION_INTERVAL);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -70,86 +74,97 @@ export function HeroAnimation() {
   );
 
   return (
-    <div
-      className="relative bg-white rounded-3xl shadow-lg overflow-hidden"
-      style={{ height: "510px" }}
+    <section
+      className="relative bg-white rounded-3xl shadow-lg overflow-hidden h-[330px] px-6 py-12 flex flex-col items-center justify-center text-center lg:grid lg:grid-cols-5 lg:h-[510px] lg:p-0 lg:text-left"
     >
-      <div className="grid grid-cols-5 h-full">
-        {/* Left Column */}
-        <div className="col-span-2 flex flex-col items-center justify-center px-12 text-center">
-          <div style={textOpacityStyle}>
-            <div
-              className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${
-                SCREENSHOTS[activeIndex].iconBg
-              } mx-auto`}
-            >
-              {(() => {
-                const Icon = SCREENSHOTS[activeIndex].icon;
-                return <Icon className={`w-8 h-8 ${SCREENSHOTS[activeIndex].iconColor}`} />;
-              })()}
-            </div>
-            <h2 className="text-4xl font-bold text-stone-900 mb-4 text-balance">
-              {SCREENSHOTS[activeIndex].title}
-            </h2>
-            <p className="text-lg text-stone-600 mb-8 text-pretty">
-              {SCREENSHOTS[activeIndex].description}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="/signup"
-                className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
-              >
-                {SCREENSHOTS[activeIndex].primaryCtaLabel}
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="col-span-3 relative overflow-hidden">
-          {SCREENSHOTS.map((shot, index) => {
-            const isActive = index === activeIndex;
-            const left = isActive ? "45%" : "65%";
-            const scale = isActive ? 1.1 : 0.9;
-            const rotate = isActive ? 5 : -5;
-            const zIndex = isActive ? 20 : 10;
-
+      <div
+        className="flex flex-col items-center justify-center h-full w-full lg:col-span-2 lg:items-start lg:px-12 lg:text-left lg:z-30"
+        style={textOpacityStyle}
+      >
+        <div
+          className={`w-10 h-10 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center mb-5 lg:mb-6 ${
+            SCREENSHOTS[activeIndex].iconBg
+          }`}
+        >
+          {(() => {
+            const Icon = SCREENSHOTS[activeIndex].icon;
             return (
-              <div
-                key={shot.id}
-                className="absolute"
-                style={{
-                  top: "50%",
-                  left,
-                  transform: `translate(-50%, -50%) translateY(-20px) scale(${scale}) rotateY(${rotate}deg)`,
-                  transformOrigin: "center",
-                  zIndex,
-                  maxWidth: "380px",
-                  maxHeight: "420px",
-                  transition: `all 800ms ${TRANSITION_EASING}`,
-                }}
-              >
-                <img
-                  src={shot.src}
-                  alt={shot.alt}
-                  className="w-full h-auto"
-                  loading={isActive ? "eager" : "lazy"}
-                />
-              </div>
+              <Icon
+                className={`w-6 h-6 lg:w-8 lg:h-8 ${SCREENSHOTS[activeIndex].iconColor}`}
+              />
             );
-          })}
+          })()}
+        </div>
+        <h2 className="text-2xl lg:text-4xl font-bold text-stone-900 mb-3 lg:mb-4 text-balance">
+          {SCREENSHOTS[activeIndex].title}
+        </h2>
+        <p className="text-base lg:text-lg text-stone-600 mb-6 lg:mb-8 leading-relaxed text-pretty">
+          {SCREENSHOTS[activeIndex].description}
+        </p>
+        <div className="lg:hidden">
+          <a
+            href="/signup"
+            className="px-8 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-base"
+          >
+            Get Started Free
+          </a>
+          <p className="text-xs text-stone-500 mt-4 uppercase tracking-wide">
+            Trusted by coaches, consultants, and team leaders
+          </p>
+        </div>
+        <div className="hidden lg:flex gap-4">
+          <a
+            href="/signup"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+          >
+            Get a Free Trial
+          </a>
+          <a
+            href="/signup"
+            className="px-6 py-3 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors"
+          >
+            Get Started
+          </a>
         </div>
       </div>
 
-      {/* Indicator Dots */}
-      <div
-        className="absolute flex gap-2"
-        style={{
-          bottom: "24px",
-          left: "50%",
-          transform: "translateX(-50%)",
-        }}
-      >
+      <div className="hidden lg:block lg:col-span-3" />
+
+      <div className="hidden lg:block absolute inset-0 pointer-events-none">
+        {SCREENSHOTS.map((shot, index) => {
+          const isActive = index === activeIndex;
+          const left = isActive ? "45%" : "65%";
+          const scale = isActive ? 1.1 : 0.9;
+          const rotate = isActive ? 5 : -5;
+          const zIndex = isActive ? 20 : 10;
+
+          return (
+            <div
+              key={shot.id}
+              className="absolute"
+              style={{
+                top: "50%",
+                left,
+                transform: `translate(-50%, -50%) translateY(-20px) scale(${scale}) rotateY(${rotate}deg)`,
+                transformOrigin: "center",
+                zIndex,
+                maxWidth: "380px",
+                maxHeight: "420px",
+                transition: `all 800ms ${TRANSITION_EASING}`,
+              }}
+            >
+              <img
+                src={shot.src}
+                alt={shot.alt}
+                className="w-full h-auto"
+                loading={isActive ? "eager" : "lazy"}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden lg:flex absolute bottom-6 left-1/2 -translate-x-1/2 gap-2">
         {SCREENSHOTS.map((_, index) => (
           <div
             key={index}
@@ -161,7 +176,7 @@ export function HeroAnimation() {
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
