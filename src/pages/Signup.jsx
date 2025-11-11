@@ -109,7 +109,7 @@ export function SignupPage({ signupEnabled }) {
     <main className="min-h-screen bg-[#F5F3F0] px-6 py-12">
       <div className="max-w-5xl mx-auto bg-white border border-stone-200 rounded-3xl shadow-sm overflow-hidden">
         <div className="grid md:grid-cols-2">
-          <div className="px-8 py-10 bg-stone-50 border-r border-stone-200">
+          <div className="px-8 py-10 bg-white border-r border-stone-200">
             <h1 className="text-4xl font-bold text-stone-900 mb-4">Start your 14-day free trial</h1>
             <p className="text-base text-stone-600 mb-6">
               Plans include full access to AI planning, Google Tasks delivery, and detailed analytics. Cancel anytime within 14 days with no charge.
@@ -182,7 +182,7 @@ export function SignupPage({ signupEnabled }) {
             </div>
           </div>
 
-          <div className="px-8 py-10">
+          <div className="px-8 py-10 bg-white">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
