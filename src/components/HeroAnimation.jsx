@@ -82,7 +82,7 @@ export function HeroAnimation() {
         style={textOpacityStyle}
       >
         <div
-          className={`w-20 h-20 lg:w-32 lg:h-32 rounded-full flex items-center justify-center mb-5 lg:mb-6 ${
+          className={`w-20 h-20 aspect-square lg:w-32 lg:h-32 lg:aspect-square rounded-full flex items-center justify-center mb-5 lg:mb-6 ${
             SCREENSHOTS[activeIndex].iconBg
           }`}
         >
@@ -90,7 +90,7 @@ export function HeroAnimation() {
             const Icon = SCREENSHOTS[activeIndex].icon;
             return (
               <Icon
-                className={`w-8 h-8 lg:w-10 lg:h-10 ${SCREENSHOTS[activeIndex].iconColor}`}
+                className={`w-9 h-9 lg:w-12 lg:h-12 ${SCREENSHOTS[activeIndex].iconColor}`}
               />
             );
           })()}
