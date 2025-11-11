@@ -78,7 +78,7 @@ export function HeroAnimation() {
       className="relative bg-white rounded-3xl shadow-lg overflow-hidden pt-16 pb-16 px-6 flex flex-col items-center justify-center gap-8 text-center lg:grid lg:grid-cols-5 lg:h-[510px] lg:p-0 lg:text-left"
     >
       <div
-        className="flex flex-col items-center justify-center h-full w-full gap-6 lg:col-span-2 lg:items-start lg:px-12 lg:text-left lg:z-30 lg:gap-8"
+        className="flex flex-col items-center justify-center h-full w-full gap-6 lg:col-span-2 lg:items-start lg:px-12 lg:text-left lg:z-30 lg:gap-8 lg:max-w-xl"
         style={textOpacityStyle}
       >
         <div
