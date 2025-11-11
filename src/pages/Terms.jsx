@@ -167,5 +167,3 @@ export function TermsPage() {
     </main>
   );
 }
-import React from "react";
-

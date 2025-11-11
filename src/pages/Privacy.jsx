@@ -204,10 +204,5 @@ export function PrivacyPage() {
             <br />
             Email: <a href={`mailto:${CONTACT_EMAIL}`} className="text-stone-900 hover:underline">{CONTACT_EMAIL}</a>
           </p>
-        </section>
-      </div>
-    </main>
-  );
-}
 import React from "react";
 
