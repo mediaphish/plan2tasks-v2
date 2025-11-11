@@ -75,16 +75,17 @@ export function HeroAnimation() {
 
   return (
     <section
-      className="relative bg-white rounded-3xl shadow-lg overflow-hidden h-[330px] px-6 py-12 flex flex-col items-center justify-center text-center lg:grid lg:grid-cols-5 lg:h-[510px] lg:p-0 lg:text-left"
+      className="relative bg-white rounded-3xl shadow-lg overflow-hidden h-[495px] px-6 py-16 flex flex-col items-center justify-center text-center lg:grid lg:grid-cols-5 lg:h-[510px] lg:p-0 lg:text-left"
     >
       <div
-        className="flex flex-col items-center justify-center h-full w-full lg:col-span-2 lg:items-start lg:px-12 lg:text-left lg:z-30"
+        className="flex flex-col items-center justify-center h-full w-full lg:col-span-2 lg:items-start lg:px-12 lg:text-left lg:z-30 space-y-4 lg:space-y-6"
         style={textOpacityStyle}
       >
         <div
-          className={`w-20 h-20 aspect-square lg:w-32 lg:h-32 lg:aspect-square rounded-full flex items-center justify-center mb-5 lg:mb-6 ${
+          className={`w-20 h-20 aspect-square lg:w-32 lg:h-32 lg:aspect-square rounded-full flex items-center justify-center flex-shrink-0 ${
             SCREENSHOTS[activeIndex].iconBg
           }`}
+          style={{ borderRadius: "9999px" }}
         >
           {(() => {
             const Icon = SCREENSHOTS[activeIndex].icon;
@@ -95,10 +96,10 @@ export function HeroAnimation() {
             );
           })()}
         </div>
-        <h2 className="text-2xl lg:text-4xl font-bold text-stone-900 mb-3 lg:mb-4 text-balance">
+        <h2 className="text-2xl lg:text-4xl font-bold text-stone-900 text-balance">
           {SCREENSHOTS[activeIndex].title}
         </h2>
-        <p className="text-base lg:text-lg text-stone-600 mb-6 lg:mb-8 leading-relaxed text-pretty">
+        <p className="text-base lg:text-lg text-stone-600 leading-relaxed text-pretty max-w-xl">
           {SCREENSHOTS[activeIndex].description}
         </p>
         <div className="lg:hidden">
@@ -108,9 +109,6 @@ export function HeroAnimation() {
           >
             Get Started Free
           </a>
-          <p className="text-xs text-stone-500 mt-4 uppercase tracking-wide">
-            Trusted by coaches, consultants, and team leaders
-          </p>
         </div>
         <div className="hidden lg:flex gap-4">
           <a
