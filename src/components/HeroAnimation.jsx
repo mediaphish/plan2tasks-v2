@@ -9,10 +9,10 @@ const SCREENSHOTS = [
   {
     id: "dashboard",
     src: "/images/p2t-dashboard-mockup.png",
-    alt: "Dashboard Analytics",
-    title: "Real-Time Dashboard Analytics",
+    alt: "Dashboard view",
+    title: "Plan better. Deliver faster. See results.",
     description:
-      "Monitor task completions, user engagement, and activity across all your users in one unified view.",
+      "A simple system for people who create plans for others — and want to know those plans actually work.",
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
     icon: BarChart3,
@@ -20,10 +20,10 @@ const SCREENSHOTS = [
   {
     id: "plan",
     src: "/images/p2t-plan-mockup.png",
-    alt: "AI Plan Creation",
-    title: "AI-Powered Plan Creation",
+    alt: "Plan creation view",
+    title: "Plan better. Deliver faster. See results.",
     description:
-      "Create comprehensive plans through conversation with our AI assistant. Choose from multiple planning approaches.",
+      "A simple system for people who create plans for others — and want to know those plans actually work.",
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
     icon: MessageSquare,
@@ -107,22 +107,18 @@ export function HeroAnimation() {
             href="/signup"
             className="px-8 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-base"
           >
-            Get Started Free
+            Start Free
           </a>
+          <p className="mt-4 text-xs text-stone-500 uppercase tracking-wide">No credit card required</p>
         </div>
         <div className="hidden lg:flex gap-4">
           <a
             href="/signup"
             className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
           >
-            Get a Free Trial
+            Start Free
           </a>
-          <a
-            href="/signup"
-            className="px-6 py-3 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors"
-          >
-            Get Started
-          </a>
+          <p className="self-center text-sm text-stone-500">No credit card required</p>
         </div>
       </div>
 

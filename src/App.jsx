@@ -299,7 +299,7 @@ function MainApp(){
                   onClick={handleSignupRequest}
                   className="bg-[oklch(62.7%_0.194_149.214)] text-white px-3 sm:px-4 py-2 rounded-lg font-medium hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors"
                 >
-                  {SIGNUP_ENABLED ? 'Get Started' : 'Join Waitlist'}
+                  {SIGNUP_ENABLED ? 'Start Free' : 'Join Waitlist'}
                 </button>
               </div>
             </div>
@@ -417,24 +417,24 @@ function MainApp(){
         <section className="border-y border-stone-200 bg-white/50">
           <div className="max-w-7xl mx-auto px-6 py-12">
             <p className="text-center text-base text-stone-600 mb-8 uppercase tracking-wide font-medium">
-              BUILT FOR COACHES, CONSULTANTS, AND PLANNERS
+              BUILT FOR COACHES, CONSULTANTS & PLANNERS
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
-                <div className="text-lg font-semibold text-stone-900">Create Plans in Minutes</div>
-                <div className="text-sm text-stone-600 mt-1">AI-powered planning</div>
+                <div className="text-lg font-semibold text-stone-900">Plan Fast with built-in AI</div>
+                <div className="text-sm text-stone-600 mt-1">Turn ideas into tasks instantly.</div>
               </div>
               <div>
-                <div className="text-lg font-semibold text-stone-900">Instant Delivery</div>
-                <div className="text-sm text-stone-600 mt-1">Google Tasks or email</div>
+                <div className="text-lg font-semibold text-stone-900">Deliver Anywhere</div>
+                <div className="text-sm text-stone-600 mt-1">Tasks show up in Google Tasks or any calendar.</div>
               </div>
               <div>
-                <div className="text-lg font-semibold text-stone-900">Track Progress</div>
-                <div className="text-sm text-stone-600 mt-1">Real-time completion data</div>
+                <div className="text-lg font-semibold text-stone-900">See Real Progress</div>
+                <div className="text-sm text-stone-600 mt-1">Know what’s done without chasing updates.</div>
               </div>
               <div>
-                <div className="text-lg font-semibold text-stone-900">No App Required</div>
-                <div className="text-sm text-stone-600 mt-1">Works with existing tools</div>
+                <div className="text-lg font-semibold text-stone-900">No Extra Apps</div>
+                <div className="text-sm text-stone-600 mt-1">Your people stay where they already work.</div>
               </div>
             </div>
           </div>
@@ -443,26 +443,35 @@ function MainApp(){
         {/* Problem Statement */}
         <section className="max-w-5xl mx-auto px-8 py-12">
           <h1 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-6 text-center leading-tight">
-            Stop Wondering If Your Plans Are Working
+            Planning shouldn’t vanish into a black hole.
           </h1>
-          <p className="text-lg lg:text-xl text-stone-600 text-center max-w-3xl mx-auto leading-relaxed">
-            You spend hours creating perfect task plans for your clients. But once you send them, it's a black hole. Are they using it? Are they making progress? You have no idea.
-          </p>
+          <div className="text-lg lg:text-xl text-stone-600 text-center max-w-3xl mx-auto leading-relaxed space-y-4">
+            <p>
+              You pour time into planning — workouts, loan checklists, onboarding steps — only to wonder if anyone’s following through.
+            </p>
+            <p>Plan2Tasks closes that gap.</p>
+            <p>
+              Build your plan once, send it instantly, and see exactly what’s getting done.
+            </p>
+          </div>
         </section>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-8 pb-16">
           {/* Feature Cards */}
           <section className="mb-20">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-stone-900">Create. Deliver. See results.</h2>
+            </div>
             <div className="grid md:grid-cols-3 gap-8">
               {/* Card 1 */}
               <div className="bg-white rounded-xl border border-stone-200 p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
                   <Zap className="h-6 w-6 text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-3">Create Plans Instantly</h3>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">1 · Build with Ease</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
-                  Use AI or templates to build task plans in minutes. No spreadsheets, no complex project management tools.
+                  Use plain English or AI assistance to build a complete plan in minutes. Add structure, priorities, and due dates without the clutter of project-management tools.
                 </p>
               </div>
 
@@ -471,9 +480,9 @@ function MainApp(){
                 <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
                   <Users className="h-6 w-6 text-amber-600" />
                 </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-3">Deliver to Google Tasks</h3>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">2 · Deliver Instantly</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
-                  Tasks appear instantly in your users' Google Tasks. No new app to learn, no friction, just work. Also supports ICS file delivery via email for non-Google users.
+                  Send your plan directly to your Users. Tasks appear inside Google Tasks, or arrive via ICS file for any calendar app. No downloads. No logins. No confusion.
                 </p>
               </div>
 
@@ -482,9 +491,9 @@ function MainApp(){
                 <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
                   <BarChart className="h-6 w-6 text-purple-600" />
                 </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-3">See Real Completion Data</h3>
+                <h3 className="text-xl font-bold text-stone-900 mb-3">3 · See It Working</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
-                  Watch task completions flow back in real-time. Know who's engaged, who needs help, and what's working.
+                  Watch completion data update automatically. You’ll know what’s done, what’s pending, and who needs support — all in one view.
                 </p>
               </div>
             </div>
@@ -495,32 +504,79 @@ function MainApp(){
             <div className="bg-stone-50 border border-stone-200 rounded-2xl p-12">
               <div className="text-center mx-auto max-w-5xl">
                 <h2 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-6">
-                  Built for People Who Plan for Others
+                  Simple on purpose. Powerful underneath.
                 </h2>
-                <p className="text-lg lg:text-xl text-stone-600 leading-relaxed mb-10">
-                  Whether you're a coach, consultant, trainer, or team leader—if you create plans for others, this is for you.
-                </p>
               </div>
               <div className="grid md:grid-cols-2 gap-8">
-                <div className="flex gap-4 items-start">
-                  <CheckCircle className="h-8 w-8 text-green-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h3 className="text-xl font-semibold text-stone-900 mb-3">No New App for Your Users</h3>
-                    <p className="text-lg text-stone-600 leading-relaxed">
-                      Tasks go straight to Google Tasks. Your users don't need to learn anything new or download another app.
-                    </p>
+                {[
+                  "AI-powered plan creation that understands context",
+                  "Saved templates for recurring workflows",
+                  "Real-time analytics and engagement tracking",
+                  "Automatic syncing to Google Tasks or calendar",
+                  "Built-in structure for stages, due dates, and categories",
+                  "You don’t need to manage projects — you just need to move plans forward.",
+                ].map((line) => (
+                  <div key={line} className="flex gap-4 items-start">
+                    <CheckCircle className="h-8 w-8 text-green-600 flex-shrink-0 mt-1" />
+                    <p className="text-lg text-stone-600 leading-relaxed">{line}</p>
                   </div>
-                </div>
-                <div className="flex gap-4 items-start">
-                  <CheckCircle className="h-8 w-8 text-green-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h3 className="text-xl font-semibold text-stone-900 mb-3">AI-Powered Planning</h3>
-                    <p className="text-lg text-stone-600 leading-relaxed">
-                      Describe what needs to be done in plain English. AI structures it into actionable tasks automatically.
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
+            </div>
+          </section>
+
+          {/* Who It's For */}
+          <section className="mb-20">
+            <div className="max-w-5xl mx-auto text-center mb-10">
+              <h2 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-4">
+                Built for people who plan for others
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  title: "Coaches & Trainers",
+                  text: "Build workout or habit plans and watch clients follow through.",
+                },
+                {
+                  title: "Consultants & Mentors",
+                  text: "Send step-by-step strategies and track implementation.",
+                },
+                {
+                  title: "Contractors & Teams",
+                  text: "Assign field tasks, inspections, or follow-ups instantly.",
+                },
+                {
+                  title: "Families & Home Organizers",
+                  text: "Share “honey-do” or chore lists that actually get done.",
+                },
+              ].map((item) => (
+                <div key={item.title} className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <h3 className="text-xl font-semibold text-stone-900 mb-3">{item.title}</h3>
+                  <p className="text-base text-stone-600 leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-stone-600 text-center mt-8">
+              From one person to one hundred, every Planner can create, deliver, and measure progress — in the same simple flow.
+            </p>
+          </section>
+
+          {/* Visibility */}
+          <section className="mb-20">
+            <div className="max-w-4xl mx-auto text-center space-y-4">
+              <h2 className="text-4xl font-bold text-stone-900">
+                Visibility that makes every plan better
+              </h2>
+              <p className="text-sm uppercase tracking-wide text-stone-500">
+                Live completion insights — no chasing, no guesswork.
+              </p>
+              <p className="text-lg text-stone-600 leading-relaxed">
+                Every completed task tells a story. Plan2Tasks helps you see those stories clearly so you can coach better, manage smarter, and adjust your plans based on real data.
+              </p>
+              <p className="text-lg text-stone-600 leading-relaxed">
+                Track completion rates in real time, spot stalled users early, and measure plan effectiveness over time.
+              </p>
             </div>
           </section>
 
@@ -536,7 +592,7 @@ function MainApp(){
             {/* Callout Box */}
             <div className="bg-stone-50 border border-stone-200 rounded-xl p-6 mb-8 max-w-4xl mx-auto">
               <p className="text-base text-stone-700 leading-relaxed">
-                <strong>Every Plan Includes:</strong> Unlimited plans, AI planning, Templates, Google Tasks integration, ICS email delivery, Real-time analytics, Full support
+                <strong>Every Plan Includes:</strong> Unlimited task plans · AI-powered planning · Templates · Google Tasks integration · ICS delivery · Real-time analytics · Full support
               </p>
             </div>
 
@@ -546,10 +602,10 @@ function MainApp(){
               <div className="bg-white border border-stone-200 rounded-xl p-6">
                 <h3 className="text-xl font-bold text-stone-900 mb-2">Free</h3>
                 <p className="text-3xl font-bold text-stone-900 mb-1">$0</p>
-                <p className="text-sm text-stone-600 mb-4">Perfect for personal use</p>
+                <p className="text-sm text-stone-600 mb-4">Try it for personal or single-client use</p>
                 <p className="text-base font-semibold text-stone-900 mb-6">1 User</p>
                 <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors" type="button" onClick={handleSignupRequest}>
-                  Start Free Trial
+                  Start Free
                 </button>
               </div>
 
@@ -558,9 +614,10 @@ function MainApp(){
                 <h3 className="text-xl font-bold text-stone-900 mb-2">Starter</h3>
                 <p className="text-3xl font-bold text-stone-900 mb-1">$9.99</p>
                 <p className="text-sm text-stone-600 mb-4">per month</p>
-                <p className="text-base font-semibold text-stone-900 mb-6">Up to 10 users</p>
+                <p className="text-base font-semibold text-stone-900 mb-2">Up to 10 users</p>
+                <p className="text-sm text-stone-600 mb-6">Built for small teams and service pros</p>
                 <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors" type="button" onClick={handleSignupRequest}>
-                  Start Free Trial
+                  Start Free
                 </button>
               </div>
 
@@ -572,9 +629,10 @@ function MainApp(){
                 <h3 className="text-xl font-bold text-stone-900 mb-2">Pro</h3>
                 <p className="text-3xl font-bold text-stone-900 mb-1">$24.99</p>
                 <p className="text-sm text-stone-600 mb-4">per month</p>
-                <p className="text-base font-semibold text-stone-900 mb-6">Up to 50 users</p>
+                <p className="text-base font-semibold text-stone-900 mb-2">Up to 50 users</p>
+                <p className="text-sm text-stone-600 mb-6">Scale to dozens of clients effortlessly</p>
                 <button className="w-full bg-[oklch(62.7%_0.194_149.214)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors" type="button" onClick={handleSignupRequest}>
-                  Start Free Trial
+                  Start Free
                 </button>
               </div>
 
@@ -583,36 +641,48 @@ function MainApp(){
                 <h3 className="text-xl font-bold text-stone-900 mb-2">Team</h3>
                 <p className="text-3xl font-bold text-stone-900 mb-1">$49.99</p>
                 <p className="text-sm text-stone-600 mb-4">per month</p>
-                <p className="text-base font-semibold text-stone-900 mb-6">Up to 100 users</p>
+                <p className="text-base font-semibold text-stone-900 mb-2">Up to 100 users</p>
+                <p className="text-sm text-stone-600 mb-6">Coordinate established teams with confidence</p>
                 <button className="w-full border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors" type="button" onClick={handleSignupRequest}>
-                  Start Free Trial
+                  Start Free
                 </button>
               </div>
             </div>
 
-            <p className="text-center text-stone-600">
-              <a href="#contact" className="text-[#2d7a5f] hover:underline font-medium">
-                Enterprise: Up to 1,000 users — contact us for custom pricing
-              </a>
-            </p>
+            <div className="text-center text-stone-600 space-y-2">
+              <p>No credit card · Upgrade anytime</p>
+              <p>
+                <span className="font-medium text-stone-900">Enterprise — Contact · Up to 1,000 Users ·</span> Custom terms for larger organizations
+              </p>
+            </div>
+          </section>
+
+          {/* Why We Built */}
+          <section className="mb-20">
+            <div className="max-w-4xl mx-auto bg-white border border-stone-200 rounded-2xl p-10 text-center space-y-4">
+              <h2 className="text-4xl font-bold text-stone-900">Why we built Plan2Tasks</h2>
+              <p className="text-lg text-stone-600 leading-relaxed">
+                We were tired of juggling spreadsheets, endless messages, and bloated project apps. We needed one tool that does one thing exceptionally well: help people deliver plans that actually get done. Now, any Planner can work with clarity, confidence, and proof of progress.
+              </p>
+            </div>
           </section>
 
           {/* Final CTA */}
           <section className="mb-20">
             <div className="bg-white border border-stone-200 rounded-xl p-12 text-center max-w-3xl mx-auto">
-              <h2 className="text-4xl font-bold text-stone-900 mb-4">
-                Ready to See Your Plans Come to Life?
+              <h2 className="text-4xl font-bold text-stone-900 mb-3">
+                Plan2Tasks
               </h2>
               <p className="text-lg text-stone-600 leading-relaxed mb-8">
-                Join coaches, consultants, and team leaders who are finally getting visibility into their planning efforts.
+                Simple. Smart. Powerful where it counts.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                 <button className="bg-[oklch(62.7%_0.194_149.214)] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[oklch(52.7%_0.154_150.069)] transition-colors text-lg" type="button" onClick={handleSignupRequest}>
-                  Start Your Free Trial
+                  Start Free
                 </button>
               </div>
               <p className="text-sm text-stone-500">
-                14-day free trial · No credit card required · Cancel anytime
+                No credit card · No downloads · Real visibility from day one
               </p>
             </div>
           </section>
