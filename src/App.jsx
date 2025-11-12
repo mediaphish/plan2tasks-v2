@@ -547,7 +547,7 @@ function MainApp(){
                 },
                 {
                   title: "Families & Home Organizers",
-                  text: "Share "honey-do" or chore lists that actually get done.",
+                  text: "Share \"honey-do\" or chore lists that actually get done.",
                 },
               ].map((item) => (
                 <div key={item.title} className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
