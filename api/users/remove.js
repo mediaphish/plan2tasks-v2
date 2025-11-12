@@ -74,6 +74,38 @@ export default async function handler(req, res) {
     }
 
     if (!rows || !rows[0]) {
+      // No connection row; check for a pending invite and remove it.
+      const { data: invites, error: inviteErr } = await supabase
+        .from('invites')
+        .select('planner_email, user_email')
+        .ilike('planner_email', plannerEmail)
+        .ilike('user_email', userEmail)
+        .limit(1);
+
+      if (inviteErr) {
+        return sendJson(res, 500, { ok: false, error: 'Database error (invite select)' });
+      }
+
+      if (invites && invites[0]) {
+        const { error: delInviteErr } = await supabase
+          .from('invites')
+          .delete()
+          .eq('planner_email', invites[0].planner_email)
+          .eq('user_email', invites[0].user_email);
+
+        if (delInviteErr) {
+          return sendJson(res, 500, { ok: false, error: 'Database error (invite delete)' });
+        }
+
+        return sendJson(res, 200, {
+          ok: true,
+          updated: true,
+          found: false,
+          status: 'invite_cancelled',
+          message: 'Pending invite cancelled',
+        });
+      }
+
       return sendJson(res, 200, { ok: true, updated: false, found: false });
     }
 
@@ -90,7 +122,13 @@ export default async function handler(req, res) {
       return sendJson(res, 500, { ok: false, error: 'Database error (update)' });
     }
 
-    return sendJson(res, 200, { ok: true, updated: true, found: true });
+    return sendJson(res, 200, {
+      ok: true,
+      updated: true,
+      found: true,
+      status: 'deleted',
+      message: 'User moved to Deleted',
+    });
   } catch {
     return sendJson(res, 500, { ok: false, error: 'Unhandled error' });
   }

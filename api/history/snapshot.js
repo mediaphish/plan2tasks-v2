@@ -22,6 +22,9 @@
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
 const BATCH_SIZE = 200;
+const COLUMN_CACHE_TTL_MS = 60_000;
+let cachedColumns = null;
+let cachedColumnsAt = 0;
 
 function norm(v) { return (v ?? "").toString().trim(); }
 function toLowerEmail(v){ return norm(v).toLowerCase(); }
@@ -47,6 +50,45 @@ async function columnExists(col){
   if (!error) return true;
   const msg = String(error.message || "");
   return !/column .* does not exist/i.test(msg);
+}
+
+async function resolveItemColumns(force = false){
+  const now = Date.now();
+  if (!force && cachedColumns && (now - cachedColumnsAt) < COLUMN_CACHE_TTL_MS) {
+    return cachedColumns;
+  }
+
+  const cols = {
+    hasTime: await columnExists("time"),
+    hasDuration: await columnExists("duration_mins"),
+    hasNotes: await columnExists("notes"),
+    hasGoogleTaskId: await columnExists("google_task_id"),
+  };
+
+  cachedColumns = cols;
+  cachedColumnsAt = now;
+  return cols;
+}
+
+async function insertPlan({ plannerEmail, userEmail, listTitle, startDate, timezone, mode, itemsLen }){
+  const payload = {
+    planner_email: plannerEmail,
+    user_email: userEmail,
+    title: listTitle,
+    start_date: startDate,
+    timezone,
+    mode: mode || null,
+    items_count: typeof itemsLen === "number" ? itemsLen : null,
+    pushed_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from("history_plans")
+    .insert(payload)
+    .select("id")
+    .single();
+
+  return { data, error };
 }
 
 async function insertItems(planId, items, cols, taskIdMappings = []){

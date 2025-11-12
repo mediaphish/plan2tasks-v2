@@ -429,7 +429,7 @@ function MainApp(){
               </div>
               <div>
                 <div className="text-lg font-semibold text-stone-900">See Real Progress</div>
-                <div className="text-sm text-stone-600 mt-1">Know what’s done without chasing updates.</div>
+                <div className="text-sm text-stone-600 mt-1">Know what's done without chasing updates.</div>
               </div>
               <div>
                 <div className="text-lg font-semibold text-stone-900">No Extra Apps</div>
@@ -442,15 +442,15 @@ function MainApp(){
         {/* Problem Statement */}
         <section className="max-w-5xl mx-auto px-8 py-12">
           <h1 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-6 text-center leading-tight">
-            Planning shouldn’t vanish into a black hole.
+            Planning shouldn't vanish into a black hole.
           </h1>
           <div className="text-lg lg:text-xl text-stone-600 text-center max-w-3xl mx-auto leading-relaxed space-y-4">
             <p>
-              You pour time into planning — workouts, loan checklists, onboarding steps — only to wonder if anyone’s following through.
+              You pour time into planning — workouts, loan checklists, onboarding steps — only to wonder if anyone's following through.
             </p>
             <p>Plan2Tasks closes that gap.</p>
             <p>
-              Build your plan once, send it instantly, and see exactly what’s getting done.
+              Build your plan once, send it instantly, and see exactly what's getting done.
             </p>
           </div>
         </section>
@@ -492,7 +492,7 @@ function MainApp(){
                 </div>
                 <h3 className="text-xl font-bold text-stone-900 mb-3">3 · See It Working</h3>
                 <p className="text-base text-stone-600 leading-relaxed">
-                  Watch completion data update automatically. You’ll know what’s done, what’s pending, and who needs support — all in one view.
+                  Watch completion data update automatically. You'll know what's done, what's pending, and who needs support — all in one view.
                 </p>
               </div>
             </div>
@@ -513,7 +513,7 @@ function MainApp(){
                   "Real-time analytics and engagement tracking",
                   "Automatic syncing to Google Tasks or calendar",
                   "Built-in structure for stages, due dates, and categories",
-                  "You don’t need to manage projects — you just need to move plans forward.",
+                  "You don't need to manage projects — you just need to move plans forward.",
                 ].map((line) => (
                   <div key={line} className="flex gap-4 items-start">
                     <CheckCircle className="h-8 w-8 text-green-600 flex-shrink-0 mt-1" />
@@ -547,7 +547,7 @@ function MainApp(){
                 },
                 {
                   title: "Families & Home Organizers",
-                  text: "Share “honey-do” or chore lists that actually get done.",
+                  text: "Share "honey-do" or chore lists that actually get done.",
                 },
               ].map((item) => (
                 <div key={item.title} className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -790,7 +790,6 @@ function MainApp(){
       setLoginEmail("");
     }
   }, [plannerEmail]);
-
   // Ensure view respects URL parameter on initial load and after redirect
   // This runs after plannerEmail is set (e.g., after magic link login)
   useEffect(() => {
@@ -1575,7 +1574,6 @@ function InboxDrawer({ plannerEmail, onClose }){
     </div>
   );
 }
-
 /* ───────── Modal + Calendar (LOCAL) ───────── */
 function Modal({ title, onClose, children }){
   useEffect(()=>{
@@ -3582,7 +3580,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
 
       // Immediate UI update
       setRows(prev => prev.filter(x => x.email !== email));
-      onToast?.("ok", `${archived ? "User archived" : "User restored"}: ${email}`);
+      onToast?.("ok", j.message || (archived ? `User archived: ${email}` : `User restored: ${email}`));
 
       // Gentle background refresh
       setTimeout(()=>{ load(); }, 400);
@@ -3601,7 +3599,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error || "Delete failed");
       setRows(prev => prev.filter(x => x.email !== email));
-      onToast?.("ok", `User moved to Deleted: ${email}`);
+      onToast?.("ok", j.message || `User moved to Deleted: ${email}`);
       setTimeout(()=>{ load(); }, 400);
     } catch(e){
       onToast?.("error", String(e.message||e));
@@ -3618,7 +3616,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error || "Cancel invite failed");
       setRows(prev => prev.filter(x => x.email !== email));
-      onToast?.("ok", `Invite canceled: ${email}`);
+      onToast?.("ok", j.message || `Invite canceled: ${email}`);
       setTimeout(()=>{ load(); }, 400);
     } catch (e){
       onToast?.("error", String(e.message||e));
@@ -3636,7 +3634,7 @@ function UsersView({ plannerEmail, onToast, onManage, onViewDashboard }){
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error || "Purge failed");
       setRows(prev => prev.filter(x => x.email !== email));
-      onToast?.("ok", `Permanently deleted: ${email}`);
+      onToast?.("ok", j.message || `Permanently deleted: ${email}`);
       setTimeout(()=>{ load(); }, 400);
     } catch(e){
       onToast?.("error", String(e.message||e));
@@ -4688,7 +4686,7 @@ function TemplatesManagementView({ plannerEmail, onToast, onNavigate }) {
       const data = await response.json();
       
       if (data.ok) {
-        onToast?.("ok", "Template deleted successfully");
+        onToast?.("ok", data.message || "Template deleted successfully");
         fetchTemplates(); // Refresh the list
       } else {
         onToast?.("error", data.error || "Failed to delete template");
@@ -5026,7 +5024,7 @@ function CreateTemplateModal({ plannerEmail, template, onClose, onSave, onToast 
       const data = await response.json();
       
       if (data.ok) {
-        onToast?.("ok", template ? "Template updated successfully" : "Template created successfully");
+        onToast?.("ok", data.message || (template ? "Template updated successfully" : "Template created successfully"));
         onSave();
       } else {
         onToast?.("error", data.error || "Failed to save template");
@@ -5263,7 +5261,7 @@ function TemplatesView({ plannerEmail, selectedUserEmail, onTemplateSelect, onTo
       const data = await response.json();
       
       if (data.ok) {
-        onToast?.("ok", "Template deleted successfully");
+        onToast?.("ok", data.message || "Template deleted successfully");
         fetchTemplates(); // Refresh the list
       } else {
         onToast?.("error", data.error || "Failed to delete template");
