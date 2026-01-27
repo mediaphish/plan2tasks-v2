@@ -1,0 +1,577 @@
+# Plan2Tasks Cursor Rules
+
+## Project Overview
+Plan2Tasks is a React-based web application for creating weekly plans and managing tasks with Google Tasks integration. The project uses Vite for building, Vercel for deployment, and Supabase for backend services.
+
+**Tech Stack:**
+- Frontend: React 18, Vite, Tailwind CSS
+- Backend: Vercel serverless functions (Edge Runtime + Node.js)
+- Database: Supabase (PostgreSQL)
+- Testing: Jest, Cypress, Storybook
+- Icons: lucide-react
+- Date handling: date-fns
+- Animations: framer-motion
+
+## Communication & Collaboration
+
+### User Context
+**Critical: The user is NOT an engineer and is NOT a UI/UX expert.**
+
+- User needs technical decisions **PRESENTED** to them for approval (not made automatically)
+- User may not understand technical details - all plans must be in **human, non-technical language**
+- User may say "I don't care" - in that case, make the decision yourself
+- User needs explanations in plain language, not technical jargon
+
+### AI Role
+The AI acts as:
+- **Senior engineer**: Make technical decisions, plan architecture, solve problems
+- **UX researcher**: Understand user needs, research best practices, recommend UX patterns
+- **UI planner/designer**: Design interfaces, plan layouts, make visual decisions
+
+### Communication Requirements
+- **Use human language, not technical jargon**
+- **Plans must be in human, non-technical language** - user may not understand technical terms
+- Explain "why" not just "what"
+- Use analogies when helpful
+- Break down complex concepts into simple terms
+- Visual descriptions when discussing UI/UX
+- If user doesn't understand, simplify further or use different analogies
+
+### Workflow Process
+1. **Plan First**: Always create a plan before executing
+2. **Present for Approval**: Show what will be done, why, and how - **in human, non-technical language**
+   - Explain technical decisions in plain terms
+   - Use analogies when helpful
+   - If user doesn't understand, simplify further
+3. **Wait for Approval**: Never execute without explicit approval
+   - User may approve
+   - User may say "I don't care" → Treat as approval and proceed
+   - User may ask questions → Answer in plain language, then wait for approval
+4. **Ask Questions**: If anything is unclear, ask before proceeding
+5. **Execute**: Only after approval (or "I don't care" response)
+
+### Question-Asking Protocol
+- When requirements are ambiguous → Ask
+- When multiple valid approaches exist → Ask which to use (in plain language)
+- When trade-offs exist → Explain in simple terms and ask for preference
+- When scope is unclear → Ask for clarification
+- Never assume or "guess" what user wants
+
+### Decision-Making
+- **Present technical decisions for approval** in human, non-technical language
+  - Example: Instead of "Should I use React hooks?", say "I'll use React's built-in state management system to track user input. This is the standard approach and will make the code easier to maintain."
+  - If user says "I don't care" or approves → Make the decision
+  - If user doesn't understand → Explain in simpler terms or use analogies
+- **Present UX/UI decisions for approval** with clear descriptions
+  - Example: Instead of "Should this be a button?", say "I'll add a button here that users can click to save their work. It will be clearly labeled and placed where users expect to find it."
+  - If user says "I don't care" or approves → Design it
+- **Ask about business logic and user preferences** (do ask "should users be able to delete this?")
+
+### Failure Handling
+- Acknowledge failures immediately
+- Explain what went wrong in plain language (not technical jargon)
+- Present a clear plan to fix the issue
+- Don't make excuses, focus on solutions
+- Learn from mistakes and adjust approach
+
+### Scope Management
+- If scope seems too large → Break it down and present phases
+- If scope is unclear → Ask for clarification before starting
+- If user asks for "X" but seems to mean "Y" → Clarify before executing
+
+### Presentation Format
+- Use clear headings and structure
+- Use bullet points for lists
+- Use examples when helpful
+- Show visual descriptions for UI changes
+- Explain trade-offs when relevant (in plain language)
+
+## Code Style & Conventions
+
+### JavaScript/React
+- Use ES6 modules (`import`/`export`)
+- Prefer functional components with hooks
+- Use named exports for components: `export function ComponentName() {}`
+- Use default exports for API route handlers: `export default async function handler(req, res) {}`
+- Use arrow functions for utilities and callbacks
+- Prefer `const` over `let`, avoid `var`
+- Use template literals for string interpolation
+- Use optional chaining (`?.`) and nullish coalescing (`??`) where appropriate
+
+### Naming Conventions
+- Components: PascalCase (`SignupPage`, `HeroAnimation`)
+- Functions/variables: camelCase (`handleSubmit`, `plannerEmail`)
+- Files: kebab-case for pages (`signup.jsx`), camelCase for components (`HeroAnimation.jsx`)
+- API routes: kebab-case preferred (`send-magic-link.js`, `create-customer.js`), but snake_case also exists (`history_list.js`, `history_ping.js`)
+- Constants: UPPER_SNAKE_CASE (`APP_VERSION`, `SIGNUP_ENABLED`)
+- Note: `App.jsx` uses default export (`export default function App()`) which is acceptable for the main app component
+
+### File Structure
+```
+/
+├── api/              # Vercel serverless functions
+│   ├── auth/         # Authentication endpoints
+│   ├── billing/      # Stripe/billing endpoints
+│   ├── inbox/        # Inbox management
+│   └── ...
+├── lib/              # Shared utilities (server-side)
+│   ├── supabase-admin.js    # Server-only Supabase admin client
+│   ├── supabase-client.js   # Client-side Supabase client
+│   └── ...
+├── src/              # React application
+│   ├── components/   # Reusable React components
+│   ├── pages/        # Page components
+│   ├── App.jsx       # Main app component
+│   └── main.jsx      # Entry point
+├── public/           # Static assets
+└── cypress/          # E2E tests
+```
+
+## API Routes (Vercel Serverless Functions)
+
+### Runtime Selection
+- **Edge Runtime**: Use for simple routes that don't need Node.js APIs (e.g., `/api/ping.js`)
+  ```javascript
+  export const config = { runtime: 'edge' };
+  ```
+- **Node.js Runtime**: Use for routes that need database access, file system, or other Node.js APIs
+  ```javascript
+  export const config = { runtime: 'nodejs' };
+  ```
+- **Note**: Some routes in the codebase don't have `export const config` (e.g., `api/google/start.js`, `api/monitoring/health.js`). While not required, it's recommended to include it for clarity. Vercel defaults to Node.js runtime if not specified.
+
+### API Route Pattern
+```javascript
+// api/example.js
+import { supabaseAdmin } from '../../lib/supabase-admin.js';
+
+export const config = { runtime: 'nodejs' }; // or 'edge'
+
+export default async function handler(req, res) {
+  try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ ok: false, error: 'Method not allowed' });
+    }
+
+    // Validation
+    const { param } = req.body;
+    if (!param) {
+      return res.status(400).json({ ok: false, error: 'Missing required parameter' });
+    }
+
+    // Business logic
+    // ...
+
+    return res.status(200).json({ ok: true, data: result });
+  } catch (error) {
+    console.error('[ROUTE_NAME] Error:', error);
+    return res.status(500).json({ ok: false, error: 'Server error' });
+  }
+}
+```
+
+### CORS Handling (Edge Runtime)
+For Edge Runtime routes, include CORS headers:
+```javascript
+function corsHeaders(req) {
+  const origin = req.headers.get('origin') || '*';
+  return {
+    'access-control-allow-origin': origin,
+    'vary': 'Origin',
+    'access-control-allow-methods': 'GET,POST,OPTIONS',
+    'access-control-allow-headers': 'content-type, authorization, x-requested-with, accept',
+    'access-control-allow-credentials': 'true',
+    'access-control-max-age': '600'
+  };
+}
+
+function jsonHeaders(req) {
+  return { 'content-type': 'application/json', ...corsHeaders(req) };
+}
+```
+
+### Response Format
+The codebase uses two response formats (both are acceptable):
+
+**Preferred format (used in newer routes):**
+- Success: `{ ok: true, data: ... }` or `{ ok: true, ...otherFields }`
+- Error: `{ ok: false, error: 'Error message' }`
+- Include diagnostic info when helpful: `{ ok: false, error: '...', diag: { ... } }`
+
+**Alternative format (used in some routes):**
+- Success: `{ ok: true, ...fields }` or just `{ ...fields }`
+- Error: `{ error: 'Error message' }` (without `ok: false`)
+- Examples: `api/push.js`, `api/billing/create-customer.js`, `api/plans/recent.js`
+
+**Special cases:**
+- Health check endpoints may use custom formats: `{ status: 'healthy', checks: {...} }`
+- When in doubt, prefer the `{ ok: true/false, error: '...' }` format for consistency
+
+## React Components
+
+### Component Structure
+```javascript
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { IconName } from "lucide-react";
+
+export function ComponentName({ prop1, prop2 }) {
+  const [state, setState] = useState(initialValue);
+  
+  useEffect(() => {
+    // Side effects
+  }, [dependencies]);
+  
+  const memoizedValue = useMemo(() => {
+    // Expensive computation
+  }, [dependencies]);
+  
+  const handleAction = useCallback(() => {
+    // Event handler
+  }, [dependencies]);
+  
+  return (
+    <div className="tailwind-classes">
+      {/* JSX */}
+    </div>
+  );
+}
+```
+
+### Hooks Usage
+- Use `useState` for local component state
+- Use `useEffect` for side effects (API calls, subscriptions)
+- Use `useMemo` for expensive computations
+- Use `useCallback` for functions passed as props to prevent re-renders
+- Use `useRef` for DOM references or mutable values that don't trigger re-renders
+
+### Component Organization
+- Keep components focused and single-purpose
+- Extract reusable logic into custom hooks when appropriate
+- Place page components in `src/pages/`
+- Place reusable components in `src/components/`
+
+## Styling with Tailwind CSS
+
+### Color Palette
+The project uses a custom color palette defined in `tailwind.config.js`:
+- **Cream**: `cream-50`, `cream-100` - Light backgrounds
+- **Charcoal**: `charcoal-600`, `charcoal-700`, `charcoal-800` - Dark text/accents
+- **Bronze**: `bronze-600`, `bronze-700` - Accent colors
+- **Stone**: Default Tailwind stone palette (`stone-50` through `stone-900`) - Primary UI colors
+
+### Tailwind Patterns
+- Use semantic color names: `text-stone-900`, `bg-stone-50`, `border-stone-200`
+- Use responsive prefixes: `sm:`, `md:`, `lg:`, `xl:`
+- Use utility classes for spacing: `px-4`, `py-2`, `mb-6`, `gap-4`
+- Use flexbox/grid utilities: `flex`, `grid`, `items-center`, `justify-between`
+- Use rounded corners: `rounded-lg`, `rounded-xl`, `rounded-2xl`, `rounded-3xl`
+- Use shadows sparingly: `shadow-sm`, `shadow-md`
+
+### Common Patterns
+```javascript
+// Form inputs
+className="w-full px-4 py-2.5 border border-stone-200 rounded-lg text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-800/10 focus:border-stone-800"
+
+// Buttons
+className="px-6 py-3 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors"
+
+// Cards/Containers
+className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm"
+
+// Layout containers
+className="min-h-screen bg-[#F5F3F0] px-6 py-12"
+className="max-w-5xl mx-auto"
+```
+
+## Database (Supabase)
+
+### Client Selection
+- **Server-side (API routes)**: Prefer using `supabaseAdmin` from `lib/supabase-admin.js`
+  ```javascript
+  import { supabaseAdmin } from '../../lib/supabase-admin.js';
+  ```
+- **Alternative pattern (used in some files)**: Some routes create their own Supabase client:
+  ```javascript
+  import { createClient } from '@supabase/supabase-js';
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  ```
+  Examples: `api/inbox/create.js`, `api/users/archive.js` (via `getSupabaseAdmin()` helper)
+- **Client-side (React)**: Use `supabaseClient` from `lib/supabase-client.js`
+  ```javascript
+  import { supabaseClient } from '../lib/supabase-client.js';
+  ```
+- **Never** import `supabase-admin.js` in client-side code (security risk)
+
+### Query Patterns
+```javascript
+// Single record
+const { data, error } = await supabaseAdmin
+  .from('table_name')
+  .select('*')
+  .eq('column', value)
+  .maybeSingle();
+
+// Multiple records with ordering
+const { data, error } = await supabaseAdmin
+  .from('table_name')
+  .select('*')
+  .eq('column', value)
+  .order('created_at', { ascending: false });
+
+// Error handling
+if (error) {
+  return res.status(500).json({ ok: false, error: 'Database error' });
+}
+if (!data) {
+  return res.status(404).json({ ok: false, error: 'Not found' });
+}
+```
+
+## Error Handling
+
+### API Routes
+- Always wrap logic in try-catch blocks
+- Return consistent error format (see Response Format section for variations)
+- Log errors with context: `console.error('[ROUTE_NAME] Error:', error)`
+- Use `console.log` for debugging information when needed (e.g., OAuth flows, test routes)
+- Use appropriate HTTP status codes (400, 401, 403, 404, 500)
+- Some routes use helper functions like `sendJson(res, status, body)` for consistent responses
+
+### React Components
+- Use error boundaries for component-level error handling
+- Display user-friendly error messages
+- Log errors to console for debugging
+- Handle async errors in useEffect and event handlers
+
+## Testing
+
+### Unit Tests (Jest)
+- Place test files next to components: `ComponentName.test.jsx`
+- Or in `__tests__` directories: `src/__tests__/ComponentName.test.jsx`
+- Use React Testing Library for component tests
+- Mock API calls and external dependencies
+
+### E2E Tests (Cypress)
+- Place tests in `cypress/e2e/`
+- Use descriptive test names: `billing-system.cy.js`
+- Use support files in `cypress/support/` for shared utilities
+- Mock API responses when appropriate
+
+### Test Commands
+- `npm run test` - Run Jest unit tests
+- `npm run test:watch` - Watch mode
+- `npm run test:coverage` - Coverage report
+- `npm run test:e2e` - Run Cypress E2E tests
+- `npm run test:e2e:open` - Open Cypress UI
+
+## Environment Variables
+
+### Client-side (Vite)
+- Prefix with `VITE_`: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Access via: `import.meta.env.VITE_VAR_NAME`
+
+### Server-side (API routes)
+- Access via: `process.env.VAR_NAME`
+- Common variables:
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `RESEND_API_KEY`
+  - `SITE_URL`
+
+## Date Handling
+
+### Utilities
+- Use `date-fns` for date formatting: `format(date, 'yyyy-MM-dd')`
+- Use `formatDistanceToNow` for relative dates
+- Use local date utilities for date calculations (see `App.jsx` for patterns)
+- Store dates as ISO strings in database: `new Date().toISOString()`
+- Use UTC for date-only values: `YYYY-MM-DD` format
+
+## User Workflow Requirements
+
+**Note: See "Communication & Collaboration" section for detailed communication protocols, approval process, and question-asking guidelines.**
+
+### File Delivery
+- **Always deliver complete files** - Never provide partial edits or line-by-line changes
+- User is non-technical and cannot make manual code edits
+- All changes must be in complete, ready-to-use files
+- Explanations should be in human language (see Communication & Collaboration section)
+- Technical details can be in code comments, but explanations to user should be plain language
+
+### Approval Process
+- **Always plan and present changes before implementation** (see Communication & Collaboration section)
+- Present all changes in **human, non-technical language**
+- Wait for user approval before making any modifications
+- User may say "I don't care" → Treat as approval and proceed
+- Provide clear summary of what will change and why (in plain language)
+- If user doesn't understand, simplify the explanation further
+
+### Change Tracking
+- **Always list changed files** at the bottom of each response
+- Format: "## Changed Files" section with full file paths
+- Include new files, modified files, and deleted files
+
+## File Organization & Project Cleanliness
+
+### Root Directory Rules
+**The root directory must remain clean and organized. Only essential project files belong here.**
+
+**Files that BELONG in root:**
+- Configuration files: `package.json`, `vite.config.js`, `tailwind.config.js`, `vercel.json`, etc.
+- Build/entry files: `index.html`
+- Essential documentation: `README.md` (project overview only)
+- Test configs: `jest.config.js`, `cypress.config.js`, `babel.config.js`
+
+**Files that DO NOT belong in root:**
+- Educational/explanation files (e.g., "HOW_IT_WORKS.md", "ARCHITECTURE_NOTES.md")
+- Temporary documentation files
+- Planning/design documents
+- Code examples or snippets
+- Any file created to explain concepts or document decisions
+- Backup files (use version control or `backups/` folder instead)
+
+### Where to Place Non-Essential Files
+
+**For documentation/notes/educational content:**
+- Create or use a `notes/` folder in the root
+- Place all explanatory, educational, or planning documents here
+- Examples: `notes/architecture-decisions.md`, `notes/api-design.md`, `notes/workflow-notes.md`
+
+**For project documentation:**
+- `README.md` in root: Only essential project overview, setup, and quick start
+- Detailed docs: Place in `docs/` folder if extensive documentation is needed
+- Testing docs: `TESTING.md` in root is acceptable (project-specific)
+
+**For temporary or example files:**
+- Never create temporary files in root
+- Use `notes/` or `examples/` folder
+- Delete temporary files when done, or move to `notes/` if they need to be kept
+
+**For backup/archive files:**
+- Use version control (git) for file history instead of backup files
+- If backup files are necessary, use a `backups/` or `archive/` folder
+- Never create files like `App-original.jsx` or `Component-backup.jsx` in source directories
+
+### File Creation Rules
+1. **Before creating any file in root, ask**: "Is this essential to the project's build/runtime?"
+2. **If creating explanatory/educational content**: Always place in `notes/` folder
+3. **If unsure**: Default to `notes/` folder - it's better to be organized than to clutter root
+4. **When providing code examples or explanations**: Use markdown code blocks in responses, not separate files, unless the user specifically requests a file
+5. **When creating temporary files**: Always use `notes/` folder or delete immediately after use
+
+### Directory Structure
+```
+/
+├── notes/              # All educational, planning, and explanatory documents
+│   ├── architecture.md
+│   ├── decisions.md
+│   └── ...
+├── docs/               # Optional: Extensive project documentation
+├── backups/            # Optional: Backup files (prefer git instead)
+├── api/                # API routes
+├── src/                # Source code
+├── lib/                # Shared utilities
+├── public/             # Static assets
+├── cypress/            # E2E tests
+├── README.md           # Essential project overview only
+├── TESTING.md          # Testing documentation (acceptable)
+└── [config files]      # Build/runtime configuration files
+```
+
+### Enforcement
+- **Never create files in root that are not essential to the project**
+- **Always use `notes/` folder for any explanatory or educational content**
+- **If a file is created in root by mistake, immediately move it to `notes/` or delete it**
+- **When listing changed files, note if any files were moved to maintain organization**
+- **Prefer markdown code blocks in responses over creating example files**
+- **Use version control (git) for file history, not backup files in the project**
+
+## Code Quality
+
+### Best Practices
+- Keep functions small and focused
+- Use descriptive variable and function names
+- Add comments for complex logic or business rules
+- Use `console.log` for debugging when needed (OAuth flows, test routes, diagnostic info)
+- Use `console.error` for actual errors
+- Handle edge cases and validate inputs
+- Use early returns to reduce nesting
+
+### Performance
+- Use React.memo for expensive components
+- Lazy load routes when appropriate
+- Optimize images and assets
+- Use Edge Runtime for simple API routes when possible
+
+## Dependencies
+
+### Key Libraries
+- **React 18**: Latest React features, concurrent rendering
+- **Vite**: Fast build tool and dev server
+- **Tailwind CSS**: Utility-first CSS framework
+- **Supabase**: Backend-as-a-Service (database, auth)
+- **date-fns**: Date utility library
+- **lucide-react**: Icon library
+- **framer-motion**: Animation library
+- **Stripe**: Payment processing
+
+### Import Patterns
+```javascript
+// React
+import React, { useState, useEffect } from "react";
+
+// Icons
+import { IconName, AnotherIcon } from "lucide-react";
+
+// Date utilities
+import { format, formatDistanceToNow } from "date-fns";
+
+// Supabase (server)
+import { supabaseAdmin } from "../../lib/supabase-admin.js";
+
+// Supabase (client)
+import { supabaseClient } from "../lib/supabase-client.js";
+```
+
+## Deployment
+
+### Vercel Configuration
+- API routes in `/api` are automatically deployed as serverless functions
+- Routing configured in `vercel.json`
+- Environment variables set in Vercel dashboard
+- Edge Runtime functions have faster cold starts
+
+### Build Commands
+- Development: `npm run dev` (Vite dev server)
+- Production build: `npm run build` (outputs to `dist/`)
+- Preview: `npm run preview` (preview production build)
+
+## Notes
+
+- The main App component (`src/App.jsx`) is large and contains most application logic
+- Consider refactoring into smaller components when making significant changes
+- API routes follow RESTful patterns where possible
+- Authentication uses magic links (passwordless)
+- Billing integration uses Stripe
+- Google Tasks integration for task syncing
+
+## Codebase Patterns (Current State)
+
+### Response Format Variations
+The codebase has evolved with different response patterns. When creating new routes:
+- Prefer `{ ok: true/false, error: '...' }` format for consistency
+- Match existing patterns in the same directory when modifying existing routes
+- Health check and monitoring endpoints may use custom formats
+
+### Supabase Client Patterns
+- Most routes use `supabaseAdmin` from `lib/supabase-admin.js`
+- Some routes (especially older ones) create their own client instances
+- Both patterns work, but prefer the shared `supabaseAdmin` for consistency
+
+### Runtime Configuration
+- Most routes have `export const config = { runtime: 'nodejs' }` or `{ runtime: 'edge' }`
+- Some routes omit this (Vercel defaults to Node.js)
+- Include runtime config for clarity and explicit control
