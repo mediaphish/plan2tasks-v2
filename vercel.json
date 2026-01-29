@@ -2,6 +2,6 @@
   "rewrites": [
     { "source": "/join", "destination": "/api/join" },
     { "source": "/join/", "destination": "/api/join" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
