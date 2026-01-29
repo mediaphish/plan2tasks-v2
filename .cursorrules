@@ -401,6 +401,10 @@ if (!data) {
 - Explanations should be in human language (see Communication & Collaboration section)
 - Technical details can be in code comments, but explanations to user should be plain language
 
+### Commit and Deploy
+- **When you are done modifying files, commit and push the changes, and deploy.**
+- User works in the browser, not in local dev. They cannot review your work until it is committed and deployed. Treat "done" as: code is committed, pushed, and deployed so they can see it live.
+
 ### Approval Process
 - **Always plan and present changes before implementation** (see Communication & Collaboration section)
 - Present all changes in **human, non-technical language**
